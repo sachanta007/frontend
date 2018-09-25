@@ -6,21 +6,20 @@ import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
 import React, { Component } from 'react';
 import SignInCard from './CustomSignIn.jsx'
+import ForgotPasswordCard from './forgotPassword.jsx'
 class SignInPage extends Component {
   constructor(){
     super()
-    this.state = {
 
-    }
   }
   render() {
     return (
       <div >
         <img src='build/login_bg.png' className="bg" />
-        <h1 className="login-header"> Course360</h1>
+        <h1 className="login-banner"> Course360</h1>
         <SignInCard />
 
-        </div>
+     </div>
     )
   }
 
