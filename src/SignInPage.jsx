@@ -5,7 +5,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
 import React, { Component } from 'react';
-import SignInCard from './CustomSignin.jsx'
+import SignInCard from './CustomSignIn.jsx'
 class SignInPage extends Component {
   constructor(){
     super()
@@ -19,7 +19,7 @@ class SignInPage extends Component {
         <img src='build/login_bg.png' className="bg" />
         <h1 className="login-header"> Course360</h1>
         <SignInCard />
-        
+
         </div>
     )
   }

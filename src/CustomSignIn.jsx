@@ -27,7 +27,7 @@ const styles = {
   marginAuto:{
     margin:'auto'
   },
-  forgotPasword :{
+  forgotPassword :{
     fontSize: 12,
     marginTop:'12',
     fontStyle: 'italic'
@@ -43,19 +43,29 @@ class SignInCard extends Component {
   constructor()
     {
       super();
-      this.state = {
-        newUser :{"a": 12}
+      this.handleSubmit = this.handleSubmit.bind(this)
+      this.state ={
+        email: '',
+        password:''
       }
     }
 
-    handleChangeEmail(event) {
-      this.setState({email: event.target.value})
-  }
+handleEmailChange(event){
+  this.setState({email: event.target.value})
 
-    handleSubmit(e){
-      emailValue = this.state.email;
-      e.preventDefault();
-    }
+}
+
+
+handlePasswordChange(event){
+  this.setState({password: event.target.value})
+
+}
+    handleSubmit(event) {
+        console.log(this.state.email);
+        console.log(this.state.password);
+      
+        event.preventDefault();
+      }
 
   render(){
     const { classes } = this.props;
@@ -67,44 +77,43 @@ class SignInCard extends Component {
         Sign In
         </Typography>
 
-        <form onSubmit = {this.handleSubmit.bind(this)}>
+        <form onSubmit = {this.handleSubmit}>
+              <FormControl required>
+                  <TextField
+                  id="email-input"
+                  type="email"
+                  name="email"
+                  label="Email"
+                  value={this.state.email}
+                  className={classes.textField}
+                  margin="normal"
+                  autoComplete = 'email'
+                  onChange = {this.handleEmailChange.bind(this)}
+                />
+            </FormControl>
+            <br />
+
           <FormControl required>
-          <TextField
-          id="email-input"
-          type="email"
-          name="email"
-          label="Email"
-          ref = "email"
-          value={this.state.email}
-          onChange={this.handleChangeEmail.bind(this)}
-          className={classes.textField}
-          margin="normal"
-          autoComplete = 'email'
-        />
-      </FormControl>
-      <br />
+            <TextField
+                  id="password-input"
+                  label="Password"
+                  className={classes.textField}
+                  type="password"
+                  value={this.state.password}
+                  onChange={this.handlePasswordChange.bind(this)}
+                  autoComplete="current-password"
+                  margin="normal"
+                  name="password"
 
-      <FormControl required>
-        <TextField
-              id="password-input"
-              label="Password"
-              className={classes.textField}
-              type="password"
-              ref="password"
-              autoComplete="current-password"
-              margin="normal"
-              name="password"
-            />
-        </FormControl>
-        <br />
+                />
+            </FormControl>
+            <br />
 
-        <a href="#" className = {classes.forgotPasword}> Forgot Password?</a>
+            <a href="#" className = {classes.forgotPassword}> Forgot Password?</a>
 
-
-
-      <CardActions>
-          <Button variant="contained" type="submit" className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
-      </CardActions>
+          <CardActions>
+              <Button variant="contained" type="submit" className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
+          </CardActions>
       </form>
       </CardContent>
         <p className = {classes.newUserText}> New User? <a href="#">Register Here!</a></p>
