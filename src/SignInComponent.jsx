@@ -74,7 +74,7 @@ function SignIn(props) {
               fullWidth
               variant="raised"
               color="primary"
-              className={classes.submit}
+            
             >
               Sign in
             </Button>
