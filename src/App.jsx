@@ -1,18 +1,26 @@
 import React, {Component} from 'react';
-import { BrowserRouter as Router, Route, Link} from 'react-router-dom';
-import { browserHistory } from 'react-router';
-import NavBar from './NavBar.jsx';
+import {
+  Route,
+  NavLink,
+  HashRouter
+} from "react-router-dom";
+
+
 import SignInPage from './SignInPage.jsx';
+import UserActivatedPage from './UserActivatedPage.jsx';
+import DashboardPage from './DashboardPage.jsx';
 
 class App extends Component {
 
   render() {
     return (
-      <Router>
+      <HashRouter>
         <div>
-          <Route name="signInPage" exact path="/" component={SignInPage} />
+            <Route path="/" exact component={SignInPage}/>
+            <Route path="/activated" component={UserActivatedPage}/>
+            <Route path="/dashboard" component={DashboardPage} />
         </div>
-      </Router>
+      </HashRouter>
     )
   }
 }
