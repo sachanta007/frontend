@@ -17,7 +17,7 @@ const styles = {
     margin: 'auto'
   },
   registrationCard:{
-    width: 400,
+    width: 300,
     margin: 'auto'
   },
   title: {
@@ -52,6 +52,7 @@ class SignInCard extends Component {
     this.state ={
       email: '',
       password:'',
+      emailForForgotPassword: '',
       isSignInCardHidden:false,
       isForgotPasswordCardHidden:true,
       isValidateOTPCardHidden:true,
@@ -97,7 +98,6 @@ class SignInCard extends Component {
     .then((response)=>{
       if(response.data != 'Not able to login'){
         console.log("Yaaaay! Logged in......");
-        console.log(this)
         this.setState({loginSuccess: true});
       }
 
@@ -121,58 +121,94 @@ class SignInCard extends Component {
 
   }
 
-// If user enters otp, check if otp matches
-// If yes, show a new password selection screen and
-// update db with new password (make an API call!!)
-// Also, check if security answer is correct too
-
+// check if security answer is correct
+// API returns True or False, based on whether
+// security answer given by user matches that in DB for his/her email
 verifySecurityAnswer(event){
-  this.setState({isForgotPasswordCardHidden: true});
-  this.setState({isSignInCardHidden: true});
-  this.setState({isValidateOTPCardHidden: true});
-  this.setState({isVerifyOTPCardHidden: false});
-  this.setState({isRegisterNewUserCardHidden: true});
-  console.log(this.state.otp);
-  console.log(this.state.securityAnswer);
+  const dataJSON = {
+    'email': this.state.emailForForgotPassword,
+    'answer': this.state.securityAnswer
+  }
+
+  axios({
+    method:'post',
+    url:'http://localhost:5000/securityAnswer',
+    data: dataJSON,
+    headers: {'Access-Control-Allow-Origin': '*'},
+  })
+  .then((response)=>{
+    if(response.data['wasAnswerCorrect']){
+      this.setState({isForgotPasswordCardHidden: true});
+      this.setState({isSignInCardHidden: true});
+      this.setState({isValidateOTPCardHidden: true});
+      this.setState({isVerifyOTPCardHidden: false});
+      this.setState({isRegisterNewUserCardHidden: true});
+    }
+
+    else{ //answer was wrong...go back to sign in
+      alert('Sorry!! Wrong answer! Try again!')
+      this.goBackToSignIn(event)
+    }
+  });
+
 }
+
   // Below function hides/shows forgot password card and sign-in card according to
   // button clicks of 'Forgot Password?' Toggling is done here based on prevState
   // Can add multiple other flags here, e.g. for registration page show/hides
 
   handleForgotPassword(event){
-  this.setState({isForgotPasswordCardHidden: false});
-  this.setState({isSignInCardHidden: true});
-  this.setState({isValidateOTPCardHidden: true});
-  this.setState({isVerifyOTPCardHidden: true});
-  this.setState({isRegisterNewUserCardHidden: true});
-}
+      this.setState({isForgotPasswordCardHidden: false});
+      this.setState({isSignInCardHidden: true});
+      this.setState({isValidateOTPCardHidden: true});
+      this.setState({isVerifyOTPCardHidden: true});
+      this.setState({isRegisterNewUserCardHidden: true});
+  }
 
 // User types a new password twice
 // check if both are same. If yes, call API
 // to update DB and go back to sign-in page
+// Also check if OTP entered is correct
 updateNewPassword(event){
 
   if(this.state.newPassword == this.state.confirmPassword){
-    alert('Passwords match. Updating in DB...Sign in again!')
-    this.setState({isForgotPasswordCardHidden: true});
-    this.setState({isSignInCardHidden: false});
-    this.setState({isValidateOTPCardHidden: true});
-    this.setState({isVerifyOTPCardHidden: true});
-    this.setState({isRegisterNewUserCardHidden: true});
+    const dataJSON = {
+      'email': this.state.emailForForgotPassword,
+      'password': this.state.newPassword
+    }
+
+    axios({
+      method:'post',
+      url:'http://localhost:5000/updatePassword',
+      data: dataJSON,
+      headers: {'Access-Control-Allow-Origin': '*'},
+    })
+    .then((response)=>{
+      if(response.data['wasUpdateSuccessful']){
+        alert("Password changed successfully!!! Please sign in again!!!")
+        this.goBackToSignIn(event)
+      }
+
+      else{
+        alert('Sorry!! Something messed up.... :(')
+        this.goBackToSignIn(event)
+      }
+    });
   }
+
   else{
     alert("passwords do not match!!!!")
   }
 
 }
-// Only show the enter security ques card. Hide everything else
+// Only show the enter security answer card. Hide everything else
 // Gets Sec Question by hitting API securityQuestion/<email>
 
 fetchSecurityQuestion(event){
 
   axios({
     method:'get',
-    url:'http://localhost:5000/securityQuestion/'+this.state.email,
+    url:'http://localhost:5000/securityQuestion/'+this.state.emailForForgotPassword,
     headers: {'Access-Control-Allow-Origin': '*'},
   })
   .then((response)=>{
@@ -185,13 +221,13 @@ fetchSecurityQuestion(event){
       this.setState({isValidateOTPCardHidden: false});
       this.setState({isVerifyOTPCardHidden: true});
       this.setState({isRegisterNewUserCardHidden: true});
-      
+
     }
 
     else{
       alert("Ooops! Something went wrong!")
-      goBackToSignIn(event);
-      console.log(this);
+      this.goBackToSignIn(event);
+
     }
   });
  // if response from backend is error, show alert saying
@@ -232,11 +268,7 @@ registerNewUser(event){
        alert("Thank you! An email with an activation link has been sent to your email! Please activate your account :)")
      });
 
-  this.setState({isForgotPasswordCardHidden: true});
-  this.setState({isSignInCardHidden: false});
-  this.setState({isValidateOTPCardHidden: true});
-  this.setState({isVerifyOTPCardHidden: true});
-  this.setState({isRegisterNewUserCardHidden: true});
+    this.goBackToSignIn(event)
 
 }
 
@@ -320,13 +352,14 @@ registerNewUser(event){
 
           <form>
 
+            /* The email being entered here is diff from email in login page */
             <FormControl required>
               <TextField
                 id="email-input"
                 type="email"
-                name="email"
+                name="emailForForgotPassword"
                 label="Enter your email"
-                value={this.state.email}
+                value={this.state.emailForForgotPassword}
                 className={classes.textField}
                 margin="normal"
                 autoComplete = 'email'
@@ -350,7 +383,7 @@ registerNewUser(event){
       </Card>
     }
 
-/**************************************** Below chunk shows card having security ques and OTP input ******************************************************/
+/**************************************** Below chunk shows card having security ques  ******************************************************/
     else if(!isValidateOTPCardHidden){
       currentCard = <Card className={classes.card}>
         <CardContent>
