@@ -10,6 +10,9 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import TextField from '@material-ui/core/TextField';
 import { Redirect } from 'react-router';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 
 const styles = {
   card: {
@@ -69,7 +72,9 @@ class SignInCard extends Component {
       setSecurityAnswer:'',
       setSecurityQuestion:'',
       newUserPassword:'',
-      loginSuccess:false
+      loginSuccess:false,
+      role:'3',
+      selectedRadioValue: '3'
     }
   }
 
@@ -79,11 +84,18 @@ class SignInCard extends Component {
      let change = {}
      change[e.target.name] = e.target.value
      this.setState(change)
+
+     // This is for registration view radio buttons ONLY
+     if(e.target.name == 'role')
+     {
+       console.log(this.state.role);
+      this.setState({ selectedRadioValue: e.target.value });
+     }
   }
 
 // This is called when user tries to signin
   handleSubmit = (event) =>  {
-    console.log(this.state.loginSuccess);
+
     const dataJSON = {
       'email': this.state.email,
       'password': this.state.password
@@ -99,6 +111,10 @@ class SignInCard extends Component {
       if(response.data != 'Not able to login'){
         console.log("Yaaaay! Logged in......");
         this.setState({loginSuccess: true});
+
+        // Token n role stored in session...can get using .getItem['token']
+        sessionStorage.setItem('token',response.data['token'])
+        sessionStorage.setItem('user_role',response.data['role_id'])
       }
 
       else{
@@ -255,9 +271,10 @@ registerNewUser(event){
            email: this.state.newEmail,
            password: this.state.newUserPassword,
            securityQuestion: this.state.setSecurityQuestion,
-           securityAnswer: this.state.setSecurityAnswer
+           securityAnswer: this.state.setSecurityAnswer,
+           role: this.state.role
          }
-
+         console.log(registrationData);
      axios({
        method:'post',
        url:'http://localhost:5000/register',
@@ -266,6 +283,14 @@ registerNewUser(event){
      })
      .then(function (response) {
        alert("Thank you! An email with an activation link has been sent to your email! Please activate your account :)")
+       // Reset all state variables for registration so that new users do not see it again
+       this.setState({firstName: ''});
+       this.setState({lastName: ''});
+       this.setState({newEmail: ''});
+       this.setState({newUserPassword: ''});
+       this.setState({setSecurityQuestion: ''});
+       this.setState({setSecurityAnswer: ''});
+       this.setState({role: ''});
      });
 
     this.goBackToSignIn(event)
@@ -352,7 +377,7 @@ registerNewUser(event){
 
           <form>
 
-            /* The email being entered here is diff from email in login page */
+            {/* The email being entered here is diff from email in login page */}
             <FormControl required>
               <TextField
                 id="email-input"
@@ -368,8 +393,6 @@ registerNewUser(event){
             </FormControl>
 
           <br />
-
-
 
           {/* This is the line of code that hides/shows forgot password VS signin page. Same function is used as above */}
             <a href="#" onClick={this.goBackToSignIn.bind(this)} className = {classes.forgotPassword}> I remember now! Go back</a>
@@ -392,7 +415,6 @@ registerNewUser(event){
           </Typography>
 
           <form>
-
             <p class='comfortaa-font '>Answer your security question:</p>
 
             {/* need to get the user's respective security question by
@@ -558,6 +580,20 @@ registerNewUser(event){
                       margin="normal"
                       name="setSecurityAnswer"
                     />
+                  <br />
+              <FormControl component="fieldset" className={classes.formControl}>
+                  <RadioGroup
+                    aria-label="Role"
+                    name="role"
+                    className={classes.group}
+                    value={this.state.value}
+                    onChange={this.handleChange.bind(this)}>
+
+                        <FormControlLabel  value="3" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="3"} />} label="Student" />
+                        <FormControlLabel value="2" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="2"}  />} label="Professor" />
+
+                  </RadioGroup>
+            </FormControl>
         </FormControl>
             <CardActions>
               <Button variant="contained" onClick = {this.registerNewUser.bind(this)} className = {classes.marginAuto} value="Next" color="primary">Register</Button>
