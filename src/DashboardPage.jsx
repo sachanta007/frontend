@@ -264,7 +264,7 @@ class DashboardPage extends Component {
                 <Divider />
               </Drawer>
 
-            
+
               <main className={classes.content}>
                 <div className={classes.toolbar} />
                   <h2> Your Courses</h2>
