@@ -9,6 +9,8 @@ import {
 import SignInPage from './SignInPage.jsx';
 import UserActivatedPage from './UserActivatedPage.jsx';
 import DashboardPage from './DashboardPage.jsx';
+import PaymentPortal from './PaymentPortal.jsx';
+
 
 class App extends Component {
 
@@ -19,6 +21,7 @@ class App extends Component {
             <Route path="/" exact component={SignInPage}/>
             <Route path="/activated" component={UserActivatedPage}/>
             <Route path="/dashboard" component={DashboardPage} />
+            <Route path="/Portal" component={PaymentPortal} />
         </div>
       </HashRouter>
     )
