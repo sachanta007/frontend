@@ -88,7 +88,6 @@ class SignInCard extends Component {
      // This is for registration view radio buttons ONLY
      if(e.target.name == 'role')
      {
-       console.log(this.state.role);
       this.setState({ selectedRadioValue: e.target.value });
      }
   }
