@@ -323,20 +323,22 @@ class DashboardPage extends Component {
 // when page loads (sorta like a constructor yeah??)
 //----------------------------------
 componentDidMount() {
+  if(sessionStorage.getItem('user_role')==1)
+  {
     this.hitAPIForAdminHomePageCourses().then((returnVal) => {
       this.setState({allCoursesForAdminHome: returnVal})
 
     })
-    .catch(err => console.log("Something messed up with Axios!: ", err))
-
+    .catch(err => console.log("Component Did mount Exception!!: ", err))
   }
+}
 
 // Calls API for admin home page courseCard
 
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'http://localhost:5000/getAllCourses/start/1/end/100000',
+    url:'http://localhost:5000/getAllCourses/start/0/end/100000',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -351,7 +353,7 @@ hitAPIForAdminHomePageCourses(){
   getAllProfessorsForSelect(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/getAllProfessors/start/1/end/100000',
+      url:'http://localhost:5000/getAllProfessors/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -369,7 +371,7 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/getAllStudents/start/1/end/100000',
+      url:'http://localhost:5000/getAllStudents/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -458,6 +460,16 @@ hitAPIForAdminHomePageCourses(){
 //-----------------------------
 
   updateCourseInDB(e){
+    console.log('Previous details',this.state.detailsOfCurrentCourseToEdit);
+    this.state.editCourseName = (this.state.editCourseName == '') ? this.state.detailsOfCurrentCourseToEdit['course_name'] : this.state.editCourseName
+
+    this.state.editCourseDesc = (this.state.editCourseDesc == '') ? this.state.detailsOfCurrentCourseToEdit['description'] : this.state.editCourseDesc
+    this.state.editCourseLocation = (this.state.editCourseLocation == '') ? this.state.detailsOfCurrentCourseToEdit['location'] : this.state.editCourseLocation
+    this.state.editCourseProf = (this.state.editCourseProf == '') ? this.state.detailsOfCurrentCourseToEdit['professor'].user_id : this.state.editCourseProf
+    this.state.editCourseDays = (this.state.editCourseDays == '') ? this.state.detailsOfCurrentCourseToEdit['days'].toString() : this.state.editCourseDays
+    this.state.editCourseStartTime = (this.state.editCourseStartTime == '') ? this.state.detailsOfCurrentCourseToEdit['start_time'] : this.state.editCourseStartTime
+    this.state.editCourseEndTime = (this.state.editCourseEndTime == '') ? this.state.detailsOfCurrentCourseToEdit['end_time'] : this.state.editCourseEndTime
+
     const dataJSON = {
             course_name: this.state.editCourseName,
             course_id: this.state.detailsOfCurrentCourseToEdit['course_id'],
@@ -470,7 +482,7 @@ hitAPIForAdminHomePageCourses(){
             role_id: sessionStorage.getItem('user_role'),
             department: 'DEFAULT_DEPT'
         }
-
+        console.log('data to be sent',dataJSON);
         axios({
           method:'post',
           url:'http://localhost:5000/updateCourses',
@@ -505,7 +517,7 @@ hitAPIForAdminHomePageCourses(){
   deleteCourseInDB(e){
     const dataJSON = {
             course_id: this.state.detailsOfCurrentCourseToEdit['course_id'].toString(),
-            role_id: sessionStorage.getItem('user_role')
+            role_id: sessionStorage.getItem('user_role').toString()
         }
 
     axios({
