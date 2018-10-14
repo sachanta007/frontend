@@ -14,7 +14,8 @@
     "reload",
     "live",
     "edit",
-    "webpack"
+    "webpack",
+    "webpack-dev-server"
   ],
   "author": "Noah-Jerome Lotzer <noah.lotzer@gmail.com>",
   "license": "MIT",
