@@ -6,6 +6,7 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import List from '@material-ui/core/List';
 import AccountCircle from '@material-ui/icons/AccountCircle';
+import AddCircle from '@material-ui/icons/AddCircle';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
@@ -15,11 +16,15 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
 import EmailIcon from '@material-ui/icons/Email';
+import EditIcon from '@material-ui/icons/Edit';
+import SchoolIcon from '@material-ui/icons/School';
+import FaceIcon from '@material-ui/icons/Face';
 import SearchIcon from '@material-ui/icons/Search';
 import HomeIcon from '@material-ui/icons/Home';
 import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
+import CardActionArea from '@material-ui/core/CardActionArea';
 import CardContent from '@material-ui/core/CardContent';
 import FormControl from '@material-ui/core/FormControl';
 import TextField from '@material-ui/core/TextField';
@@ -59,7 +64,8 @@ const axios = require('axios');
   content: {
     flexGrow: 1,
     backgroundColor: '#F5F5F5',
-    padding: theme.spacing.unit * 3
+    padding: theme.spacing.unit * 3,
+    overflowY: 'auto'
   },
   toolbar: theme.mixins.toolbar,
   rightSpacing: {
@@ -73,6 +79,13 @@ const axios = require('axios');
   },
   displayInline:{
     display: 'inline'
+  },
+  boldText:{
+    fontWeight: 'bold'
+  },
+  buttonStyles:{
+
+    marginRight: 20
   }
 });
 
@@ -82,20 +95,28 @@ class DashboardPage extends Component {
   constructor(){
     super()
     this.handleMenuItemClick = this.handleMenuItemClick.bind(this);
+    this.editSingleCourse = this.editSingleCourse.bind(this);
+    this.updateCourseInDB = this.updateCourseInDB.bind(this);
+    this.addNewCourse = this.addNewCourse.bind(this);
+    this.deleteCourseInDB = this.deleteCourseInDB.bind(this);
+
+
     this.state = {
       isHomePageHidden: false,
       isPaymentPortalHidden: true,
       isCalendarHidden: true,
       isSearchHidden: true,
-      courseCardStyle: {marginBottom: 18, width: 500},
+      courseCardStyle: {marginBottom: 18, width: 440},
       courseNameStyle: {fontSize: 20, fontWeight: 'bold', fontFamily: 'Comfortaa'},
       spacing : '16',
       isAdmin: false,
       isAddNewCourseHidden: true,
       isEditCourseHidden: true,
+      isEditSingleCourseHidden: true,
       isViewStudentsHidden: true,
       isViewProfessorsHidden: true,
       selectedRadioValue: '',
+
       newCourseName: '',
       newCourseDesc: '',
       newCourseLocation: '',
@@ -103,10 +124,20 @@ class DashboardPage extends Component {
       newCourseDays: '',
       newCourseStartTime: '',
       newCourseEndTime: '',
+
+      editCourseName: '',
+      editCourseDesc: '',
+      editCourseLocation: '',
+      editCourseProf: '',
+      editCourseDays: '',
+      editCourseStartTime: '',
+      editCourseEndTime: '',
+
       allProfessorsForSelect: [],
       allStudents: [],
       allProfessors: [],
-      allCoursesForAdminHome: []
+      allCoursesForAdminHome: [],
+      detailsOfCurrentCourseToEdit: []
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -128,7 +159,7 @@ class DashboardPage extends Component {
   // for use with all input fields. No need to modify this
   // Sets value of state variable with user input.
   // IMPORTANT:
-  // Make sure name property and state variable for each
+  // Make sure name property and state variable for the
   // input tag are same!!!!
 
     handleChange(e){
@@ -138,7 +169,7 @@ class DashboardPage extends Component {
 
        // This is only for the radio buttons
        // at add a new course page
-       if(e.target.name == 'newCourseDays')
+       if(e.target.name == 'newCourseDays' || e.target.name =='editCourseDays')
        {
         this.setState({ selectedRadioValue: e.target.value });
        }
@@ -154,7 +185,12 @@ class DashboardPage extends Component {
       this.setState({isCalendarHidden: true});
       this.setState({isSearchHidden: true});
       this.setState({isAddNewCourseHidden: true});
+      this.setState({isEditCourseHidden: true});
+      this.setState({isViewStudentsHidden: true});
+      this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
 
+      this.componentDidMount()
     }
     else if(value == 'add'){
       this.setState({isHomePageHidden: true});
@@ -165,6 +201,7 @@ class DashboardPage extends Component {
       this.setState({isEditCourseHidden: true});
       this.setState({isViewStudentsHidden: true});
       this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
 
       // hits api, when result is returned, update state var
       this.getAllProfessorsForSelect().then((returnVal) => {
@@ -182,6 +219,13 @@ class DashboardPage extends Component {
       this.setState({isEditCourseHidden: false});
       this.setState({isViewStudentsHidden: true});
       this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
+
+      this.componentDidMount()
+      this.getAllProfessorsForSelect().then((returnVal) => {
+          this.setState({allProfessorsForSelect: returnVal});
+      })
+      .catch(err => console.log("Axios err at add course: ", err))
     }
 
     else if(value == 'view students'){
@@ -193,6 +237,7 @@ class DashboardPage extends Component {
       this.setState({isEditCourseHidden: true});
       this.setState({isViewStudentsHidden: false});
       this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
 
       this.getAllStudents().then((returnVal) => {
         this.setState({allStudents: returnVal});
@@ -210,6 +255,7 @@ class DashboardPage extends Component {
       this.setState({isEditCourseHidden: true});
       this.setState({isViewStudentsHidden: true});
       this.setState({isViewProfessorsHidden: false});
+      this.setState({isEditSingleCourseHidden: true})
 
       this.getAllProfessorsForSelect().then((returnVal) => {
         this.setState({allProfessors: returnVal});
@@ -235,36 +281,57 @@ class DashboardPage extends Component {
 
     ]
 
-    let contentToReturn = courses.map((element) => {
-      return(<Card style={this.state.courseCardStyle}>
-                <CardContent>
-                  <Typography style={this.state.courseNameStyle} >
-                      {element.course_name}
-                  </Typography>
-                {element.professor} || <nbsp />
-                {element.location} || {element.days == '1' ? 'MW' : element.days == '2' ? 'TuTh' : 'F'} || {element.start_time} - {element.end_time}
-                 <br /> <br />
-                 Marks: {element.marks}
-                 <br />
-                 Attendance: {element.attendance}
-                </CardContent>
-      </Card>)
-    })
-
-    return(contentToReturn)
+    if(sessionStorage.getItem('user_role') == 3){
+        let contentToReturn = courses.map((element) => {
+          return(<Card style={this.state.courseCardStyle}>
+                    <CardContent>
+                      <Typography style={this.state.courseNameStyle} >
+                          {element.course_name}
+                      </Typography>
+                    {element.professor} || &nbsp;
+                    {element.location} || {element.days == '1' ? 'MW' : element.days == '2' ? 'TuTh' : 'F'} || {element.start_time} - {element.end_time}
+                     <br /> <br />
+                     Marks: {element.marks}
+                     <br />
+                     Attendance: {element.attendance}
+                    </CardContent>
+          </Card>)
+        })
+        return(contentToReturn)
   }
 
+  else if(sessionStorage.getItem('user_role') == 2){
+        let contentToReturn = courses.map((element) => {
+          return(<Card style={this.state.courseCardStyle}>
+                    <CardContent>
+                      <Typography style={this.state.courseNameStyle} >
+                          {element.course_name}
+                      </Typography>
 
+                    {element.location} || {element.days == '1' ? 'MW' : element.days == '2' ? 'TuTh' : 'F'} || {element.start_time} - {element.end_time}
+                     <br /> <br />
+                    </CardContent>
+          </Card>)
+        })
+        return(contentToReturn)
+      }
+  }
+
+//----------------------------------
+// Lifecycle method that gets all courses
+// when 'edit' in menu is clicked and
+// when page loads (sorta like a constructor yeah??)
+//----------------------------------
 componentDidMount() {
     this.hitAPIForAdminHomePageCourses().then((returnVal) => {
       this.setState({allCoursesForAdminHome: returnVal})
-      console.log(this.state.allCoursesForAdminHome);
+
     })
     .catch(err => console.log("Something messed up with Axios!: ", err))
 
   }
 
-// Calls API for admin home page courseCardStyle
+// Calls API for admin home page courseCard
 
 hitAPIForAdminHomePageCourses(){
   return axios({
@@ -277,7 +344,6 @@ hitAPIForAdminHomePageCourses(){
     return(response.data)
   });
 }
-
 
 
   // Get list of all professors to be populated
@@ -317,7 +383,8 @@ hitAPIForAdminHomePageCourses(){
   // Get all form input data and hit api
   // Success is a new record in Courses table in DB!
   // -------------------------
-  addNewCourse(e){
+  addNewCourse = (e) => {
+
     const dataJSON = {
             course_name: this.state.newCourseName,
             description : this.state.newCourseDesc,
@@ -337,10 +404,133 @@ hitAPIForAdminHomePageCourses(){
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
         })
-        .then(function (response) {
+        .then((response) => {
             if(response.data != 'Error : Something went wrong')
             {
+              this.componentDidMount()
               alert('Course has been added successfully!!')
+              this.setState({newCourseName: ''});
+              this.setState({newCourseDesc: ''});
+              this.setState({newCourseLocation: ''});
+              this.setState({newCourseProf: ''});
+              this.setState({newCourseDays: ''});
+              this.setState({newCourseStartTime: ''});
+              this.setState({newCourseEndTime: ''});
+
+              this.setState({isAddNewCourseHidden: true});
+              this.setState({isHomePageHidden: false});
+
+            }
+        });
+  }
+
+  //------------------------------------------------
+  // Search by course_name for a particular course
+  // in whole array of objects containing all courses
+  // and their corresponding details
+  //-------------------------------------------------
+  getDetailsOfCourseToEdit(key, array){
+       for (var i=0; i < array.length; i++) {
+           if (array[i].course_name === key) {
+               return array[i];
+           }
+       }
+   }
+
+
+  //-----------------------------
+  // When clicked on a course card in Edit screen
+  // navigate the admin to a different screen
+  // with form fields to edit CURRENT course's details
+  // and hit api to update CURRENT record in Database
+  //------------------------------
+  editSingleCourse(value,event){
+
+    let details = this.getDetailsOfCourseToEdit(value,this.state.allCoursesForAdminHome)
+    this.setState({detailsOfCurrentCourseToEdit: details})
+    this.setState({isEditCourseHidden: true})
+    this.setState({isEditSingleCourseHidden: false})
+
+  }
+
+//-----------------------------
+// Calls API to update record for a course
+//-----------------------------
+
+  updateCourseInDB(e){
+    const dataJSON = {
+            course_name: this.state.editCourseName,
+            course_id: this.state.detailsOfCurrentCourseToEdit['course_id'],
+            description : this.state.editCourseDesc,
+            location: this.state.editCourseLocation,
+            prof_id: this.state.editCourseProf,
+            days: this.state.editCourseDays,
+            start_time: this.state.editCourseStartTime,
+            end_time: this.state.editCourseEndTime,
+            role_id: sessionStorage.getItem('user_role'),
+            department: 'DEFAULT_DEPT'
+        }
+
+        axios({
+          method:'post',
+          url:'http://localhost:5000/updateCourses',
+          data: dataJSON,
+          headers: {'Access-Control-Allow-Origin': '*',
+          'Authorization': sessionStorage.getItem('token')},
+        })
+        .then((response) => {
+            if(response.data != 'Error : Something went wrong')
+            {
+              alert('Course has been updated successfully!!')
+              this.setState({editCourseName: ''});
+              this.setState({editCourseDesc: ''});
+              this.setState({editCourseLocation: ''});
+              this.setState({editCourseProf: ''});
+              this.setState({editCourseDays: ''});
+              this.setState({editCourseStartTime: ''});
+              this.setState({editCourseEndTime: ''});
+
+              this.componentDidMount();
+
+              this.setState({isEditSingleCourseHidden: true})
+              this.setState({isEditCourseHidden: false})
+            }
+        });
+
+  }
+
+  //-------------------------------------------
+  // Delete chosen course
+  //-------------------------------------------
+  deleteCourseInDB(e){
+    const dataJSON = {
+            course_id: this.state.detailsOfCurrentCourseToEdit['course_id'].toString(),
+            role_id: sessionStorage.getItem('user_role')
+        }
+
+    axios({
+          method:'post',
+          url:'http://localhost:5000/deleteCourses',
+          data: dataJSON,
+          headers: {'Access-Control-Allow-Origin': '*',
+          'Authorization': sessionStorage.getItem('token')},
+        })
+        .then((response) => {
+            if(response.data != 'Error : Something went wrong')
+            {
+              alert('Course has been deleted successfully!!')
+              this.setState({editCourseName: ''});
+              this.setState({editCourseDesc: ''});
+              this.setState({editCourseLocation: ''});
+              this.setState({editCourseProf: ''});
+              this.setState({editCourseDays: ''});
+              this.setState({editCourseStartTime: ''});
+              this.setState({editCourseEndTime: ''});
+
+              this.componentDidMount();
+
+              this.setState({isEditSingleCourseHidden: true})
+              this.setState({isEditCourseHidden: false})
             }
         });
   }
@@ -359,14 +549,14 @@ hitAPIForAdminHomePageCourses(){
       {
         currentContent =   <main className={classes.content}>
             <div className={classes.toolbar} />
-            <h2> All courses</h2>
+            <h2> Hello, Admin! Here are all the courses available now!</h2>
               {
                 this.state.allCoursesForAdminHome.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
                   <CardContent>
                     <Typography style={this.state.courseNameStyle} >
                         {el.course_name}
                     </Typography>
-                    {el.professor.first_name} {el.professor.last_name} ||  <nbsp />
+                    {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
                   {el.location} || {el.days == '1' ? 'MW' : el.days == '2' ? 'TuTh' : 'F'} || {el.start_time} - {el.end_time}
                      <br /> <br />
                   </CardContent>
@@ -441,10 +631,11 @@ hitAPIForAdminHomePageCourses(){
               <br /><br /><br />
 
                 <FormControl required className = {classes.rightSpacing}>
+                  <span> Start Time</span>
                   <TextField
                         id="newCourseStartTime"
                         name="newCourseStartTime"
-                        label="Start Time"
+
                         type="time"
                         value={this.state.newCourseStartTime}
                         onChange={this.handleChange.bind(this)}
@@ -454,10 +645,11 @@ hitAPIForAdminHomePageCourses(){
                 </FormControl>
 
                 <FormControl required className = {classes.rightSpacing25}>
+                  <span> End Time</span>
                   <TextField
                         id="newCourseEndTime"
                         name="newCourseEndTime"
-                        label="End Time"
+
                         type="time"
                         value={this.state.newCourseEndTime}
                         onChange={this.handleChange.bind(this)}
@@ -468,9 +660,11 @@ hitAPIForAdminHomePageCourses(){
 
 
                 <FormControl component="fieldset" className={classes.formControl}>
+
                     <RadioGroup
                       aria-label="Days"
                       name="newCourseDays"
+                      label="Days"
                       className={classes.displayInline}
                       value={this.state.newCourseDays}
                       onChange={this.handleChange.bind(this)}>
@@ -495,7 +689,7 @@ hitAPIForAdminHomePageCourses(){
       if(!this.state.isViewStudentsHidden){
         currentContent = <main className = {classes.content}>
           <div className = {classes.toolbar} />
-            <Grid container className={classes.root} spacing={16}>
+            <Grid container spacing={16}>
                  <Grid item xs={12}>
                    <Grid container className={classes.demo} justify="center" spacing={Number(spacing)}>
 
@@ -504,7 +698,7 @@ hitAPIForAdminHomePageCourses(){
                          <Grid key={i} item>
                            <Card >
                              <CardContent>
-                                <AccountCircle className = {classes.rightSpacing10}/>
+                                <FaceIcon className = {classes.rightSpacing10}/>
                                  {el.first_name}  {el.last_name} <br />
                                <EmailIcon className = {classes.rightSpacing10}/> {el.email}
                              </CardContent>
@@ -523,7 +717,7 @@ hitAPIForAdminHomePageCourses(){
       if(!this.state.isViewProfessorsHidden){
         currentContent = <main className = {classes.content}>
           <div className = {classes.toolbar} />
-            <Grid container className={classes.root} spacing={16}>
+            <Grid container spacing={16}>
                  <Grid item xs={12}>
                    <Grid container className={classes.demo} justify="center" spacing={Number(spacing)}>
 
@@ -532,7 +726,7 @@ hitAPIForAdminHomePageCourses(){
                          <Grid key={i} item>
                            <Card >
                              <CardContent>
-                                <AccountCircle className = {classes.rightSpacing10}/>
+                                <SchoolIcon className = {classes.rightSpacing10}/>
                                  {el.first_name}  {el.last_name} <br />
                                <EmailIcon className = {classes.rightSpacing10}/> {el.email}
                              </CardContent>
@@ -544,6 +738,159 @@ hitAPIForAdminHomePageCourses(){
                    </Grid>
             </Grid>
           </Grid>
+        </main>
+      }
+
+      // ---------------- ADMIN GRID VIEW TO EDIT A COURSE ---------------------------------------------//
+      if(!(this.state.isEditCourseHidden)){
+        currentContent = <main className = {classes.content}>
+          <div className = {classes.toolbar} />
+            <Grid container spacing={16}>
+                 <Grid item xs={12}>
+                   <Grid container className={classes.demo} justify="center" spacing={Number(spacing)}>
+
+                     {
+                       this.state.allCoursesForAdminHome.map((el,i) => (
+                         <Grid key={el.course_id} item>
+                           <Card >
+                             <CardActionArea onClick={this.editSingleCourse.bind(this, el.course_name)}>
+                               <CardContent>
+                                   <span className = {classes.boldText}>{el.course_name}</span> <br />
+                                 {el.location}
+                               </CardContent>
+                             </CardActionArea>
+                           </Card>
+                         </Grid>
+                       ))
+                     }
+
+                   </Grid>
+            </Grid>
+          </Grid>
+        </main>
+      }
+
+      //------------------------- ADMIN EDITS DETAILS OF A SINGLE COURSE ----------------------------------- //
+      if(!(this.state.isEditSingleCourseHidden)){
+        currentContent = <main className = {classes.content}>
+          <div className = {classes.toolbar} />
+            <Card>
+              <CardContent>
+                <span className = {classes.rightSpacing}>Course Title</span>
+                <FormControl required>
+                    <TextField
+                        id="editCourseName"
+                        className={classes.textField}
+                        value={this.state.editCourseName}
+                        helperText={this.state.detailsOfCurrentCourseToEdit['course_name']}
+                        onChange={this.handleChange.bind(this)}
+                        margin="normal"
+                        name="editCourseName"
+                      />
+                </FormControl>
+                <br /><br />
+
+                <span className = {classes.rightSpacing}>Description</span>
+                <FormControl required>
+                    <TextField
+                        id="editCourseDesc"
+                        multiline
+                        rows = "2"
+                        rowsMax="5"
+                        className={classes.textField}
+                        helperText={this.state.detailsOfCurrentCourseToEdit['description']}
+                        value={this.state.editCourseDesc}
+                        onChange={this.handleChange.bind(this)}
+                        margin="normal"
+                        name="editCourseDesc"
+
+                      />
+                </FormControl>
+                    <br /><br />
+
+                <span className = {classes.rightSpacing}>Location</span>
+                <FormControl required>
+                    <TextField
+                        id="editCourseLocation"
+                        className={classes.textField}
+                        value={this.state.editCourseLocation}
+                        helperText={this.state.detailsOfCurrentCourseToEdit['location']}
+                        onChange={this.handleChange.bind(this)}
+                        name="editCourseLocation"
+                        margin="normal"
+                      />
+                </FormControl>
+                <br /><br />
+
+                <span className = {classes.rightSpacing}>Professor</span>
+                <FormControl required>
+                  <Select
+                        value={this.state.editCourseProf}
+                        onChange={this.handleChange.bind(this)}
+                        name="editCourseProf"
+                        >
+                            {
+                              this.state.allProfessorsForSelect.map((el,i) => (<MenuItem key={i} value={el.user_id}> {el.first_name} {el.last_name}</MenuItem>))
+                            }
+                      </Select>
+                </FormControl>
+                <br /><br /><br />
+
+                  <FormControl required className = {classes.rightSpacing}>
+                    <span> Start Time</span>
+                    <TextField
+                          id="editCourseStartTime"
+                          name="editCourseStartTime"
+                          type="time"
+                          value={this.state.editCourseStartTime}
+                          helperText={this.state.detailsOfCurrentCourseToEdit['start_time']}
+                          onChange={this.handleChange.bind(this)}
+                          className={classes.textField}
+                        />
+                  </FormControl>
+
+                  <FormControl required className = {classes.rightSpacing25}>
+                    <span> End Time</span>
+                    <TextField
+                          id="editCourseEndTime"
+                          name="editCourseEndTime"
+                          type="time"
+                          value={this.state.editCourseEndTime}
+                          helperText={this.state.detailsOfCurrentCourseToEdit['end_time']}
+                          onChange={this.handleChange.bind(this)}
+
+                          className={classes.textField}
+                        />
+                  </FormControl>
+
+
+                  <FormControl component="fieldset" className={classes.formControl}>
+
+                      <RadioGroup
+                        aria-label="Days"
+                        name="editCourseDays"
+                        className={classes.displayInline}
+                        value={this.state.editCourseDays}
+                        onChange={this.handleChange.bind(this)}>
+
+                            <FormControlLabel  value="1" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="1"} />} label="Mon & Wed" />
+                            <FormControlLabel value="2" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="2"}  />} label="Tue & Thu" />
+                            <FormControlLabel value="3" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="3"}  />} label="Fri" />
+
+                      </RadioGroup>
+                </FormControl>
+                <br />
+                <CardActions>
+                  <Button variant="contained" onClick = {this.updateCourseInDB.bind(this)} className = {classes.buttonStyles} color="primary">Edit</Button>
+
+                  <div>
+                    <Button variant="contained" onClick = {this.deleteCourseInDB.bind(this)} className = {classes.marginAuto} color="secondary">Delete</Button>
+                  </div>
+                </CardActions>
+              </CardContent>
+
+            </Card>
+
         </main>
       }
 
@@ -578,28 +925,28 @@ hitAPIForAdminHomePageCourses(){
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "add")}>
                 <ListItemIcon>
-                  <SearchIcon />
+                  <AddCircle />
                 </ListItemIcon>
                 <ListItemText primary="Add New Course" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "edit")}>
                 <ListItemIcon>
-                  <CalendarTodayIcon />
+                  <EditIcon />
                 </ListItemIcon>
                 <ListItemText primary="Edit Course" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "view students")}>
                 <ListItemIcon>
-                  <CalendarTodayIcon />
+                  <FaceIcon />
                 </ListItemIcon>
                 <ListItemText primary="View Students" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "view profs")}>
                 <ListItemIcon>
-                  <CalendarTodayIcon />
+                  <SchoolIcon />
                 </ListItemIcon>
                 <ListItemText primary="View Professors" />
               </ListItem>
