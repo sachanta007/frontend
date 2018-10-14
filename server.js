@@ -5,7 +5,7 @@ var config = require('./webpack.config');
 new WebpackDevServer(webpack(config), {
     publicPath: config.output.publicPath
   })
-  .listen(process.env.PORT, course360app.herokuapp.com, function (err, result) {
+  .listen(process.env.PORT, function (err, result) {
     if (err) {
       console.log(err);
     }
