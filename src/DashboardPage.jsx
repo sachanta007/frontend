@@ -79,8 +79,6 @@ const axios = require('axios');
 // ------------------------------------------- Constants end here -----------------------------------------------//
 
 class DashboardPage extends Component {
-
-
   constructor(){
     super()
     this.handleMenuItemClick = this.handleMenuItemClick.bind(this);
@@ -107,7 +105,9 @@ class DashboardPage extends Component {
       newCourseEndTime: '',
       allProfessorsForSelect: [],
       allStudents: [],
-      allProfessors: []
+      allProfessors: [],
+      allCoursesForAdminHome: []
+
     }
     let currentUserRole = sessionStorage.getItem('user_role')
     console.log(currentUserRole);
@@ -154,6 +154,7 @@ class DashboardPage extends Component {
       this.setState({isCalendarHidden: true});
       this.setState({isSearchHidden: true});
       this.setState({isAddNewCourseHidden: true});
+
     }
     else if(value == 'add'){
       this.setState({isHomePageHidden: true});
@@ -169,7 +170,7 @@ class DashboardPage extends Component {
       this.getAllProfessorsForSelect().then((returnVal) => {
           this.setState({allProfessorsForSelect: returnVal});
       })
-      .catch(err => console.log("Axios err: ", err))
+      .catch(err => console.log("Axios err at add course: ", err))
     }
 
     else if(value == 'edit'){
@@ -254,11 +255,34 @@ class DashboardPage extends Component {
   }
 
 
+componentDidMount() {
+    this.hitAPIForAdminHomePageCourses().then((returnVal) => {
+      this.setState({allCoursesForAdminHome: returnVal})
+      console.log(this.state.allCoursesForAdminHome);
+    })
+    .catch(err => console.log("Something messed up with Axios!: ", err))
+
+  }
+
+// Calls API for admin home page courseCardStyle
+
+hitAPIForAdminHomePageCourses(){
+  return axios({
+    method:'get',
+    url:'http://localhost:5000/getAllCourses/start/1/end/100000',
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    return(response.data)
+  });
+}
+
+
+
   // Get list of all professors to be populated
   // in select drop down while adding new courses
-
   getAllProfessorsForSelect(){
-
     return axios({
       method:'get',
       url:'http://localhost:5000/getAllProfessors/start/1/end/100000',
@@ -335,7 +359,19 @@ class DashboardPage extends Component {
       {
         currentContent =   <main className={classes.content}>
             <div className={classes.toolbar} />
-              <h2> How ya doing? </h2>
+            <h2> All courses</h2>
+              {
+                this.state.allCoursesForAdminHome.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
+                  <CardContent>
+                    <Typography style={this.state.courseNameStyle} >
+                        {el.course_name}
+                    </Typography>
+                    {el.professor.first_name} {el.professor.last_name} ||  <nbsp />
+                  {el.location} || {el.days == '1' ? 'MW' : el.days == '2' ? 'TuTh' : 'F'} || {el.start_time} - {el.end_time}
+                     <br /> <br />
+                  </CardContent>
+                </Card>))
+              }
           </main>
       }
 
