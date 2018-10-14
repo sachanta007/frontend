@@ -5,7 +5,7 @@
   "scripts": {
     "lint": "eslint src",
     "start": "node server.js",
-    "heroku-postbuild": "cd client && npm install && npm run build"
+    "heroku-prebuild": "cd client && npm install && npm run build"
   },
   "repository": "https://github.com/noahlotzer/react-simple-boilerplate.git",
   "keywords": [
