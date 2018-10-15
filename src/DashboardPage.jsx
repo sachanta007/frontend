@@ -16,6 +16,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
 import EmailIcon from '@material-ui/icons/Email';
+import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import SchoolIcon from '@material-ui/icons/School';
 import FaceIcon from '@material-ui/icons/Face';
@@ -29,6 +30,7 @@ import CardContent from '@material-ui/core/CardContent';
 import FormControl from '@material-ui/core/FormControl';
 import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormLabel from '@material-ui/core/FormLabel'
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
@@ -100,7 +102,7 @@ class DashboardPage extends Component {
     this.addNewCourse = this.addNewCourse.bind(this);
     this.deleteCourseInDB = this.deleteCourseInDB.bind(this);
     this.wrapperForCourseSearch = this.wrapperForCourseSearch.bind(this);
-
+    this.PaymentMode = this.PaymentMode.bind(this);
 
     this.state = {
       isHomePageHidden: false,
@@ -141,7 +143,14 @@ class DashboardPage extends Component {
       detailsOfCurrentCourseToEdit: [],
 
       searchCourseName: '',
-      searchResults: []
+      searchResults: [],
+
+      firstCourse:'',
+      SecondCourse:'',
+      ThirdCourse:'',
+      TotalAmount:'',
+      isPaymentModeCardHidden:true,
+      isPaymentSuccessfulCardHidden:true
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -155,6 +164,7 @@ class DashboardPage extends Component {
 
     else
     {
+     this.state.isAdmin = false
      this.enrolledCourses = this.getListOfEnrolledCourses()
     }
   }
@@ -178,6 +188,7 @@ class DashboardPage extends Component {
         this.setState({ selectedRadioValue: e.target.value });
        }
     }
+
 
 // Below is handle change specifically for course search field
 handleChangeAndGetMatchingCourses(e){
@@ -238,6 +249,8 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isViewStudentsHidden: true});
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
 
       this.componentDidMount()
     }
@@ -251,6 +264,8 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isViewStudentsHidden: true});
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
 
       // hits api, when result is returned, update state var
       this.getAllProfessorsForSelect().then((returnVal) => {
@@ -269,6 +284,8 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isViewStudentsHidden: true});
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
 
       this.componentDidMount()
       this.getAllProfessorsForSelect().then((returnVal) => {
@@ -287,6 +304,8 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isViewStudentsHidden: false});
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
 
       this.getAllStudents().then((returnVal) => {
         this.setState({allStudents: returnVal});
@@ -305,6 +324,8 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isViewStudentsHidden: true});
       this.setState({isViewProfessorsHidden: false});
       this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
 
       this.getAllProfessorsForSelect().then((returnVal) => {
         this.setState({allProfessors: returnVal});
@@ -323,12 +344,39 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isViewStudentsHidden: true});
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
+    }
+    else if(value=='payment'){
+      this.setState({isHomePageHidden: true});
+      this.setState({isPaymentPortalHidden: false});
+      this.setState({isCalendarHidden: true});
+      this.setState({isSearchHidden: true});
+      this.setState({isAddNewCourseHidden: true});
+      this.setState({isEditCourseHidden: true});
+      this.setState({isViewStudentsHidden: true});
+      this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
+    }
+  }
 
 
+  // --- Kriti's functions ----------//
+    PaymentMode(event) {
+      this.setState({isPaymentPortalHidden: true});
+      this.setState({isPaymentModeCardHidden: false});
+      this.setState({isPaymentSuccessfulCardHidden: true});
     }
 
+   EnterDetails(event){
+       this.setState({isPaymentPortalHidden: true});
+       this.setState({isPaymentModeCardHidden: true});
+       this.setState({isPaymentSuccessfulCardHidden: false});
+   }
+//-------------- End of Kriti's functions ---//
 
-  }
 
 
 // ---------------------------
@@ -386,6 +434,18 @@ handleChangeAndGetMatchingCourses(e){
 // when page loads (sorta like a constructor yeah??)
 //----------------------------------
 componentDidMount() {
+  let currentUserRole = sessionStorage.getItem('user_role')
+  console.log('inside mount',currentUserRole);
+  if(currentUserRole == 1){
+    this.setState({isAdmin: true });
+    console.log('Admin is in the house!!!');
+  }
+  else
+  {
+    this.setState({isAdmin: false });
+    this.enrolledCourses = this.getListOfEnrolledCourses()
+  }
+
   if(sessionStorage.getItem('user_role')==1)
   {
     this.hitAPIForAdminHomePageCourses().then((returnVal) => {
@@ -1083,6 +1143,123 @@ hitAPIForAdminHomePageCourses(){
           </main>
       }
 
+      // ---------- KRITI'S PAYMENT PORTAL SECTION --------------------------//
+        else if(!(this.state.isPaymentPortalHidden)){
+          currentContent = <main className={classes.content}>
+              <div className={classes.toolbar} />
+                <div>
+                  <Card className={classes.card}>
+                             <DeleteIcon className={classes.icon, classes.deleteIcon} />
+                            <CardContent>
+                              <Typography gutterBottom variant="headline" component="h2">
+                              Course 1
+                              </Typography>
+                              <Typography component="p">
+                                Mon, Tues 1:45
+                              </Typography>
+                            </CardContent>
+                        </Card>
+
+                  <Card className={classes.card1}>
+                    <DeleteIcon className={classes.icon, classes.deleteIcon} />
+                      <CardContent>
+                            <Typography gutterBottom variant="headline" component="h2">
+                                  Course 2
+                            </Typography>
+                            <Typography component="p">
+                                  Mon, Wed 4:00
+                            </Typography>
+                      </CardContent>
+                    </Card>
+                  <Card className={classes.card2}>
+                          <DeleteIcon className={classes.icon, classes.deleteIcon} />
+                            <CardContent>
+                              <Typography gutterBottom variant="headline" component="h2">
+                              Course 3
+                              </Typography>
+                              <Typography component="p">
+                              Thurs, Fri 1:00
+                              </Typography>
+                            </CardContent>
+                    </Card>
+
+                    <CardActions>
+                      <Button variant="contained" onClick = {this.PaymentMode.bind(this)} className = {classes.marginAuto}  color="primary">Checkout</Button>
+                    </CardActions>
+                  </div>
+            </main>
+        }
+
+
+else if(!(this.state.isPaymentModeCardHidden))
+{
+  currentContent=
+    <main className={classes.content}>
+        <div className={classes.toolbar} />
+          <div className={classes.root}>
+            <FormControl component="fieldset" className={classes.formControl}>
+                      <FormLabel component="legend">Payment Mode</FormLabel>
+                      <RadioGroup
+                        aria-label="Payment Mode"
+                        name="Payment Mode"
+                        className={classes.group}
+                        value={this.state.value}
+                        onChange={this.handleChange.bind(this)}
+                      >
+                        <FormControlLabel
+                          value="Credit Card"
+                          control={<Radio color="primary" />}
+                          label="Credit Card"
+                        labelPlacement="end"
+                        />
+                        <FormControlLabel
+                          value="eCheck"
+                          control={<Radio color="primary" />}
+                          label="eCheck"
+                          labelPlacement="end"
+                        />
+                        <FormControlLabel
+                          value="Coupon"
+                          control={<Radio color="primary" />}
+                          label="Coupon"
+                          labelPlacement="end"
+                        />
+                      </RadioGroup>
+                      <Button variant="contained" onClick = {this.EnterDetails.bind(this)} className = {classes.marginAuto}  color="primary">Pay</Button>
+                    </FormControl>
+            </div>
+          </main>
+}
+
+else if(!(this.state.isPaymentSuccessfulCardHidden))
+{
+  currentContent =   <main className={classes.content}>
+    <div className={classes.toolbar} />
+        <Card className={classes.card}>
+                  <CardContent>
+                        <Typography class='login-page-headers' color="textSecondary">
+                          Enter your details
+                        </Typography>
+                      <form>
+                        <FormControl required>
+                            <TextField
+                                id="Details"
+                                type="text"
+                                label="Card Number"
+                                className={classes.textField}
+                                value={this.state.Details}
+                                onChange={this.handleChange.bind(this)}
+                                margin="normal"
+                                name="Details"
+                              />
+                              <Button variant="outlined" className = {classes.marginAuto}  color="primary">Submit</Button>
+                            </FormControl>
+                          </form>
+                    </CardContent>
+            </Card>
+  </main>
+}
+
 
       // ------------------------------ SIDE NAV FOR STUDENT ALWAYS EXISTS ---------------------------------------//
       sideNav =
@@ -1141,8 +1318,7 @@ hitAPIForAdminHomePageCourses(){
               {currentContent}
         </div>
     }
-    // ---------------------------------- END OF HOME PAGE ---------------------------------------- //
-
+    // ---------------------------------- END OF STUDENT/PROFS VIEW ---------------------------------------- //
 
     return (
       <div>
