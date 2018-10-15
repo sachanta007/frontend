@@ -82,7 +82,13 @@ const axios = require('axios');
     this.setState({isPaymentSuccessfulCardHidden: true});
   }
 
-  
+ EnterDetails(event){
+ this.setState({isPaymentPortalCardHidden: true});
+ this.setState({isPaymentModeCardHidden: true});
+ this.setState({isPaymentSuccessfulCardHidden: false});
+
+ }
+
 
     render() {
     const { classes } = this.props;
@@ -158,28 +164,67 @@ currentCard=
                       value="Credit Card"
                       control={<Radio color="primary" />}
                       label="Credit Card"
-                    labelPlacement="middle"
+                    labelPlacement="end"
                     />
                     <FormControlLabel
                       value="eCheck"
                       control={<Radio color="primary" />}
                       label="eCheck"
-                      labelPlacement="middle"
+                      labelPlacement="end"
                     />
                     <FormControlLabel
                       value="Coupon"
                       control={<Radio color="primary" />}
                       label="Coupon"
-                      labelPlacement="middle"
+                      labelPlacement="end"
                     />
                   </RadioGroup>
-                  <Button variant="contained" onClick = {this.PaymentMode.bind(this)} className = {classes.marginAuto}  color="primary">Pay</Button>
+                  <Button variant="contained" onClick = {this.EnterDetails.bind(this)} className = {classes.marginAuto}  color="primary">Pay</Button>
 
                 </FormControl>
 
     </div>
 
 }
+
+
+
+if(!this.state.isPaymentSuccessfulCardHidden)
+{
+
+currentCard =   <Card className={classes.card}>
+  <CardContent>
+    <Typography class='login-page-headers' color="textSecondary">
+      Enter your details
+    </Typography>
+
+    <form>
+<FormControl required>
+    <TextField
+        id="Details"
+        type="text"
+        label="Card Number"
+        className={classes.textField}
+        value={this.state.Details}
+        onChange={this.handleChange.bind(this)}
+        margin="normal"
+        name="Details"
+      />
+
+      <Button variant="outlined" className = {classes.marginAuto}  color="primary">Submit</Button>
+
+
+      </FormControl>
+
+            </form>
+
+          </CardContent>
+            </Card>
+
+
+}
+
+
       return (
            <div>
              {currentCard}
