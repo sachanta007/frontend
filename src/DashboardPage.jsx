@@ -99,6 +99,7 @@ class DashboardPage extends Component {
     this.updateCourseInDB = this.updateCourseInDB.bind(this);
     this.addNewCourse = this.addNewCourse.bind(this);
     this.deleteCourseInDB = this.deleteCourseInDB.bind(this);
+    this.wrapperForCourseSearch = this.wrapperForCourseSearch.bind(this);
 
 
     this.state = {
@@ -137,7 +138,10 @@ class DashboardPage extends Component {
       allStudents: [],
       allProfessors: [],
       allCoursesForAdminHome: [],
-      detailsOfCurrentCourseToEdit: []
+      detailsOfCurrentCourseToEdit: [],
+
+      searchCourseName: '',
+      searchResults: []
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -174,6 +178,51 @@ class DashboardPage extends Component {
         this.setState({ selectedRadioValue: e.target.value });
        }
     }
+
+// Below is handle change specifically for course search field
+handleChangeAndGetMatchingCourses(e){
+      let change = {}
+      change[e.target.name] = e.target.value
+      this.setState(change)
+
+      //Hit API and get results that matches
+      return axios({
+        method:'get',
+        url:'http://localhost:5000/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
+        headers: {'Access-Control-Allow-Origin': '*',
+        'Authorization': sessionStorage.getItem('token')}
+      })
+      .then((response)=>{
+        console.log(response.data);
+        if(response.status == 200)
+        {
+
+          return(response.data)
+        }
+        else{
+          return([{'course_name': 'No Results Found', 'location':'','professor':'','start_time':'','end_time':''}])
+        }
+      }).catch(err => {
+        console.log("No search results ", err)
+        return([{'course_name': 'No Results Found', 'location':'','professor':'','start_time':'','end_time':'','days':''}])
+      })
+}
+
+ //-------------------------------------------
+ // This function is called each time a user inputs a character
+ // to be searched in course search feature
+ // This function inturn hits the API and gets an array of searchResults
+ // This is added to this.state
+ //-------------------------------------------
+  wrapperForCourseSearch(e){
+    let searchTerm = e.target.value
+
+    this.handleChangeAndGetMatchingCourses(e).then((returnVal) => {
+        this.setState({searchResults: returnVal});
+    })
+
+  }
+
 
 // ---------------------------------------------
 // Show/Hides pages based on side nav link clicks
@@ -262,6 +311,20 @@ class DashboardPage extends Component {
 
       })
       .catch(err => console.log("Something messed up with Axios!: ", err))
+    }
+
+    else if(value == 'search'){
+      this.setState({isHomePageHidden: true});
+      this.setState({isPaymentPortalHidden: true});
+      this.setState({isCalendarHidden: true});
+      this.setState({isSearchHidden: false});
+      this.setState({isAddNewCourseHidden: true});
+      this.setState({isEditCourseHidden: true});
+      this.setState({isViewStudentsHidden: true});
+      this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
+
+
     }
 
 
@@ -462,7 +525,6 @@ hitAPIForAdminHomePageCourses(){
   updateCourseInDB(e){
     console.log('Previous details',this.state.detailsOfCurrentCourseToEdit);
     this.state.editCourseName = (this.state.editCourseName == '') ? this.state.detailsOfCurrentCourseToEdit['course_name'] : this.state.editCourseName
-
     this.state.editCourseDesc = (this.state.editCourseDesc == '') ? this.state.detailsOfCurrentCourseToEdit['description'] : this.state.editCourseDesc
     this.state.editCourseLocation = (this.state.editCourseLocation == '') ? this.state.detailsOfCurrentCourseToEdit['location'] : this.state.editCourseLocation
     this.state.editCourseProf = (this.state.editCourseProf == '') ? this.state.detailsOfCurrentCourseToEdit['professor'].user_id : this.state.editCourseProf
@@ -501,7 +563,6 @@ hitAPIForAdminHomePageCourses(){
               this.setState({editCourseDays: ''});
               this.setState({editCourseStartTime: ''});
               this.setState({editCourseEndTime: ''});
-
               this.componentDidMount();
 
               this.setState({isEditSingleCourseHidden: true})
@@ -973,11 +1034,58 @@ hitAPIForAdminHomePageCourses(){
   // -------------- ADMIN SECTION ENDS HERE.... NOW STUDENT AND PROF ---------------------------------//
 
 
-    //checks which page has been clicked from the side navigation
 
-    // --------------------------------- HOME PAGE OF STUDENTS / PROFS---------------------------------------------- //
-    if(!(this.state.isHomePageHidden) && !(this.state.isAdmin)){
-      sideNav = <div>
+
+    // --------------------------------- STUDENT/PROF VIEW BEGINS---------------------------------------------- //
+    if(!(this.state.isAdmin)){
+
+      //---------------------------- HOME PAGE OF STUDENT/PROFESSOR ---------------------------------------------//
+      if(!(this.state.isHomePageHidden)){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+              <h2> Your Courses</h2>
+              {this.enrolledCourses}
+          </main>
+      }
+
+      // --------------- SEARCH COURSES FOR STUDENT ------------------------------//
+      else if(!(this.state.isSearchHidden)){
+        currentContent = <main className={classes.content}>
+            <div className={classes.toolbar} />
+              <h2> Search for a course</h2>
+                <TextField
+                   id="searchCourseName"
+                   placeholder="Enter a course name"
+                   style={{ margin: 8 }}
+                   fullWidth
+                   value={this.state.searchCourseName}
+                   onChange={this.wrapperForCourseSearch.bind(this)}
+                   margin="normal"
+                   variant="outlined"
+                   name="searchCourseName"
+                   InputLabelProps={{
+                     shrink: true,
+                   }}
+                />
+                {
+                  this.state.searchResults.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
+                    <CardContent>
+                      <Typography style={this.state.courseNameStyle} >
+                          {el.course_name}
+                      </Typography>
+                      {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
+                    {el.location} || {el.days == '1' ? 'MW' : el.days == '2' ? 'TuTh' : el.days == '3' ? 'F': ''} || {el.start_time} - {el.end_time}
+                       <br /> <br />
+                    </CardContent>
+                  </Card>))
+                }
+
+          </main>
+      }
+
+
+      // ------------------------------ SIDE NAV FOR STUDENT ALWAYS EXISTS ---------------------------------------//
+      sideNav =
           <div className={classes.root}>
 
               <AppBar position="absolute" className={classes.appBar}>
@@ -1030,13 +1138,7 @@ hitAPIForAdminHomePageCourses(){
                 </List>
                 <Divider />
               </Drawer>
-
-              <main className={classes.content}>
-                <div className={classes.toolbar} />
-                  <h2> Your Courses</h2>
-                  {this.enrolledCourses}
-              </main>
-          </div>
+              {currentContent}
         </div>
     }
     // ---------------------------------- END OF HOME PAGE ---------------------------------------- //
