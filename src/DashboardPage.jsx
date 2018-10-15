@@ -118,7 +118,7 @@ class DashboardPage extends Component {
       isEditSingleCourseHidden: true,
       isViewStudentsHidden: true,
       isViewProfessorsHidden: true,
-      selectedRadioValue: '',
+      selectedRadioValue: '1',
 
       newCourseName: '',
       newCourseDesc: '',
@@ -185,7 +185,8 @@ class DashboardPage extends Component {
        // at add a new course page
        if(e.target.name == 'newCourseDays' || e.target.name =='editCourseDays')
        {
-        this.setState({ selectedRadioValue: e.target.value });
+         console.log('here');
+        this.setState({selectedRadioValue: e.target.value });
        }
     }
 
@@ -199,7 +200,7 @@ handleChangeAndGetMatchingCourses(e){
       //Hit API and get results that matches
       return axios({
         method:'get',
-        url:'http://localhost:5000/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
+        url:'http://course360.herokuapp.com/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
@@ -461,7 +462,7 @@ componentDidMount() {
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'http://localhost:5000/getAllCourses/start/0/end/100000',
+    url:'http://course360.herokuapp.com/getAllCourses/start/0/end/100000',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -476,7 +477,7 @@ hitAPIForAdminHomePageCourses(){
   getAllProfessorsForSelect(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/getAllProfessors/start/0/end/100000',
+      url:'http://course360.herokuapp.com/getAllProfessors/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -494,7 +495,7 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/getAllStudents/start/0/end/100000',
+      url:'http://course360.herokuapp.com/getAllStudents/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -524,7 +525,7 @@ hitAPIForAdminHomePageCourses(){
 
         axios({
           method:'post',
-          url:'http://localhost:5000/insertCourses',
+          url:'http://course360.herokuapp.com/insertCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -607,7 +608,7 @@ hitAPIForAdminHomePageCourses(){
         console.log('data to be sent',dataJSON);
         axios({
           method:'post',
-          url:'http://localhost:5000/updateCourses',
+          url:'http://course360.herokuapp.com/updateCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -643,7 +644,7 @@ hitAPIForAdminHomePageCourses(){
 
     axios({
           method:'post',
-          url:'http://localhost:5000/deleteCourses',
+          url:'http://course360.herokuapp.com/deleteCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},

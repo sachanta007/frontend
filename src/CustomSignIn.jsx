@@ -102,7 +102,7 @@ class SignInCard extends Component {
 
     axios({
       method:'post',
-      url:'http://localhost:5000/login',
+      url:'http://course360.herokuapp.com/login',
       data: dataJSON,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
@@ -147,7 +147,7 @@ verifySecurityAnswer(event){
 
   axios({
     method:'post',
-    url:'http://localhost:5000/securityAnswer',
+    url:'http://course360.herokuapp.com/securityAnswer',
     data: dataJSON,
     headers: {'Access-Control-Allow-Origin': '*'},
   })
@@ -194,7 +194,7 @@ updateNewPassword(event){
 
     axios({
       method:'post',
-      url:'http://localhost:5000/updatePassword',
+      url:'http://course360.herokuapp.com/updatePassword',
       data: dataJSON,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
@@ -223,7 +223,7 @@ fetchSecurityQuestion(event){
 
   axios({
     method:'get',
-    url:'http://localhost:5000/securityQuestion/'+this.state.emailForForgotPassword,
+    url:'http://course360.herokuapp.com/securityQuestion/'+this.state.emailForForgotPassword,
     headers: {'Access-Control-Allow-Origin': '*'},
   })
   .then((response)=>{
@@ -276,7 +276,7 @@ registerNewUser(event){
          console.log(registrationData);
      axios({
        method:'post',
-       url:'http://localhost:5000/register',
+       url:'http://course360.herokuapp.com/register',
        data: registrationData,
        headers: {'Access-Control-Allow-Origin': '*'},
      })
@@ -585,7 +585,7 @@ registerNewUser(event){
                     aria-label="Role"
                     name="role"
                     className={classes.group}
-                    value={this.state.value}
+                    value={this.state.role}
                     onChange={this.handleChange.bind(this)}>
 
                         <FormControlLabel  value="3" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="3"} />} label="Student" />
