@@ -890,11 +890,19 @@ getCartDetails(id){
     'Authorization': sessionStorage.getItem('token')}
   })
   .then((response)=>{
-    return(response.data);
+    console.log('response code',response.status);
+    console.log('rrr',response);
+    if(response.status ==200)
+      {
+        return(response.data);
+      }
+    else{
+      return([]);
+    }
   });
 }
 
-// navigate to cart page from nav AppBar
+// navigate to cart page from nav AppBarss
 // GIVEN USER ID
 // Sets state with cart data
 goToCartPage(id,e){
@@ -915,9 +923,12 @@ goToCartPage(id,e){
 
     this.setState({cartData: returnVal});
     this.setState({isCartPageHidden: false});
-    console.log(returnVal);
   })
-  .catch(err => console.log("Cart page err", err))
+  .catch(
+    err => {
+      this.setState({cartData: []});
+      this.setState({isCartPageHidden: false});
+    });
 }
 
 // -------------------------
@@ -1545,11 +1556,13 @@ deleteFromCart(id,e){
           </main>
       }
 
+      /////////////////// CART PAGE ///////////////////////////////////////////
       if(!(this.state.isCartPageHidden)){
         currentContent =   <main className={classes.content}>
             <div className={classes.toolbar} />
               <h1> Your Cart</h1>
                 {
+                  this.state.cartData.length>0 &&
                   this.state.cartData.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
                     <CardContent>
                       <div name="cartCourseAndDelete">
@@ -1571,6 +1584,15 @@ deleteFromCart(id,e){
                     </CardContent>
                   </Card>))
                 }
+
+                {
+                  this.state.cartData.length == 0 &&
+                  <div>
+                      <h2>You have no courses in the cart yet!</h2>
+                      <h3>Search for a course to begin adding!!</h3>
+                  </div>
+                }
+
           </main>
       }
 
