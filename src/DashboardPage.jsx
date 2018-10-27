@@ -259,17 +259,16 @@ handleChangeAndGetMatchingCourses(e){
         'Authorization': sessionStorage.getItem('token')}
       })
       .then((response)=>{
-
         if(response.status == 200)
         {
           return(response.data)
         }
         else{
-          return([{'course_name': 'No Results Found', 'location':'','professor':'','start_time':'','end_time':''}])
+          return([])
         }
       }).catch(err => {
         console.log("No search results ", err)
-        return([{'course_name': 'No Results Found', 'location':'','professor':'','start_time':'','end_time':'','days':['']}])
+        return([])
       })
 }
 
@@ -1391,11 +1390,10 @@ deleteFromCart(id,e){
 
 
 
+    // --------------------------------- STUDENT VIEW BEGINS---------------------------------------------- //
+    if(sessionStorage.getItem('user_role')==3){
 
-    // --------------------------------- STUDENT/PROF VIEW BEGINS---------------------------------------------- //
-    if(!(this.state.isAdmin)){
-
-      //---------------------------- HOME PAGE OF STUDENT/PROFESSOR ---------------------------------------------//
+      //---------------------------- HOME PAGE OF STUDENT ---------------------------------------------//
       if(!(this.state.isHomePageHidden)){
         currentContent =   <main className={classes.content}>
             <div className={classes.toolbar} />
@@ -1424,6 +1422,7 @@ deleteFromCart(id,e){
                    }}
                 />
                 {
+                  this.state.searchResults.length > 0 &&
                   this.state.searchResults.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
                     <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, el)}>
                       <CardContent>
@@ -1441,6 +1440,15 @@ deleteFromCart(id,e){
                       </CardContent>
                     </CardActionArea>
                   </Card>))
+                }
+
+                {
+                  this.state.searchResults.length == 0 && this.state.searchCourseName.length !=0 &&
+                  <h2> No results found!</h2>
+                }
+                {
+                  this.state.searchCourseName.length == 0 &&
+                  <p> Start typing to search for courses!</p>
                 }
 
           </main>
@@ -1776,7 +1784,193 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
               {currentContent}
         </div>
     }
-    // ---------------------------------- END OF STUDENT/PROFS VIEW ---------------------------------------- //
+    // ---------------------------------- END OF STUDENT VIEW ---------------------------------------- //
+
+
+
+
+    // ------- PROFS VIEW ------//
+    if(sessionStorage.getItem('user_role')==2){
+      //---------------------------- HOME PAGE OF PROF ---------------------------------------------//
+      if(!(this.state.isHomePageHidden)){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+              <h2> Hello, Professo! Here are your courses!</h2>
+              {this.enrolledCourses}
+          </main>
+      }
+
+      // --------------- SEARCH COURSES FOR PROFESSOR ------------------------------//
+      else if(!(this.state.isSearchHidden)){
+        currentContent = <main className={classes.content}>
+            <div className={classes.toolbar} />
+              <h2> Search for a course</h2>
+                <TextField
+                   id="searchCourseName"
+                   placeholder="Enter a course name"
+                   style={{ margin: 8 }}
+                   fullWidth
+                   value={this.state.searchCourseName}
+                   onChange={this.wrapperForCourseSearch.bind(this)}
+                   margin="normal"
+                   variant="outlined"
+                   name="searchCourseName"
+                   InputLabelProps={{
+                     shrink: true,
+                   }}
+                />
+                {
+                  this.state.searchResults.length>0 &&
+                  this.state.searchResults.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
+                    <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, el)}>
+                      <CardContent>
+                        <Typography style={this.state.courseNameStyle} >
+                            {el.course_name}
+                        </Typography>
+                        {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
+                      {el.location} || {
+                        el.days.map(function(element){
+                          return <span>{element} &nbsp;</span>
+                        })
+                      }|| {el.start_time} - {el.end_time}
+                         <br /> <br />
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>))
+                }
+                {
+                  this.state.searchResults.length == 0 && this.state.searchCourseName.length !=0 &&
+                  <h2> No results found!</h2>
+                }
+                {
+                  this.state.searchCourseName.length == 0 &&
+                  <p> Start typing to search for courses!</p>
+                }
+          </main>
+      }
+
+      // ----- INDIVIDUAL COURSE PAGE ------------- ///
+      if(!(this.state.isIndividualCoursePageHidden)){
+        currentContent = <main className={classes.content}>
+            <div className={classes.toolbar} />
+            {
+              <div>
+                <Card>
+                  <CardContent>
+                    <div name="courseNameProfView">
+                      <h1> {this.state.dataOfClickedCourse.course_code} - {this.state.dataOfClickedCourse.course_name}</h1>
+                    </div>
+
+                    <span> {this.state.dataOfClickedCourse.professor['first_name']} {this.state.dataOfClickedCourse.professor['last_name']}</span> || {this.state.dataOfClickedCourse.professor['email']}
+                    <p> Location: {this.state.dataOfClickedCourse.location}</p>
+                    <p> Time: {this.state.dataOfClickedCourse.start_time} - {this.state.dataOfClickedCourse.end_time}</p>
+                    <p> Days Offered: {
+                        this.state.dataOfClickedCourse.days.map(function(element){
+                      return <span>{element} &nbsp;</span>
+                    })
+                  }
+                  </p>
+                  <p> Description: {this.state.dataOfClickedCourse.description}</p>
+                  </CardContent>
+                </Card>
+                <br />
+
+              <Card>
+                <CardContent>
+                  <h1>Comments about this course</h1>
+                    {
+                      this.state.dataOfClickedCourse.comment.map((el,i) => (
+                      <div name="outerWrapper" key={i}>
+                         <div name="commenterAndStars" className={classes.displayInlineBlock}>
+
+                                <div name="commenter" className={classes.displayInlineBlock} style={{paddingRight:10}}>
+                                  <AccountCircle/>
+                                  <span name="name">{el.first_name} {el.last_name}</span>
+                                </div>
+                                <br />
+                                <div name="stars" className={classes.displayInlineBlock}>
+                                  <StarRatings
+                                    rating={el.rating}
+                                    starRatedColor="gold"
+                                    numberOfStars={5}
+                                    starDimension="15px"
+                                    starSpacing="1px"
+                                    />
+                                </div>
+                            </div>
+
+                            <div name="commentGiven" className={classes.displayInlineBlock}>
+                                <TextField
+                                    disabled
+                                    className ={classes.commentBox}
+                                    value={el.comment}
+                                    margin="normal"
+                                    variant="filled"
+                                  />
+                            </div>
+                        </div>
+                      ))
+                    }
+                </CardContent>
+              </Card>
+              <br /> <br />
+              </div>
+           }
+          </main>
+      }
+
+      // ------------------------------ SIDE NAV FOR PROF ALWAYS EXISTS ---------------------------------------//
+      sideNav =
+          <div className={classes.root}>
+              <AppBar position="absolute" className={classes.appBar}>
+                <Toolbar>
+                    <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
+                      Course360
+                    </Typography>
+
+                    <IconButton color="inherit" aria-label="Menu">
+                     <AccountCircle />
+                   </IconButton>
+                </Toolbar>
+              </AppBar>
+
+              <Drawer
+                variant="permanent"
+                classes={{
+                  paper: classes.drawerPaper,
+                }}
+              >
+                <div className={classes.toolbar} />
+                <List>
+                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "home")}>
+                      <ListItemIcon>
+                        <HomeIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Home" />
+                    </ListItem>
+
+                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "search")}>
+                      <ListItemIcon>
+                        <SearchIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Course Search" />
+                    </ListItem>
+
+                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "calendar")}>
+                      <ListItemIcon>
+                        <CalendarTodayIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Calendar" />
+                    </ListItem>
+
+                </List>
+                <Divider />
+              </Drawer>
+              {currentContent}
+        </div>
+    }
+    //////////////// END OF PROF VIEW ////////////////////////
+
 
     return (
       <div>
