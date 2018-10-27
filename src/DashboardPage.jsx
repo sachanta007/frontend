@@ -17,6 +17,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
 import EmailIcon from '@material-ui/icons/Email';
 import DeleteIcon from '@material-ui/icons/Delete';
+import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
 import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
 import EditIcon from '@material-ui/icons/Edit';
 import SchoolIcon from '@material-ui/icons/School';
@@ -130,6 +131,7 @@ class DashboardPage extends Component {
       isViewStudentsHidden: true,
       isViewProfessorsHidden: true,
       isIndividualCoursePageHidden: true,
+      isCartPageHidden:true,
       selectedRadioValue: [],
       mon: false,
       tue: false,
@@ -172,6 +174,8 @@ class DashboardPage extends Component {
       dataOfClickedCourse: {},
       courseComment: '',
       courseRating:0,
+
+      cartData: [],
 
       firstCourse:'',
       SecondCourse:'',
@@ -315,6 +319,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
 
       this.componentDidMount()
     }
@@ -331,7 +336,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
-
+      this.setState({isCartPageHidden: true});
       // hits api, when result is returned, update state var
       this.getAllProfessorsForSelect().then((returnVal) => {
           this.setState({allProfessorsForSelect: returnVal});
@@ -352,6 +357,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
 
       this.componentDidMount()
       this.getAllProfessorsForSelect().then((returnVal) => {
@@ -373,6 +379,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
 
       this.getAllStudents().then((returnVal) => {
         this.setState({allStudents: returnVal});
@@ -394,6 +401,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
 
       this.getAllProfessorsForSelect().then((returnVal) => {
         this.setState({allProfessors: returnVal});
@@ -417,6 +425,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({searchCourseName: ''});
       this.setState({searchResults: []});
+      this.setState({isCartPageHidden: true});
     }
 
     else if(value=='payment'){
@@ -432,6 +441,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
     }
   }
 
@@ -442,6 +452,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentModeCardHidden: false});
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
     }
 
    EnterDetails(event){
@@ -449,6 +460,7 @@ handleChangeAndGetMatchingCourses(e){
        this.setState({isPaymentModeCardHidden: true});
        this.setState({isPaymentSuccessfulCardHidden: false});
        this.setState({isIndividualCoursePageHidden: true});
+       this.setState({isCartPageHidden: true});
    }
 //-------------- End of Kriti's functions ---//
 
@@ -844,10 +856,90 @@ getLatestCourseDetails(course_id){
 //-------------
 // Adds clicked course to cart
 //-------------
-addCourseToCart(e){
-  console.log("clicked to cart");
+addCourseToCart(id,e){
+  const dataJSON = {
+          course_id: id,
+          user_id: sessionStorage.getItem('user_id'),
+      }
+  axios({
+        method:'post',
+        url:'http://localhost:5000/addToCart',
+        data: dataJSON,
+        headers: {'Access-Control-Allow-Origin': '*',
+        'Authorization': sessionStorage.getItem('token')},
+      })
+      .then((response) => {
+          if(response.data != 'Error : Something went wrong')
+          {
+            alert("Success! You can checkout now!!!")
+          }
+      }).catch(err => {
+        console.log("ADD TO CART ERR: ", err)
+      });
 }
 
+//---------------------------
+// Get Cart data for user ID
+//
+//---------------------------
+getCartDetails(id){
+  return axios({
+    method:'get',
+    url:'http://localhost:5000/getCart/userId/'+id,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    return(response.data);
+  });
+}
+
+// navigate to cart page from nav AppBar
+// GIVEN USER ID
+// Sets state with cart data
+goToCartPage(id,e){
+  this.getCartDetails(id).then((returnVal) => {
+
+    for(let i = 0; i < returnVal.length; i++){
+      returnVal[i]['days'].forEach(function(item,index){
+
+        switch(item){
+          case 1: returnVal[i]['days'][index] = "Mon"; break;
+          case 2: returnVal[i]['days'][index] = "Tue"; break;
+          case 3: returnVal[i]['days'][index] = "Wed"; break;
+          case 4: returnVal[i]['days'][index] = "Thu"; break;
+          case 5: returnVal[i]['days'][index] = "Fri"; break;
+        }
+      })
+    }
+
+    this.setState({cartData: returnVal});
+    this.setState({isCartPageHidden: false});
+    console.log(returnVal);
+  })
+  .catch(err => console.log("Cart page err", err))
+}
+
+// -------------------------
+// Deletes course from cart given course id
+// -------------------------
+deleteFromCart(id,e){
+  let user_id = sessionStorage.getItem('user_id')
+  axios({
+    method:'get',
+    url:'http://localhost:5000/delete/course/'+id+'/fromCart/for/user/'+user_id,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    alert('Course Deleted From Cart!!')
+    this.goToCartPage(user_id,e)
+  });
+}
+
+/////////////////////////////////////////////////////////
+/////////////// RENDER FUNCTION /////////////////////////
+////////////////////////////////////////////////////////
   render() {
     const { classes } = this.props;
     const { spacing } = this.state; // this is for student grid in admin
@@ -1354,10 +1446,9 @@ addCourseToCart(e){
 
                     <div name="courseNameAndAdd">
                       <h1> {this.state.dataOfClickedCourse.course_code} - {this.state.dataOfClickedCourse.course_name}</h1>
-                        <IconButton color="inherit" onClick={this.addCourseToCart.bind(this)} style={{float:"right"}}>
+                        <IconButton color="inherit" onClick={this.addCourseToCart.bind(this, this.state.dataOfClickedCourse.course_id)} style={{float:"right"}}>
                           <AddShoppingCartIcon  />
                         </IconButton>
-
                     </div>
 
 
@@ -1408,8 +1499,6 @@ addCourseToCart(e){
                                     variant="filled"
                                   />
                             </div>
-
-
                         </div>
                       ))
                     }
@@ -1453,6 +1542,35 @@ addCourseToCart(e){
                 </Card>
               </div>
            }
+          </main>
+      }
+
+      if(!(this.state.isCartPageHidden)){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+              <h1> Your Cart</h1>
+                {
+                  this.state.cartData.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
+                    <CardContent>
+                      <div name="cartCourseAndDelete">
+                          <p className= {classes.displayInline} style={this.state.courseNameStyle} >
+                              {el.course_name}
+                          </p>
+                          <IconButton onClick={this.deleteFromCart.bind(this, el.course_id)} style={{float:"right"}}>
+                              <DeleteIcon />
+                          </IconButton>
+                      </div>
+                      {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
+                      {el.location} || {
+                        el.days.map(function(element){
+                          return <span>{element} &nbsp;</span>
+                        })
+                      }
+                         || {el.start_time} - {el.end_time}
+                       <br /> <br />
+                    </CardContent>
+                  </Card>))
+                }
           </main>
       }
 
@@ -1580,12 +1698,17 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
 
               <AppBar position="absolute" className={classes.appBar}>
                 <Toolbar>
-                  <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
-                    Course360
-                  </Typography>
-                  <IconButton color="inherit" aria-label="Menu">
-                   <AccountCircle />
-                 </IconButton>
+                    <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
+                      Course360
+                    </Typography>
+
+                    <IconButton color="inherit" aria-label="ShoppingCartNav" onClick={this.goToCartPage.bind(this, sessionStorage.getItem('user_id'))}>
+                        <ShoppingCartIcon />
+                   </IconButton>
+
+                    <IconButton color="inherit" aria-label="Menu">
+                     <AccountCircle />
+                   </IconButton>
                 </Toolbar>
               </AppBar>
 
