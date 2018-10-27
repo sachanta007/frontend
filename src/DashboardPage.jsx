@@ -41,13 +41,37 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import Checkbox from '@material-ui/core/Checkbox';
 import Grid from '@material-ui/core/Grid';
 import StarRatings from 'react-star-ratings';
-
+import BigCalendar from 'react-big-calendar'
+import moment from 'moment'
+import '!style-loader!css-loader!react-big-calendar/lib/css/react-big-calendar.css';
 
 
 // -------------------- Declaring constants here -------------------//
 const drawerWidth = 240;
 const axios = require('axios');
+const localizer = BigCalendar.momentLocalizer(moment)
+let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
+let events = [
+  {
+    id: 0,
+    title: 'Elements of AI course',
+    start: new Date(2018, 0, 7,10,30,0,0),
+    end: new Date(2018, 0, 7,11,30,0,0),
+    desc: 'Course by David Crandall'
+  },
+  {
+    id: 1,
+    title: 'Software Engineering',
+    start: new Date(2018, 0, 8),
+    end: new Date(2018, 0, 8),
+  },
 
+  {
+    id: 2,
+    title: 'Applied Algorithms',
+    start: new Date(2018, 0, 9),
+    end: new Date(2018, 0, 11),
+  }]
 
   const styles = theme => ({
   root: {
@@ -176,6 +200,8 @@ class DashboardPage extends Component {
       courseRating:0,
 
       cartData: [],
+      profSchedule:[],
+      eventsForCalendar:[],
 
       firstCourse:'',
       SecondCourse:'',
@@ -320,6 +346,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
 
+
       this.componentDidMount()
     }
     else if(value == 'add'){
@@ -441,6 +468,24 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
+    }
+
+    else if(value=='calendar'){
+      this.setState({isHomePageHidden: true});
+      this.setState({isPaymentPortalHidden: true});
+      this.setState({isCalendarHidden: false});
+      this.setState({isSearchHidden: true});
+      this.setState({isAddNewCourseHidden: true});
+      this.setState({isEditCourseHidden: true});
+      this.setState({isViewStudentsHidden: true});
+      this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
+
+      this.getProfessorSchedule()
     }
   }
 
@@ -944,6 +989,26 @@ deleteFromCart(id,e){
   .then((response)=>{
     alert('Course Deleted From Cart!!')
     this.goToCartPage(user_id,e)
+  });
+}
+
+///////////
+// Get Professor Schedule
+//////////
+getProfessorSchedule(){
+  let user_id = sessionStorage.getItem('user_id')
+  console.log('Professor ID is:',user_id);
+  axios({
+    method:'get',
+    url:'http://localhost:5000/getProfessorSchedule/id/'+user_id,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    if(response.status == 200){
+      this.setState({profSchedule: response.data});
+      console.log(this.state.profSchedule);
+    }
   });
 }
 
@@ -1788,8 +1853,10 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
 
 
 
+    ////////////////////////////////////////////////////////
+    // ------------------ PROFS VIEW ------           /////
+    ///////////////////////////////////////////////////////
 
-    // ------- PROFS VIEW ------//
     if(sessionStorage.getItem('user_role')==2){
       //---------------------------- HOME PAGE OF PROF ---------------------------------------------//
       if(!(this.state.isHomePageHidden)){
@@ -1916,6 +1983,28 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
               <br /> <br />
               </div>
            }
+          </main>
+      }
+
+      //---CALENDAR VIEW --//
+      if(!(this.state.isCalendarHidden)){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+              <h2> Your Schedule</h2>
+                <div>
+                  <Card>
+                    <BigCalendar
+                      events={events}
+                      views={allViews}
+                      step={60}
+                      timeslots={8}
+                      style={{height:'-webkit-fill-available'}}
+                      defaultView={BigCalendar.Views.MONTH}
+                      defaultDate={new Date(2018, 0, 1)}
+                      localizer={localizer}
+                    />
+                </Card>
+              </div>
           </main>
       }
 
