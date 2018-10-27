@@ -17,6 +17,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
 import EmailIcon from '@material-ui/icons/Email';
 import DeleteIcon from '@material-ui/icons/Delete';
+import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
 import EditIcon from '@material-ui/icons/Edit';
 import SchoolIcon from '@material-ui/icons/School';
 import FaceIcon from '@material-ui/icons/Face';
@@ -36,7 +37,11 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
+import Checkbox from '@material-ui/core/Checkbox';
 import Grid from '@material-ui/core/Grid';
+import StarRatings from 'react-star-ratings';
+
+
 
 // -------------------- Declaring constants here -------------------//
 const drawerWidth = 240;
@@ -46,7 +51,7 @@ const axios = require('axios');
   const styles = theme => ({
   root: {
     flexGrow: 1,
-    height: 660,
+    height: '-webkit-fill-available',
     zIndex: 2,
     overflow: 'hidden',
     position: 'relative',
@@ -82,12 +87,17 @@ const axios = require('axios');
   displayInline:{
     display: 'inline'
   },
+  displayInlineBlock:{
+    display:'inline-block'
+  },
   boldText:{
     fontWeight: 'bold'
   },
   buttonStyles:{
-
     marginRight: 20
+  },
+  commentBox:{
+    width: 850
   }
 });
 
@@ -110,6 +120,7 @@ class DashboardPage extends Component {
       isCalendarHidden: true,
       isSearchHidden: true,
       courseCardStyle: {marginBottom: 18, width: 440},
+      inheritWidth: {width: 'inherit'},
       courseNameStyle: {fontSize: 20, fontWeight: 'bold', fontFamily: 'Comfortaa'},
       spacing : '16',
       isAdmin: false,
@@ -118,7 +129,19 @@ class DashboardPage extends Component {
       isEditSingleCourseHidden: true,
       isViewStudentsHidden: true,
       isViewProfessorsHidden: true,
-      selectedRadioValue: '1',
+      isIndividualCoursePageHidden: true,
+      selectedRadioValue: [],
+      mon: false,
+      tue: false,
+      wed: false,
+      thu: false,
+      fri: false,
+
+      editMon: false,
+      editTue: false,
+      editWed: false,
+      editThu: false,
+      editFri: false,
 
       newCourseName: '',
       newCourseDesc: '',
@@ -127,6 +150,7 @@ class DashboardPage extends Component {
       newCourseDays: '',
       newCourseStartTime: '',
       newCourseEndTime: '',
+      newCourseID:'',
 
       editCourseName: '',
       editCourseDesc: '',
@@ -135,6 +159,7 @@ class DashboardPage extends Component {
       editCourseDays: '',
       editCourseStartTime: '',
       editCourseEndTime: '',
+      editCourseID: '',
 
       allProfessorsForSelect: [],
       allStudents: [],
@@ -144,6 +169,9 @@ class DashboardPage extends Component {
 
       searchCourseName: '',
       searchResults: [],
+      dataOfClickedCourse: {},
+      courseComment: '',
+      courseRating:0,
 
       firstCourse:'',
       SecondCourse:'',
@@ -181,14 +209,36 @@ class DashboardPage extends Component {
        change[e.target.name] = e.target.value
        this.setState(change)
 
-       // This is only for the radio buttons
+       // This is only for the checkboxes
        // at add a new course page
-       if(e.target.name == 'newCourseDays' || e.target.name =='editCourseDays')
+       if(e.target.name == 'newCourseDays')
        {
-         console.log('here');
-        this.setState({selectedRadioValue: e.target.value });
+
+         switch(e.target.value){
+           case '1': this.state.mon == false? this.setState({mon: true}) : this.setState({mon: false}) ; break;
+           case '2': this.state.tue == false? this.setState({tue: true}) : this.setState({tue: false}) ; break;
+           case '3': this.state.wed == false? this.setState({wed: true}) : this.setState({wed: false}) ; break;
+           case '4': this.state.thu == false? this.setState({thu: true}) : this.setState({thu: false}) ; break;
+           case '5': this.state.fri == false? this.setState({fri: true}) : this.setState({fri: false}) ; break;
+         }
+       }
+       // This is for the checkboxes at EDIT a course page
+       if(e.target.name == 'editCourseDays'){
+         switch(e.target.value){
+           case '1': this.state.editMon == false? this.setState({editMon: true}) : this.setState({editMon: false}) ; break;
+           case '2': this.state.editTue == false? this.setState({editTue: true}) : this.setState({editTue: false}) ; break;
+           case '3': this.state.editWed == false? this.setState({editWed: true}) : this.setState({editWed: false}) ; break;
+           case '4': this.state.editThu == false? this.setState({editThu: true}) : this.setState({editThu: false}) ; break;
+           case '5': this.state.editFri == false? this.setState({editFri: true}) : this.setState({editFri: false}) ; break;
+         }
        }
     }
+
+// Below is custom handle Change ONLY FOR STAR Rating
+// For courses
+handleChangeForRating(e){
+  this.setState({courseRating: e})
+}
 
 
 // Below is handle change specifically for course search field
@@ -200,15 +250,14 @@ handleChangeAndGetMatchingCourses(e){
       //Hit API and get results that matches
       return axios({
         method:'get',
-        url:'http://course360.herokuapp.com/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
+        url:'http://localhost:5000/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
       .then((response)=>{
-        console.log(response.data);
+
         if(response.status == 200)
         {
-
           return(response.data)
         }
         else{
@@ -216,7 +265,7 @@ handleChangeAndGetMatchingCourses(e){
         }
       }).catch(err => {
         console.log("No search results ", err)
-        return([{'course_name': 'No Results Found', 'location':'','professor':'','start_time':'','end_time':'','days':''}])
+        return([{'course_name': 'No Results Found', 'location':'','professor':'','start_time':'','end_time':'','days':['']}])
       })
 }
 
@@ -230,6 +279,19 @@ handleChangeAndGetMatchingCourses(e){
     let searchTerm = e.target.value
 
     this.handleChangeAndGetMatchingCourses(e).then((returnVal) => {
+      for(let i = 0; i < returnVal.length; i++){
+        returnVal[i]['days'].forEach(function(item,index){
+
+          switch(item){
+            case 1: returnVal[i]['days'][index] = "Mon"; break;
+            case 2: returnVal[i]['days'][index] = "Tue"; break;
+            case 3: returnVal[i]['days'][index] = "Wed"; break;
+            case 4: returnVal[i]['days'][index] = "Thu"; break;
+            case 5: returnVal[i]['days'][index] = "Fri"; break;
+          }
+        })
+      }
+
         this.setState({searchResults: returnVal});
     })
 
@@ -252,6 +314,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
 
       this.componentDidMount()
     }
@@ -267,6 +330,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
 
       // hits api, when result is returned, update state var
       this.getAllProfessorsForSelect().then((returnVal) => {
@@ -287,6 +351,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
 
       this.componentDidMount()
       this.getAllProfessorsForSelect().then((returnVal) => {
@@ -307,6 +372,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
 
       this.getAllStudents().then((returnVal) => {
         this.setState({allStudents: returnVal});
@@ -327,6 +393,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
 
       this.getAllProfessorsForSelect().then((returnVal) => {
         this.setState({allProfessors: returnVal});
@@ -347,7 +414,11 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
+      this.setState({searchCourseName: ''});
+      this.setState({searchResults: []});
     }
+
     else if(value=='payment'){
       this.setState({isHomePageHidden: true});
       this.setState({isPaymentPortalHidden: false});
@@ -360,6 +431,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
     }
   }
 
@@ -369,12 +441,14 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentPortalHidden: true});
       this.setState({isPaymentModeCardHidden: false});
       this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
     }
 
    EnterDetails(event){
        this.setState({isPaymentPortalHidden: true});
        this.setState({isPaymentModeCardHidden: true});
        this.setState({isPaymentSuccessfulCardHidden: false});
+       this.setState({isIndividualCoursePageHidden: true});
    }
 //-------------- End of Kriti's functions ---//
 
@@ -450,8 +524,21 @@ componentDidMount() {
   if(sessionStorage.getItem('user_role')==1)
   {
     this.hitAPIForAdminHomePageCourses().then((returnVal) => {
-      this.setState({allCoursesForAdminHome: returnVal})
+      // must convert day numbers into words
+      for(let i = 0; i < returnVal.length; i++){
+        returnVal[i]['days'].forEach(function(item,index){
 
+          switch(item){
+            case 1: returnVal[i]['days'][index] = "Mon"; break;
+            case 2: returnVal[i]['days'][index] = "Tue"; break;
+            case 3: returnVal[i]['days'][index] = "Wed"; break;
+            case 4: returnVal[i]['days'][index] = "Thu"; break;
+            case 5: returnVal[i]['days'][index] = "Fri"; break;
+          }
+        })
+      }
+      this.setState({allCoursesForAdminHome: returnVal})
+      console.log(this.state.allCoursesForAdminHome);
     })
     .catch(err => console.log("Component Did mount Exception!!: ", err))
   }
@@ -462,7 +549,7 @@ componentDidMount() {
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getAllCourses/start/0/end/100000',
+    url:'http://localhost:5000/getAllCourses/start/0/end/100000',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -477,7 +564,7 @@ hitAPIForAdminHomePageCourses(){
   getAllProfessorsForSelect(){
     return axios({
       method:'get',
-      url:'http://course360.herokuapp.com/getAllProfessors/start/0/end/100000',
+      url:'http://localhost:5000/getAllProfessors/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -495,7 +582,7 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'http://course360.herokuapp.com/getAllStudents/start/0/end/100000',
+      url:'http://localhost:5000/getAllStudents/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -510,22 +597,30 @@ hitAPIForAdminHomePageCourses(){
   // Success is a new record in Courses table in DB!
   // -------------------------
   addNewCourse = (e) => {
+    let days_array = []
+    if(this.state.mon) {days_array.push(1)}
+    if(this.state.tue) {days_array.push(2)}
+    if(this.state.wed) {days_array.push(3)}
+    if(this.state.thu) {days_array.push(4)}
+    if(this.state.fri) {days_array.push(5)}
 
     const dataJSON = {
             course_name: this.state.newCourseName,
             description : this.state.newCourseDesc,
             location: this.state.newCourseLocation,
             prof_id: this.state.newCourseProf,
-            days: this.state.newCourseDays,
+            days: days_array,
             start_time: this.state.newCourseStartTime,
             end_time: this.state.newCourseEndTime,
+            course_code: this.state.newCourseID,
             role_id: sessionStorage.getItem('user_role'),
             department: 'DEFAULT_DEPT'
         }
 
+        console.log(dataJSON);
         axios({
           method:'post',
-          url:'http://course360.herokuapp.com/insertCourses',
+          url:'http://localhost:5000/insertCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -542,9 +637,10 @@ hitAPIForAdminHomePageCourses(){
               this.setState({newCourseDays: ''});
               this.setState({newCourseStartTime: ''});
               this.setState({newCourseEndTime: ''});
-
+              this.setState({newCourseID: ''});
               this.setState({isAddNewCourseHidden: true});
               this.setState({isHomePageHidden: false});
+              this.setState({isIndividualCoursePageHidden: true});
 
             }
         });
@@ -592,6 +688,15 @@ hitAPIForAdminHomePageCourses(){
     this.state.editCourseDays = (this.state.editCourseDays == '') ? this.state.detailsOfCurrentCourseToEdit['days'].toString() : this.state.editCourseDays
     this.state.editCourseStartTime = (this.state.editCourseStartTime == '') ? this.state.detailsOfCurrentCourseToEdit['start_time'] : this.state.editCourseStartTime
     this.state.editCourseEndTime = (this.state.editCourseEndTime == '') ? this.state.detailsOfCurrentCourseToEdit['end_time'] : this.state.editCourseEndTime
+    this.state.editCourseID = (this.state.editCourseID == '') ? this.state.detailsOfCurrentCourseToEdit['course_code'] : this.state.editCourseID
+
+    let days_array = []
+    if(this.state.editMon) {days_array.push(1)}
+    if(this.state.editTue) {days_array.push(2)}
+    if(this.state.editWed) {days_array.push(3)}
+    if(this.state.editThu) {days_array.push(4)}
+    if(this.state.editFri) {days_array.push(5)}
+
 
     const dataJSON = {
             course_name: this.state.editCourseName,
@@ -599,16 +704,17 @@ hitAPIForAdminHomePageCourses(){
             description : this.state.editCourseDesc,
             location: this.state.editCourseLocation,
             prof_id: this.state.editCourseProf,
-            days: this.state.editCourseDays,
+            days: days_array,
             start_time: this.state.editCourseStartTime,
             end_time: this.state.editCourseEndTime,
+            course_code: this.state.editCourseID,
             role_id: sessionStorage.getItem('user_role'),
             department: 'DEFAULT_DEPT'
         }
         console.log('data to be sent',dataJSON);
         axios({
           method:'post',
-          url:'http://course360.herokuapp.com/updateCourses',
+          url:'http://localhost:5000/updateCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -624,10 +730,12 @@ hitAPIForAdminHomePageCourses(){
               this.setState({editCourseDays: ''});
               this.setState({editCourseStartTime: ''});
               this.setState({editCourseEndTime: ''});
+              this.setState({editCourseID: ''});
               this.componentDidMount();
 
               this.setState({isEditSingleCourseHidden: true})
               this.setState({isEditCourseHidden: false})
+              this.setState({isIndividualCoursePageHidden: true});
             }
         });
 
@@ -644,7 +752,7 @@ hitAPIForAdminHomePageCourses(){
 
     axios({
           method:'post',
-          url:'http://course360.herokuapp.com/deleteCourses',
+          url:'http://localhost:5000/deleteCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -660,14 +768,85 @@ hitAPIForAdminHomePageCourses(){
               this.setState({editCourseDays: ''});
               this.setState({editCourseStartTime: ''});
               this.setState({editCourseEndTime: ''});
+              this.setState({editCourseID: ''});
 
               this.componentDidMount();
 
               this.setState({isEditSingleCourseHidden: true})
               this.setState({isEditCourseHidden: false})
+              this.setState({isIndividualCoursePageHidden: true});
             }
         });
   }
+
+  //-----------------
+  // On clicking a card from course search, go to a page
+  // showing only details of that particular card2
+  //-----------------
+  goToCoursePage(courseClicked,v){
+      console.log('COURSE CLICKED!!',courseClicked);
+      this.setState({dataOfClickedCourse: courseClicked})
+      this.setState({isIndividualCoursePageHidden: false});
+
+  }
+
+//-------------------
+// Submits student's comment to Database
+//-----------------
+submitComment(e){
+  const dataJSON = {
+          course_id: this.state.dataOfClickedCourse['course_id'].toString(),
+          user_id: sessionStorage.getItem('user_id'),
+          comment: this.state.courseComment,
+          ratings: this.state.courseRating.toString()
+      }
+
+  axios({
+        method:'post',
+        url:'http://localhost:5000/commentOnACourse',
+        data: dataJSON,
+        headers: {'Access-Control-Allow-Origin': '*',
+        'Authorization': sessionStorage.getItem('token')},
+      })
+      .then((response) => {
+          if(response.data != 'Error : Something went wrong')
+          {
+            alert("Thank you for your review! We appreciate it!")
+            this.setState({courseComment: ''});
+            this.setState({courseRating: 0});
+            this.getLatestCourseDetails(this.state.dataOfClickedCourse['course_id'])
+
+          }
+      }).catch(err => {
+        console.log("SUBMIT COMMENT ERROR: ", err)
+        this.setState({courseComment: ''});
+        this.setState({courseRating: 0});
+
+      });
+}
+
+////////////////////////////////////////
+// Given courseID, gets details
+///////////////////////////////////////
+getLatestCourseDetails(course_id){
+  return axios({
+    method:'get',
+    url:'http://localhost:5000/getCourseBy/course/'+course_id,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    console.log(response.data);
+    this.setState({dataOfClickedCourse: response.data})
+  });
+}
+
+//-------------
+// Adds clicked course to cart
+//-------------
+addCourseToCart(e){
+  console.log("clicked to cart");
+}
 
   render() {
     const { classes } = this.props;
@@ -691,7 +870,13 @@ hitAPIForAdminHomePageCourses(){
                         {el.course_name}
                     </Typography>
                     {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
-                  {el.location} || {el.days == '1' ? 'MW' : el.days == '2' ? 'TuTh' : 'F'} || {el.start_time} - {el.end_time}
+                    {el.location} || {
+                      el.days.map(function(element){
+
+                        return <span>{element} &nbsp;</span>
+                      })
+                    }
+                       || {el.start_time} - {el.end_time}
                      <br /> <br />
                   </CardContent>
                 </Card>))
@@ -720,6 +905,18 @@ hitAPIForAdminHomePageCourses(){
               </FormControl>
               <br /><br />
 
+                <span className = {classes.rightSpacing}>Course Code</span>
+                <FormControl required>
+                    <TextField
+                        id="newCourseID"
+                        className={classes.textField}
+                        value={this.state.newCourseID}
+                        onChange={this.handleChange.bind(this)}
+                        name="newCourseID"
+                        margin="normal"
+                      />
+                </FormControl>
+                    <br /><br />
               <span className = {classes.rightSpacing}>Description</span>
               <FormControl required>
                   <TextField
@@ -769,11 +966,9 @@ hitAPIForAdminHomePageCourses(){
                   <TextField
                         id="newCourseStartTime"
                         name="newCourseStartTime"
-
                         type="time"
                         value={this.state.newCourseStartTime}
                         onChange={this.handleChange.bind(this)}
-
                         className={classes.textField}
                       />
                 </FormControl>
@@ -783,32 +978,22 @@ hitAPIForAdminHomePageCourses(){
                   <TextField
                         id="newCourseEndTime"
                         name="newCourseEndTime"
-
                         type="time"
                         value={this.state.newCourseEndTime}
                         onChange={this.handleChange.bind(this)}
-
                         className={classes.textField}
                       />
                 </FormControl>
 
 
-                <FormControl component="fieldset" className={classes.formControl}>
-
-                    <RadioGroup
-                      aria-label="Days"
-                      name="newCourseDays"
-                      label="Days"
-                      className={classes.displayInline}
-                      value={this.state.newCourseDays}
-                      onChange={this.handleChange.bind(this)}>
-
-                          <FormControlLabel  value="1" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="1"} />} label="Mon & Wed" />
-                          <FormControlLabel value="2" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="2"}  />} label="Tue & Thu" />
-                          <FormControlLabel value="3" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="3"}  />} label="Fri" />
-
-                    </RadioGroup>
+              <FormControl require className = {classes.displayInline}>
+                <FormControlLabel control = {<Checkbox checked={this.state.mon}  name = "newCourseDays" onChange={this.handleChange.bind(this)} value="1"/>} label = "Mon"/>
+                <FormControlLabel control = {<Checkbox checked={this.state.tue}  name = "newCourseDays" onChange={this.handleChange.bind(this)} value="2"/>} label = "Tue"/>
+                <FormControlLabel control = {<Checkbox checked={this.state.wed}  name = "newCourseDays" onChange={this.handleChange.bind(this)} value="3"/>} label = "Wed"/>
+                <FormControlLabel control = {<Checkbox checked={this.state.thu}  name = "newCourseDays" onChange={this.handleChange.bind(this)} value="4"/>} label = "Thu"/>
+                <FormControlLabel control = {<Checkbox checked={this.state.fri}  name = "newCourseDays" onChange={this.handleChange.bind(this)} value="5"/>} label = "Fri"/>
               </FormControl>
+
               <CardActions>
                 <Button variant="contained" onClick = {this.addNewCourse.bind(this)} className = {classes.marginAuto} color="primary">Add</Button>
               </CardActions>
@@ -924,6 +1109,20 @@ hitAPIForAdminHomePageCourses(){
                 </FormControl>
                 <br /><br />
 
+              <span className = {classes.rightSpacing}>Course Code</span>
+                  <FormControl required>
+                      <TextField
+                          id="editCourseID"
+                          className={classes.textField}
+                          value={this.state.editCourseID}
+                          helperText={this.state.detailsOfCurrentCourseToEdit['course_code']}
+                          onChange={this.handleChange.bind(this)}
+                          margin="normal"
+                          name="editCourseID"
+                        />
+                  </FormControl>
+                  <br /><br />
+
                 <span className = {classes.rightSpacing}>Description</span>
                 <FormControl required>
                     <TextField
@@ -998,21 +1197,14 @@ hitAPIForAdminHomePageCourses(){
                   </FormControl>
 
 
-                  <FormControl component="fieldset" className={classes.formControl}>
+                  <FormControl require className = {classes.displayInline}>
+                    <FormControlLabel control = {<Checkbox checked={this.state.editMon}  name = "editCourseDays" onChange={this.handleChange.bind(this)} value="1"/>} label = "Mon"/>
+                    <FormControlLabel control = {<Checkbox checked={this.state.editTue}  name = "editCourseDays" onChange={this.handleChange.bind(this)} value="2"/>} label = "Tue"/>
+                    <FormControlLabel control = {<Checkbox checked={this.state.editWed}  name = "editCourseDays" onChange={this.handleChange.bind(this)} value="3"/>} label = "Wed"/>
+                    <FormControlLabel control = {<Checkbox checked={this.state.editThu}  name = "editCourseDays" onChange={this.handleChange.bind(this)} value="4"/>} label = "Thu"/>
+                    <FormControlLabel control = {<Checkbox checked={this.state.editFri}  name = "editCourseDays" onChange={this.handleChange.bind(this)} value="5"/>} label = "Fri"/>
+                  </FormControl>
 
-                      <RadioGroup
-                        aria-label="Days"
-                        name="editCourseDays"
-                        className={classes.displayInline}
-                        value={this.state.editCourseDays}
-                        onChange={this.handleChange.bind(this)}>
-
-                            <FormControlLabel  value="1" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="1"} />} label="Mon & Wed" />
-                            <FormControlLabel value="2" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="2"}  />} label="Tue & Thu" />
-                            <FormControlLabel value="3" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="3"}  />} label="Fri" />
-
-                      </RadioGroup>
-                </FormControl>
                 <br />
                 <CardActions>
                   <Button variant="contained" onClick = {this.updateCourseInDB.bind(this)} className = {classes.buttonStyles} color="primary">Edit</Button>
@@ -1130,17 +1322,137 @@ hitAPIForAdminHomePageCourses(){
                 />
                 {
                   this.state.searchResults.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
-                    <CardContent>
-                      <Typography style={this.state.courseNameStyle} >
-                          {el.course_name}
-                      </Typography>
-                      {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
-                    {el.location} || {el.days == '1' ? 'MW' : el.days == '2' ? 'TuTh' : el.days == '3' ? 'F': ''} || {el.start_time} - {el.end_time}
-                       <br /> <br />
-                    </CardContent>
+                    <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, el)}>
+                      <CardContent>
+                        <Typography style={this.state.courseNameStyle} >
+                            {el.course_name}
+                        </Typography>
+                        {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
+                      {el.location} || {
+                        el.days.map(function(element){
+
+                          return <span>{element} &nbsp;</span>
+                        })
+                      }|| {el.start_time} - {el.end_time}
+                         <br /> <br />
+                      </CardContent>
+                    </CardActionArea>
                   </Card>))
                 }
 
+          </main>
+      }
+
+      // ----- INDIVIDUAL COURSE PAGE ------------- ///
+      if(!(this.state.isIndividualCoursePageHidden)){
+        currentContent = <main className={classes.content}>
+            <div className={classes.toolbar} />
+            {
+              <div>
+                <Card>
+                  <CardContent>
+
+                    <div name="courseNameAndAdd">
+                      <h1> {this.state.dataOfClickedCourse.course_code} - {this.state.dataOfClickedCourse.course_name}</h1>
+                        <IconButton color="inherit" onClick={this.addCourseToCart.bind(this)} style={{float:"right"}}>
+                          <AddShoppingCartIcon  />
+                        </IconButton>
+
+                    </div>
+
+
+                    <span> {this.state.dataOfClickedCourse.professor['first_name']} {this.state.dataOfClickedCourse.professor['last_name']}</span> || {this.state.dataOfClickedCourse.professor['email']}
+                    <p> Location: {this.state.dataOfClickedCourse.location}</p>
+                    <p> Time: {this.state.dataOfClickedCourse.start_time} - {this.state.dataOfClickedCourse.end_time}</p>
+                    <p> Days Offered: {
+                        this.state.dataOfClickedCourse.days.map(function(element){
+                      return <span>{element} &nbsp;</span>
+                    })
+                  }
+                  </p>
+                  <p> Description: {this.state.dataOfClickedCourse.description}</p>
+                  </CardContent>
+                </Card>
+                <br />
+
+              <Card>
+                <CardContent>
+                  <h1>Comments about this course</h1>
+                    {
+                      this.state.dataOfClickedCourse.comment.map((el,i) => (
+                      <div name="outerWrapper" key={i}>
+                         <div name="commenterAndStars" className={classes.displayInlineBlock}>
+
+                                <div name="commenter" className={classes.displayInlineBlock} style={{paddingRight:10}}>
+                                  <AccountCircle/>
+                                  <span name="name">{el.first_name} {el.last_name}</span>
+                                </div>
+                                <br />
+                                <div name="stars" className={classes.displayInlineBlock}>
+                                  <StarRatings
+                                    rating={el.rating}
+                                    starRatedColor="gold"
+                                    numberOfStars={5}
+                                    starDimension="15px"
+                                    starSpacing="1px"
+                                    />
+                                </div>
+                            </div>
+
+                            <div name="commentGiven" className={classes.displayInlineBlock}>
+                                <TextField
+                                    disabled
+                                    className ={classes.commentBox}
+                                    value={el.comment}
+                                    margin="normal"
+                                    variant="filled"
+                                  />
+                            </div>
+
+
+                        </div>
+                      ))
+                    }
+                </CardContent>
+              </Card>
+              <br /> <br />
+
+                <Card>
+                  <CardContent>
+                    <h1>Write a comment?</h1>
+                    <AccountCircle className = {classes.rightSpacing10}/>
+                          <TextField
+                              id="courseComment"
+                              multiline
+                              rows = "3"
+                              rowsMax="6"
+                              className ={classes.commentBox}
+                              value={this.state.courseComment}
+                              onChange={this.handleChange.bind(this)}
+                              margin="normal"
+                              name="courseComment"
+                              variant="filled"
+                            />
+                          <br />
+                      <span className = {classes.rightSpacing10}> Rate this course!</span>
+                      <StarRatings
+                        rating={this.state.courseRating}
+                        starRatedColor="gold"
+                        starHoverColor="gold"
+                        changeRating={this.handleChangeForRating.bind(this)}
+                        numberOfStars={5}
+                        name='courseRating'
+                        id='courseRating'
+                        starDimension="20px"
+                        starSpacing="4px"
+                        />
+                      </CardContent>
+                    <CardActions>
+                      <Button variant="contained" onClick = {this.submitComment.bind(this)} className = {classes.marginAuto} color="primary">Submit</Button>
+                    </CardActions>
+                </Card>
+              </div>
+           }
           </main>
       }
 

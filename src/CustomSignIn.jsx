@@ -102,7 +102,7 @@ class SignInCard extends Component {
 
     axios({
       method:'post',
-      url:'http://course360.herokuapp.com/login',
+      url:'http://localhost:5000/login',
       data: dataJSON,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
@@ -114,6 +114,7 @@ class SignInCard extends Component {
         // Token n role stored in session...can get using .getItem['token']
         sessionStorage.setItem('token',response.data['token'])
         sessionStorage.setItem('user_role',response.data['role_id'])
+        sessionStorage.setItem('user_id',response.data['user_id'])
       }
 
       else{
@@ -146,13 +147,12 @@ verifySecurityAnswer(event){
   }
 
   axios({
-    method:'post',
-    url:'http://course360.herokuapp.com/securityAnswer',
-    data: dataJSON,
+    method:'get',
+    url:'http://localhost:5000/sendOtp/email/'+this.state.emailForForgotPassword+'/answer/'+this.state.securityAnswer,
     headers: {'Access-Control-Allow-Origin': '*'},
   })
   .then((response)=>{
-    if(response.data['wasAnswerCorrect']){
+    if(response){
       this.setState({isForgotPasswordCardHidden: true});
       this.setState({isSignInCardHidden: true});
       this.setState({isValidateOTPCardHidden: true});
@@ -194,7 +194,7 @@ updateNewPassword(event){
 
     axios({
       method:'post',
-      url:'http://course360.herokuapp.com/updatePassword',
+      url:'http://localhost:5000/updatePassword',
       data: dataJSON,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
@@ -223,7 +223,7 @@ fetchSecurityQuestion(event){
 
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/securityQuestion/'+this.state.emailForForgotPassword,
+    url:'http://localhost:5000/securityQuestion/'+this.state.emailForForgotPassword,
     headers: {'Access-Control-Allow-Origin': '*'},
   })
   .then((response)=>{
@@ -276,7 +276,7 @@ registerNewUser(event){
          console.log(registrationData);
      axios({
        method:'post',
-       url:'http://course360.herokuapp.com/register',
+       url:'http://localhost:5000/register',
        data: registrationData,
        headers: {'Access-Control-Allow-Origin': '*'},
      })
