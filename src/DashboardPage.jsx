@@ -201,7 +201,7 @@ class DashboardPage extends Component {
 
       cartData: [],
       profSchedule:[],
-      eventsForCalendar:[],
+      eventsForProfessorCalendar:[],
 
       firstCourse:'',
       SecondCourse:'',
@@ -212,7 +212,7 @@ class DashboardPage extends Component {
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
-    console.log(currentUserRole);
+    console.log('CURRENT ROLE',currentUserRole);
 
     if(currentUserRole == 1){
       this.state.isAdmin = true
@@ -220,7 +220,7 @@ class DashboardPage extends Component {
 
     }
 
-    else
+    else if(currentUserRole == 3)
     {
      this.state.isAdmin = false
      this.enrolledCourses = this.getListOfEnrolledCourses()
@@ -346,8 +346,9 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
 
-
       this.componentDidMount()
+
+
     }
     else if(value == 'add'){
       this.setState({isHomePageHidden: true});
@@ -485,7 +486,12 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
 
-      this.getProfessorSchedule()
+      if(sessionStorage.getItem('user_role')==2)
+      {
+        this.getProfessorSchedule()
+
+      }
+
     }
   }
 
@@ -509,10 +515,9 @@ handleChangeAndGetMatchingCourses(e){
 //-------------- End of Kriti's functions ---//
 
 
-
 // ---------------------------
 // Hit API to get enrolled courses for current USER
-// Can be courses a prof is teaching too, if current user is a professor
+// ONLY FOR STUDENTS!! NOT FOR PROFESSORS!!!
 // Returns Cards to be rendered directly
 // ----------------------------
   getListOfEnrolledCourses(){
@@ -520,7 +525,6 @@ handleChangeAndGetMatchingCourses(e){
       {'course_name' : 'Applied Algorithms', 'location': 'BH 101', 'marks': '100%', 'professor':'Funda Ergun', 'start_time': '4.00 PM', 'end_time': '5.15 PM', 'attendance': '100%','days':'1' },
       {'course_name' : 'Elements of AI', 'location': 'BH 101', 'marks': '100%', 'professor':'Funda Ergun', 'start_time': '4.00 PM', 'end_time': '5.15 PM', 'attendance': '100%','days':'2' },
       {'course_name' : 'Software Engineering', 'location': 'BH 101', 'marks': '100%', 'professor':'Funda Ergun', 'start_time': '4.00 PM', 'end_time': '5.15 PM', 'attendance': '100%','days':'3' },
-
     ]
 
     if(sessionStorage.getItem('user_role') == 3){
@@ -542,21 +546,6 @@ handleChangeAndGetMatchingCourses(e){
         return(contentToReturn)
   }
 
-  else if(sessionStorage.getItem('user_role') == 2){
-        let contentToReturn = courses.map((element) => {
-          return(<Card style={this.state.courseCardStyle}>
-                    <CardContent>
-                      <Typography style={this.state.courseNameStyle} >
-                          {element.course_name}
-                      </Typography>
-
-                    {element.location} || {element.days == '1' ? 'MW' : element.days == '2' ? 'TuTh' : 'F'} || {element.start_time} - {element.end_time}
-                     <br /> <br />
-                    </CardContent>
-          </Card>)
-        })
-        return(contentToReturn)
-      }
   }
 
 //----------------------------------
@@ -567,18 +556,11 @@ handleChangeAndGetMatchingCourses(e){
 componentDidMount() {
   let currentUserRole = sessionStorage.getItem('user_role')
   console.log('inside mount',currentUserRole);
+
   if(currentUserRole == 1){
     this.setState({isAdmin: true });
     console.log('Admin is in the house!!!');
-  }
-  else
-  {
-    this.setState({isAdmin: false });
-    this.enrolledCourses = this.getListOfEnrolledCourses()
-  }
 
-  if(sessionStorage.getItem('user_role')==1)
-  {
     this.hitAPIForAdminHomePageCourses().then((returnVal) => {
       // must convert day numbers into words
       for(let i = 0; i < returnVal.length; i++){
@@ -598,6 +580,19 @@ componentDidMount() {
     })
     .catch(err => console.log("Component Did mount Exception!!: ", err))
   }
+
+  else if(currentUserRole == 3)
+  {
+    this.setState({isAdmin: false });
+    this.enrolledCourses = this.getListOfEnrolledCourses()
+  }
+
+  if(currentUserRole == 2)
+  {
+    this.getProfessorSchedule()
+
+  }
+
 }
 
 // Calls API for admin home page courseCard
@@ -1006,10 +1001,63 @@ getProfessorSchedule(){
   })
   .then((response)=>{
     if(response.status == 200){
+      for(let i = 0; i < response.data.length; i++){
+        response.data[i]['days'].forEach(function(item,index){
+
+          switch(item){
+            case 1: response.data[i]['days'][index] = "Mon"; break;
+            case 2: response.data[i]['days'][index] = "Tue"; break;
+            case 3: response.data[i]['days'][index] = "Wed"; break;
+            case 4: response.data[i]['days'][index] = "Thu"; break;
+            case 5: response.data[i]['days'][index] = "Fri"; break;
+          }
+        })
+      }
       this.setState({profSchedule: response.data});
-      console.log(this.state.profSchedule);
+      console.log('Schedule of prof',this.state.profSchedule);
+      this.populateEventsForProfCalendar() //events array being populated for calendar
     }
   });
+}
+
+//// PROF CALENDAR EVENTS DATA POPULATION //////
+populateEventsForProfCalendar(){
+  let profSchedule = this.state.profSchedule
+  let events = []
+  profSchedule.map(function(element){
+    for(var i =0; i < element.start_dates.length; i++)
+    {
+          let temp_event = {
+          id: element.course_id,
+          title: element.course_name,
+          desc: element.location,
+          start: new Date(element.start_dates[i]+'T'+element.start_time),
+          end: new Date(element.start_dates[i]+'T'+element.end_time)
+        }
+        events.push(temp_event)
+   }
+
+  })
+console.log('EVENT ARRAY ----',events);
+
+  let repeatedEvents = []
+  for(var j=0; j < events.length; j++){
+
+    for(var counter = 1; counter < 6; counter++){
+
+      let temp_event = {
+        id: events[j].id,
+        title: events[j].title,
+        desc: events[j].desc,
+        start: new Date(events[j].start.setTime( events[j].start.getTime() + 7*(counter) * 86400000 )),
+        end: new Date(events[j].end.setTime( events[j].end.getTime() + 7*(counter)  * 86400000 ))
+      }
+      repeatedEvents.push(temp_event)
+    }
+  }
+  console.log('Repeated till end of sem ARRAY ----',repeatedEvents);
+  this.setState({eventsForProfessorCalendar : repeatedEvents})
+
 }
 
 /////////////////////////////////////////////////////////
@@ -1862,8 +1910,32 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
       if(!(this.state.isHomePageHidden)){
         currentContent =   <main className={classes.content}>
             <div className={classes.toolbar} />
-              <h2> Hello, Professo! Here are your courses!</h2>
-              {this.enrolledCourses}
+              <h2> Hello, Professor! Here are your courses!</h2>
+                {
+                  this.state.profSchedule.length>0 &&
+                  this.state.profSchedule.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
+                    <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, el)}>
+                      <CardContent>
+                        <Typography style={this.state.courseNameStyle} >
+                            {el.course_name}
+                        </Typography>
+
+                      {el.location} || {
+                        el.days.map(function(element){
+                          return <span>{element} &nbsp;</span>
+                        })
+                      }|| {el.start_time} - {el.end_time}
+                         <br /> <br />
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>))
+                }
+
+                {
+                  this.state.profSchedule.length == 0 &&
+                  <h2> You are not teaching any courses :( </h2>
+                }
+
           </main>
       }
 
@@ -1994,13 +2066,13 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                 <div>
                   <Card>
                     <BigCalendar
-                      events={events}
+                      events={this.state.eventsForProfessorCalendar}
                       views={allViews}
                       step={60}
                       timeslots={8}
                       style={{height:'-webkit-fill-available'}}
                       defaultView={BigCalendar.Views.MONTH}
-                      defaultDate={new Date(2018, 0, 1)}
+                      defaultDate={new Date(2018, 7, 1)}
                       localizer={localizer}
                     />
                 </Card>
