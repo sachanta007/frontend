@@ -61,9 +61,11 @@ class SignInCard extends Component {
       isValidateOTPCardHidden:true,
       isVerifyOTPCardHidden:true,
       isRegisterNewUserCardHidden:true,
+      isVerifyOTPForSigninMFAHidden:true,
       securityQuestion: '',
       securityAnswer:'',
       otp:'',
+      OTPForLogin:'',
       newPassword:'',
       confirmPassword:'',
       newEmail:'',
@@ -73,9 +75,12 @@ class SignInCard extends Component {
       setSecurityQuestion:'',
       newUserPassword:'',
       loginSuccess:false,
-      role:'3',
+      role:'',
       selectedRadioValue: '3'
     }
+      sessionStorage.setItem('token','')
+      sessionStorage.setItem('user_role','')
+      sessionStorage.setItem('user_id','')
   }
 
 // Below is a common handleChange function
@@ -92,38 +97,85 @@ class SignInCard extends Component {
      }
   }
 
-// This is called when user tries to signin
-  handleSubmit = (event) =>  {
 
+//This sends OTP to user when he tries to log in..
+sendOTPForLogin = (event) =>{
+      const dataJSON = {
+        'email': this.state.email,
+        'password': this.state.password
+      }
+
+      console.log('SENDING OTP',dataJSON);
+
+      axios({
+        method:'post',
+        url:'http://localhost:5000/authenticateTest',
+        data: dataJSON,
+        headers: {'Access-Control-Allow-Origin': '*'},
+      })
+      .then((response)=>{
+        if(response.status != 500){
+          alert("An email with an OTP has been sent to you! Please enter it in the next screen!")
+          this.setState({isSignInCardHidden: true});
+          this.setState({isVerifyOTPForSigninMFAHidden: false});
+        }
+        else{
+          alert("Ooops! Something went wrong! Please check your email and password again!!")
+          console.log('OTP SENDING FAIL!',response);
+          this.setState({loginSuccess: false});
+          this.goBackToSignIn(event)
+        }
+      });
+}
+
+// User is ready to Log in..provided otp also..
+handleSubmit(e) {
+  this.wrapperForLoginSubmit(e).then((returnVal) => {
+        console.log('What did the login api return?', returnVal);
+        if(returnVal){
+            // Stuff stored in session...can get using .getItem[<thingy>] from ANYWHERE IN THE UNIVERSE!!!!!
+            sessionStorage.setItem('token',returnVal['token'])
+            sessionStorage.setItem('user_role',returnVal['role_id'])
+            sessionStorage.setItem('user_id',returnVal['user_id'])
+
+            this.setState({loginSuccess: true});
+          }
+        else{
+          console.log('ERROR OCCURRED',returnVal);
+          alert('OOPS!! Wrong OTP...Try again!!')
+          this.goBackToSignIn()
+        }
+  });
+
+}
+
+// This is called when user tries to signin with OTP
+  wrapperForLoginSubmit = (event) =>  {
     const dataJSON = {
       'email': this.state.email,
-      'password': this.state.password
+      'password': this.state.password,
+      'otp': this.state.OTPForLogin
     }
+    console.log('Trying with OTP',dataJSON);
 
-    axios({
+    return axios({
       method:'post',
-      url:'http://localhost:5000/login',
+      url:'http://localhost:5000/loginTest',
       data: dataJSON,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
     .then((response)=>{
-      if(response.data != 'Not able to login'){
-        console.log("Yaaaay! Logged in......");
-        this.setState({loginSuccess: true});
-
-        // Token n role stored in session...can get using .getItem['token']
-        sessionStorage.setItem('token',response.data['token'])
-        sessionStorage.setItem('user_role',response.data['role_id'])
-        sessionStorage.setItem('user_id',response.data['user_id'])
+      if(response.status != 500){
+          return(response.data)
       }
-
       else{
-        alert("Ooops! Something went wrong! Please check your email and password again!!")
-        console.log(this);
-        this.setState({loginSuccess: false});
+        console.log('login FAIL');
+        return(false)
       }
-    });
-    event.preventDefault();
+    }).catch(err => {
+      console.log('LOGIN error occurred',err);
+      return(false)
+    })
   }
 
 // Below function is called when user remembers Password
@@ -134,7 +186,7 @@ class SignInCard extends Component {
     this.setState({isValidateOTPCardHidden: true});
     this.setState({isVerifyOTPCardHidden: true});
     this.setState({isRegisterNewUserCardHidden: true});
-
+    this.setState({isVerifyOTPForSigninMFAHidden: true});
   }
 
 // check if security answer is correct
@@ -158,6 +210,7 @@ verifySecurityAnswer(event){
       this.setState({isValidateOTPCardHidden: true});
       this.setState({isVerifyOTPCardHidden: false});
       this.setState({isRegisterNewUserCardHidden: true});
+      this.setState({isVerifyOTPForSigninMFAHidden: true});
     }
 
     else{ //answer was wrong...go back to sign in
@@ -178,6 +231,7 @@ verifySecurityAnswer(event){
       this.setState({isValidateOTPCardHidden: true});
       this.setState({isVerifyOTPCardHidden: true});
       this.setState({isRegisterNewUserCardHidden: true});
+      this.setState({isVerifyOTPForSigninMFAHidden: true});
   }
 
 // User types a new password twice
@@ -236,7 +290,7 @@ fetchSecurityQuestion(event){
       this.setState({isValidateOTPCardHidden: false});
       this.setState({isVerifyOTPCardHidden: true});
       this.setState({isRegisterNewUserCardHidden: true});
-
+      this.setState({isVerifyOTPForSigninMFAHidden: true});
     }
 
     else{
@@ -262,7 +316,7 @@ showRegistrationCard(event){
 // User has input all details
 // Send all those to backend to create a new record
 // and navigate back to sign in
-registerNewUser(event){
+registerNewUser = (event) =>{
 
      const registrationData = {
            firstName: this.state.firstName,
@@ -280,7 +334,7 @@ registerNewUser(event){
        data: registrationData,
        headers: {'Access-Control-Allow-Origin': '*'},
      })
-     .then(function (response) {
+     .then( (response) => {
        alert("Thank you! An email with an activation link has been sent to your email! Please activate your account :)")
        // Reset all state variables for registration so that new users do not see it again
        this.setState({firstName: ''});
@@ -358,7 +412,7 @@ registerNewUser(event){
             <a href="#" onClick={this.handleForgotPassword.bind(this)} className = {classes.forgotPassword}> Forgot Password?</a>
 
             <CardActions>
-              <Button variant="contained" onClick = {this.handleSubmit.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
+              <Button variant="contained" onClick = {this.sendOTPForLogin.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
             </CardActions>
           </form>
         </CardContent>
@@ -600,6 +654,36 @@ registerNewUser(event){
           </form>
         </CardContent>
           <a href="#" onClick={this.goBackToSignIn.bind(this)} className = {classes.forgotPassword}> Back to Sign In</a>
+      </Card>
+    }
+
+    //-------------
+    // User prompted to enter OTP for Logging in
+    //--------------
+    if(!(this.state.isVerifyOTPForSigninMFAHidden)){
+      currentCard = <Card className={classes.card}>
+        <CardContent>
+          <Typography class='login-page-headers' color="textSecondary">
+            Multifactor Authentication
+          </Typography>
+
+          <form>
+            <p class='comfortaa-font '>Enter the OTP :</p>
+            <TextField
+              id="OTPForLogin"
+              className={classes.textField}
+              value={this.state.OTPForLogin}
+              onChange={this.handleChange.bind(this)}
+              margin="normal"
+              name="OTPForLogin"
+            />
+            <CardActions>
+              <Button variant="contained" onClick = {this.handleSubmit.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Submit</Button>
+            </CardActions>
+          </form>
+
+        </CardContent>
+        <p onClick = {this.showRegistrationCard.bind(this)} className = {classes.newUserText}> New User? <a href="#">Register Here!</a></p>
       </Card>
     }
 
