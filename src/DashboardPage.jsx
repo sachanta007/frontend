@@ -51,27 +51,6 @@ const drawerWidth = 240;
 const axios = require('axios');
 const localizer = BigCalendar.momentLocalizer(moment)
 let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
-let events = [
-  {
-    id: 0,
-    title: 'Elements of AI course',
-    start: new Date(2018, 0, 7,10,30,0,0),
-    end: new Date(2018, 0, 7,11,30,0,0),
-    desc: 'Course by David Crandall'
-  },
-  {
-    id: 1,
-    title: 'Software Engineering',
-    start: new Date(2018, 0, 8),
-    end: new Date(2018, 0, 8),
-  },
-
-  {
-    id: 2,
-    title: 'Applied Algorithms',
-    start: new Date(2018, 0, 9),
-    end: new Date(2018, 0, 11),
-  }]
 
   const styles = theme => ({
   root: {
@@ -567,28 +546,32 @@ handleChangeAndGetMatchingCourses(e){
       'Authorization': sessionStorage.getItem('token')}
     })
     .then((response)=>{
+      console.log(response);
       if(response.status == 200)
       {
-          for(let i = 0; i < response.data.length; i++){
-            response.data[i]['days'].forEach(function(item,index){
+         var filtered = []
+          for(let item of response.data){if(item.length != 0) { filtered.push(item)}}
+          console.log('ff',filtered);
+          for(let i = 0; i < filtered.length; i++){
+            filtered[i]['days'].forEach(function(item,index){
               switch(item){
-                case 1: response.data[i]['days'][index] = "Mon"; break;
-                case 2: response.data[i]['days'][index] = "Tue"; break;
-                case 3: response.data[i]['days'][index] = "Wed"; break;
-                case 4: response.data[i]['days'][index] = "Thu"; break;
-                case 5: response.data[i]['days'][index] = "Fri"; break;
+                case 1: filtered[i]['days'][index] = "Mon"; break;
+                case 2: filtered[i]['days'][index] = "Tue"; break;
+                case 3: filtered[i]['days'][index] = "Wed"; break;
+                case 4: filtered[i]['days'][index] = "Thu"; break;
+                case 5: filtered[i]['days'][index] = "Fri"; break;
               }
             })
           }
 
-          console.log('FETCHED STUDENTS ENROLLED DETAILS!',response.data);
-          this.setState({studentEnrolledCourses: response.data})
+          console.log('FETCHED STUDENTS ENROLLED DETAILS!',filtered);
+          this.setState({studentEnrolledCourses: filtered})
       }
       else{
-        console.log('Error fetching students enrolled courses!!');
+        console.log('Status is not 200 fetching students enrolled courses!!',response);
       }
     }).catch(err => {
-        console.log('Error fetching students enrolled courses!!');
+        console.log('Error fetching students enrolled courses!!',err);
         this.setState({studentEnrolledCourses: []})
     })
   }
@@ -1090,6 +1073,7 @@ getProfessorSchedule(){
 //// PROF CALENDAR EVENTS DATA POPULATION //////
 populateEventsForProfCalendar(){
   let profSchedule = this.state.profSchedule
+  console.log('Schedule BEFORE',profSchedule);
   let events = []
   profSchedule.map(function(element){
     for(var i =0; i < element.start_dates.length; i++)
@@ -1103,15 +1087,12 @@ populateEventsForProfCalendar(){
         }
         events.push(temp_event)
    }
+ });
 
-  })
-console.log('EVENT ARRAY ----',events);
 
   let repeatedEvents = []
   for(var j=0; j < events.length; j++){
-
     for(var counter = 1; counter < 6; counter++){
-
       let temp_event = {
         id: events[j].id,
         title: events[j].title,
@@ -1122,7 +1103,8 @@ console.log('EVENT ARRAY ----',events);
       repeatedEvents.push(temp_event)
     }
   }
-  console.log('Repeated till end of sem ARRAY ----',repeatedEvents);
+  console.log('EVENT ARRAY ----',repeatedEvents);
+
   this.setState({eventsForProfessorCalendar : repeatedEvents})
 }
 
@@ -1636,7 +1618,6 @@ dropEnrolledCourse(element,v){
             <div className={classes.toolbar} />
               <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses</h2>
               {
-
                 this.state.studentEnrolledCourses.map((element,i) => {
                   return(<div key={i}>
                     <Card  style={this.state.courseCardStyle}>
@@ -1659,7 +1640,10 @@ dropEnrolledCourse(element,v){
                   </Card>
                 </div>)
                 })
-
+              }
+              {
+                this.state.studentEnrolledCourses.length == 0 &&
+                <p> You are not enrolled to any courses!</p>
               }
           </main>
       }
