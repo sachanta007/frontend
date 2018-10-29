@@ -203,11 +203,15 @@ class DashboardPage extends Component {
       cartData: [],
       profSchedule:[],
       eventsForProfessorCalendar:[],
+      studentEnrolledCourses: [],
+      isThisAnEnrolledCourse: false,
 
       firstCourse:'',
       SecondCourse:'',
       ThirdCourse:'',
       TotalAmount:'',
+      cartCost:0,
+      finanical_aid:0,
       isPaymentModeCardHidden:true,
       isPaymentSuccessfulCardHidden:true
 
@@ -224,7 +228,7 @@ class DashboardPage extends Component {
     else if(currentUserRole == 3)
     {
      this.state.isAdmin = false
-     this.enrolledCourses = this.getListOfEnrolledCourses()
+     this.getListOfEnrolledCourses()
     }
   }
 
@@ -346,7 +350,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
-
+      this.setState({isThisAnEnrolledCourse: false})
       this.componentDidMount()
 
 
@@ -454,6 +458,8 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({searchCourseName: ''});
       this.setState({searchResults: []});
       this.setState({isCartPageHidden: true});
+
+      this.setState({isThisAnEnrolledCourse: false})
     }
 
     else if(value=='payment'){
@@ -470,6 +476,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
+      this.setState({isThisAnEnrolledCourse: false})
     }
 
     else if(value=='calendar'){
@@ -486,6 +493,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
+      this.setState({isThisAnEnrolledCourse: false})
 
       if(sessionStorage.getItem('user_role')==2)
       {
@@ -499,11 +507,40 @@ handleChangeAndGetMatchingCourses(e){
 
   // --- Kriti's functions ----------//
     PaymentMode(event) {
-      this.setState({isPaymentPortalHidden: true});
-      this.setState({isPaymentModeCardHidden: false});
-      this.setState({isPaymentSuccessfulCardHidden: true});
-      this.setState({isIndividualCoursePageHidden: true});
-      this.setState({isCartPageHidden: true});
+      const dataJSON = {
+        user_id: sessionStorage.getItem('user_id')
+      }
+      axios({
+        method:'post',
+        url:'http://localhost:5000/enrollCourses',
+        data: dataJSON,
+        headers: {'Access-Control-Allow-Origin': '*',
+        'Authorization': sessionStorage.getItem('token')},
+      })
+      .then((response) => {
+          if(response.status != 500)
+          {
+            this.setState({cartCost: 7800});
+            this.setState({finanical_aid: 2532});
+
+            this.setState({isPaymentPortalHidden: true});
+            this.setState({isPaymentModeCardHidden: false});
+            this.setState({isPaymentSuccessfulCardHidden: true});
+            this.setState({isIndividualCoursePageHidden: true});
+            this.setState({isCartPageHidden: true});
+
+          }
+          else{
+            this.setState({isPaymentPortalHidden: true});
+            this.setState({isPaymentModeCardHidden: true});
+            this.setState({isPaymentSuccessfulCardHidden: true});
+            this.setState({isIndividualCoursePageHidden: true});
+            this.setState({isCartPageHidden: false});
+            console.log("Error in enrollment");
+          }
+      });
+
+
     }
 
    EnterDetails(event){
@@ -522,31 +559,38 @@ handleChangeAndGetMatchingCourses(e){
 // Returns Cards to be rendered directly
 // ----------------------------
   getListOfEnrolledCourses(){
-    let courses = [
-      {'course_name' : 'Applied Algorithms', 'location': 'BH 101', 'marks': '100%', 'professor':'Funda Ergun', 'start_time': '4.00 PM', 'end_time': '5.15 PM', 'attendance': '100%','days':'1' },
-      {'course_name' : 'Elements of AI', 'location': 'BH 101', 'marks': '100%', 'professor':'Funda Ergun', 'start_time': '4.00 PM', 'end_time': '5.15 PM', 'attendance': '100%','days':'2' },
-      {'course_name' : 'Software Engineering', 'location': 'BH 101', 'marks': '100%', 'professor':'Funda Ergun', 'start_time': '4.00 PM', 'end_time': '5.15 PM', 'attendance': '100%','days':'3' },
-    ]
+    this.setState({studentEnrolledCourses: []})
+    axios({
+      method:'get',
+      url:'http://localhost:5000/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
+      headers: {'Access-Control-Allow-Origin': '*',
+      'Authorization': sessionStorage.getItem('token')}
+    })
+    .then((response)=>{
+      if(response.status == 200)
+      {
+          for(let i = 0; i < response.data.length; i++){
+            response.data[i]['days'].forEach(function(item,index){
+              switch(item){
+                case 1: response.data[i]['days'][index] = "Mon"; break;
+                case 2: response.data[i]['days'][index] = "Tue"; break;
+                case 3: response.data[i]['days'][index] = "Wed"; break;
+                case 4: response.data[i]['days'][index] = "Thu"; break;
+                case 5: response.data[i]['days'][index] = "Fri"; break;
+              }
+            })
+          }
 
-    if(sessionStorage.getItem('user_role') == 3){
-        let contentToReturn = courses.map((element) => {
-          return(<Card style={this.state.courseCardStyle}>
-                    <CardContent>
-                      <Typography style={this.state.courseNameStyle} >
-                          {element.course_name}
-                      </Typography>
-                    {element.professor} || &nbsp;
-                    {element.location} || {element.days == '1' ? 'MW' : element.days == '2' ? 'TuTh' : 'F'} || {element.start_time} - {element.end_time}
-                     <br /> <br />
-                     Marks: {element.marks}
-                     <br />
-                     Attendance: {element.attendance}
-                    </CardContent>
-          </Card>)
-        })
-        return(contentToReturn)
-  }
-
+          console.log('FETCHED STUDENTS ENROLLED DETAILS!',response.data);
+          this.setState({studentEnrolledCourses: response.data})
+      }
+      else{
+        console.log('Error fetching students enrolled courses!!');
+      }
+    }).catch(err => {
+        console.log('Error fetching students enrolled courses!!');
+        this.setState({studentEnrolledCourses: []})
+    })
   }
 
 //----------------------------------
@@ -557,7 +601,9 @@ handleChangeAndGetMatchingCourses(e){
 componentDidMount() {
   let currentUserRole = sessionStorage.getItem('user_role')
   console.log('inside mount',currentUserRole);
+  this.setState({loggedinUserFirstName: sessionStorage.getItem('user_first_name')})
 
+    // ADMIN SECTION
   if(currentUserRole == 1){
     this.setState({isAdmin: true });
     console.log('Admin is in the house!!!');
@@ -582,17 +628,18 @@ componentDidMount() {
     .catch(err => console.log("Component Did mount Exception!!: ", err))
   }
 
+//STUDENT SECTION
   else if(currentUserRole == 3)
   {
     this.setState({isAdmin: false });
-    this.enrolledCourses = this.getListOfEnrolledCourses()
+    this.getListOfEnrolledCourses()
   }
 
+// PROFESSOR
   if(currentUserRole == 2)
   {
-    this.setState({loggedinUserFirstName: sessionStorage.getItem('user_first_name')})
+    this.setState({isAdmin: false });
     this.getProfessorSchedule()
-
   }
 
 }
@@ -829,6 +876,9 @@ hitAPIForAdminHomePageCourses(){
               this.setState({isEditCourseHidden: false})
               this.setState({isIndividualCoursePageHidden: true});
             }
+            else{
+              console.log('Error in deleting course');
+            }
         });
   }
 
@@ -837,15 +887,30 @@ hitAPIForAdminHomePageCourses(){
   // showing only details of that particular card2
   //-----------------
   goToCoursePage(courseClicked,v){
-      console.log('COURSE CLICKED!!',courseClicked);
+      console.log('COURSE CLICKED!!',courseClicked.course_id);
+      console.log('all enrolled', this.state.studentEnrolledCourses);
+
+      if(sessionStorage.getItem('user_role') == 3){
+        var allEnrolledCoursesOfStudent = this.state.studentEnrolledCourses
+
+        for(var i=0; i<allEnrolledCoursesOfStudent.length; i++){
+          if(allEnrolledCoursesOfStudent[i].course_id == courseClicked.course_id ){
+            console.log('Yep enrolled to', allEnrolledCoursesOfStudent[i].course_id);
+
+            this.setState({isThisAnEnrolledCourse: true})
+            console.log('enrolled inside?',this.state.isThisAnEnrolledCourse);
+          }
+
+        }
+      }
       this.setState({dataOfClickedCourse: courseClicked})
       this.setState({isIndividualCoursePageHidden: false});
-
+      console.log('enrolled??',this.state.isThisAnEnrolledCourse);
   }
 
 //-------------------
-// Submits student's comment to Database
-//-----------------
+// Submits student comment to Database
+//--------------------
 submitComment(e){
   const dataJSON = {
           course_id: this.state.dataOfClickedCourse['course_id'].toString(),
@@ -1059,6 +1124,63 @@ console.log('EVENT ARRAY ----',events);
   }
   console.log('Repeated till end of sem ARRAY ----',repeatedEvents);
   this.setState({eventsForProfessorCalendar : repeatedEvents})
+}
+
+//dummy function fr showing alert after payment Success
+dummySuccessPayment(){
+  alert("Congratulations! You have enrolled for the chosen courses!")
+  this.setState({isHomePageHidden: false});
+  this.setState({isPaymentPortalHidden: true});
+  this.setState({isCalendarHidden: true});
+  this.setState({isSearchHidden: true});
+  this.setState({isAddNewCourseHidden: true});
+  this.setState({isEditCourseHidden: true});
+  this.setState({isViewStudentsHidden: true});
+  this.setState({isViewProfessorsHidden: true});
+  this.setState({isEditSingleCourseHidden: true})
+  this.setState({isPaymentModeCardHidden: true});
+  this.setState({isPaymentSuccessfulCardHidden: true});
+  this.setState({isIndividualCoursePageHidden: true});
+  this.setState({isCartPageHidden: true});
+
+  this.componentDidMount();
+
+}
+
+// Drop enrolled course for a student
+dropEnrolledCourse(element,v){
+  console.log('Dropping course',element);
+
+  axios({
+    method:'get',
+    url:'http://localhost:5000/dropCourse/courseId/'+element+'/userId/'+sessionStorage.getItem('user_id'),
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    if(response.status == 200){
+        alert('This course has been dropped from your schedule!')
+        this.setState({isHomePageHidden: false});
+        this.setState({isPaymentPortalHidden: true});
+        this.setState({isCalendarHidden: true});
+        this.setState({isSearchHidden: true});
+        this.setState({isAddNewCourseHidden: true});
+        this.setState({isEditCourseHidden: true});
+        this.setState({isViewStudentsHidden: true});
+        this.setState({isViewProfessorsHidden: true});
+        this.setState({isEditSingleCourseHidden: true})
+        this.setState({isPaymentModeCardHidden: true});
+        this.setState({isPaymentSuccessfulCardHidden: true});
+        this.setState({isIndividualCoursePageHidden: true});
+        this.setState({isCartPageHidden: true});
+
+        this.componentDidMount()
+
+    }
+    else{
+      console.log("Error with dropping course");
+    }
+  });
 
 }
 
@@ -1512,8 +1634,33 @@ console.log('EVENT ARRAY ----',events);
       if(!(this.state.isHomePageHidden)){
         currentContent =   <main className={classes.content}>
             <div className={classes.toolbar} />
-              <h2> Your Courses</h2>
-              {this.enrolledCourses}
+              <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses</h2>
+              {
+
+                this.state.studentEnrolledCourses.map((element,i) => {
+                  return(<div key={i}>
+                    <Card  style={this.state.courseCardStyle}>
+                          <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
+                            <CardContent>
+                              <div name="courseNameAndDrop">
+                                  <Typography className ={classes.displayInline} style={this.state.courseNameStyle} >
+                                      {element.course_name}
+                                  </Typography>
+                              </div>
+                            {element.professor.first_name} {element.professor.last_name} || &nbsp;
+                            {element.location} || {
+                              element.days.map(function(e){
+
+                                return <span>{e} &nbsp;</span>
+                              })
+                            } || {element.start_time} - {element.end_time}
+                            </CardContent>
+                          </CardActionArea>
+                  </Card>
+                </div>)
+                })
+
+              }
           </main>
       }
 
@@ -1578,11 +1725,19 @@ console.log('EVENT ARRAY ----',events);
                 <Card>
                   <CardContent>
 
+
                     <div name="courseNameAndAdd">
                       <h1> {this.state.dataOfClickedCourse.course_code} - {this.state.dataOfClickedCourse.course_name}</h1>
-                        <IconButton color="inherit" onClick={this.addCourseToCart.bind(this, this.state.dataOfClickedCourse.course_id)} style={{float:"right"}}>
+                        {!(this.state.isThisAnEnrolledCourse) &&
+                        <IconButton color="inherit" title="Add to cart" onClick={this.addCourseToCart.bind(this, this.state.dataOfClickedCourse.course_id)} style={{float:"right"}}>
                           <AddShoppingCartIcon  />
                         </IconButton>
+                      }
+                      {this.state.isThisAnEnrolledCourse &&
+                        <IconButton color="inherit" title="Drop Course" onClick={this.dropEnrolledCourse.bind(this, this.state.dataOfClickedCourse.course_id)} style={{float:"right"}}>
+                          <DeleteIcon  />
+                        </IconButton>
+                      }
                     </div>
 
 
@@ -1636,6 +1791,14 @@ console.log('EVENT ARRAY ----',events);
                         </div>
                       ))
                     }
+
+                    {
+                      this.state.dataOfClickedCourse.comment.length ==0 &&
+                      <div>
+                        No comments so far!
+                      </div>
+                    }
+
                 </CardContent>
               </Card>
               <br /> <br />
@@ -1706,8 +1869,13 @@ console.log('EVENT ARRAY ----',events);
                        <br /> <br />
                     </CardContent>
                   </Card>))
+
                 }
 
+                {
+                  this.state.cartData.length > 0 &&
+                  <Button variant="contained" onClick = {this.PaymentMode.bind(this)} className = {classes.marginAuto} color="primary"> Checkout</Button>
+                }
                 {
                   this.state.cartData.length == 0 &&
                   <div>
@@ -1766,13 +1934,19 @@ console.log('EVENT ARRAY ----',events);
             </main>
         }
 
-
+// Hit checkout from cart and lands here
 else if(!(this.state.isPaymentModeCardHidden))
 {
   currentContent=
     <main className={classes.content}>
         <div className={classes.toolbar} />
           <div className={classes.root}>
+            <div>
+              <h2> Amount to be paid:</h2>
+              {this.state.cartCost}
+              <h2> Financial aid available:</h2>
+              {this.state.finanical_aid}
+            </div>
             <FormControl component="fieldset" className={classes.formControl}>
                       <FormLabel component="legend">Payment Mode</FormLabel>
                       <RadioGroup
@@ -1807,6 +1981,7 @@ else if(!(this.state.isPaymentModeCardHidden))
           </main>
 }
 
+// chose a payment mode and lands here
 else if(!(this.state.isPaymentSuccessfulCardHidden))
 {
   currentContent =   <main className={classes.content}>
@@ -1828,7 +2003,7 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                                 margin="normal"
                                 name="Details"
                               />
-                              <Button variant="outlined" className = {classes.marginAuto}  color="primary">Submit</Button>
+                            <Button variant="outlined"  onClick={this.dummySuccessPayment.bind(this)} className = {classes.marginAuto}  color="primary">Submit</Button>
                             </FormControl>
                           </form>
                     </CardContent>
