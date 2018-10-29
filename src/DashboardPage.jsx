@@ -148,6 +148,7 @@ class DashboardPage extends Component {
       inheritWidth: {width: 'inherit'},
       courseNameStyle: {fontSize: 20, fontWeight: 'bold', fontFamily: 'Comfortaa'},
       spacing : '16',
+      loggedinUserFirstName: '',
       isAdmin: false,
       isAddNewCourseHidden: true,
       isEditCourseHidden: true,
@@ -589,6 +590,7 @@ componentDidMount() {
 
   if(currentUserRole == 2)
   {
+    this.setState({loggedinUserFirstName: sessionStorage.getItem('user_first_name')})
     this.getProfessorSchedule()
 
   }
@@ -930,7 +932,7 @@ getCartDetails(id){
   })
   .then((response)=>{
     console.log('response code',response.status);
-    console.log('rrr',response);
+    console.log('rrr',response.data);
     if(response.status ==200)
       {
         return(response.data);
@@ -1910,7 +1912,8 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
       if(!(this.state.isHomePageHidden)){
         currentContent =   <main className={classes.content}>
             <div className={classes.toolbar} />
-              <h2> Hello, Professor! Here are your courses!</h2>
+              <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses!</h2>
+
                 {
                   this.state.profSchedule.length>0 &&
                   this.state.profSchedule.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
@@ -2018,6 +2021,7 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                 <CardContent>
                   <h1>Comments about this course</h1>
                     {
+                      this.state.dataOfClickedCourse.comment.length >0 &&
                       this.state.dataOfClickedCourse.comment.map((el,i) => (
                       <div name="outerWrapper" key={i}>
                          <div name="commenterAndStars" className={classes.displayInlineBlock}>
@@ -2049,6 +2053,12 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                             </div>
                         </div>
                       ))
+                    }
+                    {
+                      this.state.dataOfClickedCourse.comment.length ==0 &&
+                      <div>
+                        No comments so far!
+                      </div>
                     }
                 </CardContent>
               </Card>
