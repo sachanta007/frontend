@@ -13,6 +13,7 @@ import { Redirect } from 'react-router';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FacebookLogin from 'react-facebook-login';
 
 const styles = {
   card: {
@@ -76,7 +77,9 @@ class SignInCard extends Component {
       newUserPassword:'',
       loginSuccess:false,
       role:'',
-      selectedRadioValue: '3'
+      selectedRadioValue: '3',
+      promptRole: false,
+      fbAccessToken:''
     }
       sessionStorage.setItem('token','')
       sessionStorage.setItem('user_role','')
@@ -351,6 +354,54 @@ registerNewUser = (event) =>{
 
 }
 
+  tryToLogin = (email) =>{
+    axios({
+      method:'get',
+      url:'http://course360.herokuapp.com/checkFbUserExistence/email/'+email,
+      headers: {'Access-Control-Allow-Origin': '*'}
+    })
+    .then( (response) => {
+      sessionStorage.setItem('token',response.data['token'])
+      sessionStorage.setItem('user_role',response.data['role_id'])
+      sessionStorage.setItem('user_id',response.data['user_id'])
+      sessionStorage.setItem('user_first_name', response.data['first_name'])
+      this.setState({loginSuccess: true});
+    }).catch((error)=>{
+      this.setState({promptRole: true});
+    })
+  }
+
+  responseFacebook = (response) => {
+    if(response){
+      this.setState({firstName: response.name, newEmail:response.email, fbAccessToken: response.accessToken, type: 'fb'},
+      ()=>{
+          this.tryToLogin(response.email);
+      });
+    }
+  }
+
+  sendFBData =() => {
+    const registrationData = {
+          firstName: this.state.firstName,
+          email: this.state.newEmail,
+          accessToken: this.state.fbAccessToken,
+          role: this.state.selectedRadioValue,
+          type: this.state.type
+        }
+    axios({
+      method:'post',
+      url:'http://course360.herokuapp.com/registerFbUser',
+      data: registrationData,
+      headers: {'Access-Control-Allow-Origin': '*'},
+    })
+    .then( (response) => {
+      sessionStorage.setItem('token',response.data['token'])
+      sessionStorage.setItem('user_role',response.data['role_id'])
+      sessionStorage.setItem('user_id',response.data['user_id'])
+      sessionStorage.setItem('user_first_name', response.data['first_name'])
+      this.setState({loginSuccess: true});
+    });
+  }
 
   render(){
     const { classes } = this.props;
@@ -376,46 +427,73 @@ registerNewUser = (event) =>{
           <Typography class='login-page-headers'  color="textSecondary">
             Sign In
           </Typography>
+          {this.state.promptRole?
+            <CardContent>
+              <RadioGroup
+                aria-label="Role"
+                name="role"
+                className={classes.group}
+                value={this.state.role}
+                onChange={this.handleChange.bind(this)}>
 
-          <form>
-            <FormControl required>
-              <TextField
-                id="email-input"
-                type="email"
-                name="email"
-                label="Email"
-                value={this.state.email}
-                className={classes.textField}
-                margin="normal"
-                autoComplete = 'email'
-                onChange = {this.handleChange.bind(this)}
-                />
-            </FormControl>
-            <br />
+                    <FormControlLabel  value="3" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="3"} />} label="Student" />
+                    <FormControlLabel value="2" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="2"}  />} label="Professor" />
 
-            <FormControl required>
-              <TextField
-                id="password-input"
-                label="Password"
-                className={classes.textField}
-                type="password"
-                value={this.state.password}
-                onChange={this.handleChange.bind(this)}
-                autoComplete="current-password"
-                margin="normal"
-                name="password"
+              </RadioGroup>
+              <CardActions>
+                <Button variant="contained" onClick = {this.sendFBData.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
+              </CardActions>
+            </CardContent>
+            :
+              <form>
+                <FormControl required>
+                  <TextField
+                    id="email-input"
+                    type="email"
+                    name="email"
+                    label="Email"
+                    value={this.state.email}
+                    className={classes.textField}
+                    margin="normal"
+                    autoComplete = 'email'
+                    onChange = {this.handleChange.bind(this)}
+                    />
+                </FormControl>
+                <br />
 
-                />
-            </FormControl>
-            <br />
+                <FormControl required>
+                  <TextField
+                    id="password-input"
+                    label="Password"
+                    className={classes.textField}
+                    type="password"
+                    value={this.state.password}
+                    onChange={this.handleChange.bind(this)}
+                    autoComplete="current-password"
+                    margin="normal"
+                    name="password"
 
-            {/* This is the line of code that hides/shows forgot password VS signin page. Same function is used below too! */}
-            <a href="#" onClick={this.handleForgotPassword.bind(this)} className = {classes.forgotPassword}> Forgot Password?</a>
+                    />
+                </FormControl>
+                <br />
 
-            <CardActions>
-              <Button variant="contained" onClick = {this.sendOTPForLogin.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
-            </CardActions>
-          </form>
+                {/* This is the line of code that hides/shows forgot password VS signin page. Same function is used below too! */}
+                <a href="#" onClick={this.handleForgotPassword.bind(this)} className = {classes.forgotPassword}> Forgot Password?</a>
+
+                <CardActions>
+                  <Button variant="contained" onClick = {this.sendOTPForLogin.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
+                </CardActions>
+                <br/>
+                <Typography class='login-page-headers' color="textSecondary">
+                  or
+                </Typography>
+                <FacebookLogin
+                  appId="1932450986840445"
+                  autoLoad={false}
+                  fields="name,email,picture"
+                  callback={(response)=>this.responseFacebook(response)} />
+              </form>
+            }
         </CardContent>
         <p onClick = {this.showRegistrationCard.bind(this)} className = {classes.newUserText} >New User? <a href="#">Register Here!</a></p>
       </Card>
