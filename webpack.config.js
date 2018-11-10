@@ -27,5 +27,6 @@ module.exports = {
   devServer: {
     compress: true,
     disableHostCheck: true,
+    public: 'course-360.herokuapp.com'
   }
 }
