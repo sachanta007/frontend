@@ -23,6 +23,7 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import Grid from '@material-ui/core/Grid';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import Select from '@material-ui/core/Select';
+import {ToastContainer, ToastStore} from 'react-toasts';
 
 
 const styles = theme => ({
@@ -41,16 +42,12 @@ const styles = theme => ({
 
 });
 
-
-
 function DatePickers(props) {
   const { classes } = props;
   };
 
-
 function InputWithIcon(props) {
   const { classes } = props;
-
 };
 
 
@@ -61,6 +58,7 @@ const axios = require('axios');
   constructor()
   {
     super();
+    console.log("hhhhhh")
     this.state ={
 
       isStudentDetailsFormHidden:false,
@@ -73,7 +71,9 @@ const axios = require('axios');
      console.log(e);
 }
 
-
+componentDidMount(){
+console.log('sss')
+}
   StudentDetailsForm(event) {
     this.setState({isPaymentModeCardHidden: false});
   }
@@ -232,11 +232,18 @@ const axios = require('axios');
                         className={classes.textField}
                         helperText="e.g CS/DS etc."
                         />
+
+
+
+
                         </FormControl>
 
-                        
                         </form>
 
+
+                       <Button variant="outlined"  onClick={() => ToastStore.success(" Submitted the form successfully!!")}  className = {classes.marginBottom}  color="primary">Submit</Button>
+
+                      <ToastContainer position={ToastContainer.POSITION.BOTTOM_CENTER} lightBackground store={ToastStore}/>
 
 
 
@@ -258,6 +265,7 @@ const axios = require('axios');
 
       }
   }
+
 
 StudentDetails.propTypes = {
   classes: PropTypes.object.isRequired,

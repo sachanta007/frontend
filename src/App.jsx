@@ -21,6 +21,7 @@ class App extends Component {
             <Route path="/" exact component={SignInPage}/>
             <Route path="/activated" component={UserActivatedPage}/>
             <Route path="/DashboardPage" component={DashboardPage} />
+            <Route path="/PaymentPortal" component={PaymentPortal} />
             <Route path="/StudentDetails" component={StudentDetails} />
         </div>
       </HashRouter>
