@@ -1,0 +1,63 @@
+
+.login-page-headers {
+  font-family: 'Comfortaa', sans-serif;
+  color:tomato;
+  font-size: 25px;
+  font-weight: bold;
+ }
+.comfortaa-font{
+  font-family: 'Comfortaa', sans-serif;
+}
+body {
+  font-family: 'Saira Semi Condensed', sans-serif;
+}
+
+
+.course360-font {
+  font-family: 'Lobster', cursive;
+}
+
+.courses-card{
+  padding-bottom: 12px
+}
+.center-text{
+  text-align: center;
+}
+.small-font-size{
+  font-size: 11px
+}
+.login-banner{
+  font-family: 'Comfortaa', sans-serif;
+  color: white;
+  font-size: 50px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.user-added-font{
+  font-size: 20px;
+  color: white;
+  font-weight: bold;
+}
+img.bg {
+  /* Set rules to fill background */
+  min-height: 100%;
+  min-width: 1024px;
+
+  /* Set up proportionate scaling */
+  width: 100%;
+  height: auto;
+
+  /* Set up positioning */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+@media screen and (max-width: 1024px) { /* Specific to this particular image */
+  img.bg {
+    left: 50%;
+    margin-left: -512px;   /* 50% */
+  }
+}
