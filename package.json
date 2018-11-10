@@ -1,12 +1,11 @@
 {
-  "name": "react-simple-boilerplate",
+  "name": "Course 360",
   "version": "1.0.0",
-  "description": "Simple and lightweight Boilerplate for ReactJS projects",
+  "description": "Software Engineering Group 7",
   "scripts": {
     "lint": "eslint src",
     "start": "node server.js"
   },
-  "repository": "https://github.com/noahlotzer/react-simple-boilerplate.git",
   "keywords": [
     "react",
     "reactjs",
@@ -16,12 +15,8 @@
     "edit",
     "webpack"
   ],
-  "author": "Noah-Jerome Lotzer <noah.lotzer@gmail.com>",
+  "author": "Group7",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/noahlotzer/react-simple-boilerplate/issues"
-  },
-  "homepage": "https://github.com/noahlotzer/react-simple-boilerplate",
   "devDependencies": {
     "babel-core": "^6.24.1",
     "babel-loader": "^7.0.0",
@@ -56,7 +51,19 @@
     "react-router-dom": "^4.3.1",
     "react-star-ratings": "^2.3.0",
     "react-toastify": "^4.3.2",
-    "react-toasts": "^2.0.13"
+    "react-toasts": "^2.0.13",
+    "babel-core": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-0": "^6.24.1",
+    "css-loader": "^0.28.0",
+    "eslint": "^3.19.0",
+    "eslint-plugin-react": "^6.10.3",
+    "node-sass": "^4.5.2",
+    "sass-loader": "^6.0.3",
+    "style-loader": "^0.16.1",
+    "webpack": "^2.4.1",
+    "webpack-dev-server": "^2.4.4"
   },
   "main": "server.js"
 }
