@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
+import { Redirect } from 'react-router';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -44,7 +45,8 @@ import StarRatings from 'react-star-ratings';
 import BigCalendar from 'react-big-calendar'
 import moment from 'moment'
 import '!style-loader!css-loader!react-big-calendar/lib/css/react-big-calendar.css';
-
+import ChatScreen from './ChatScreen.js';
+import Chatkit from '@pusher/chatkit-client'
 
 // -------------------- Declaring constants here -------------------//
 const drawerWidth = 240;
@@ -108,8 +110,8 @@ let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
 // ------------------------------------------- Constants end here -----------------------------------------------//
 
 class DashboardPage extends Component {
-  constructor(){
-    super()
+  constructor(props){
+    super(props)
     this.handleMenuItemClick = this.handleMenuItemClick.bind(this);
     this.editSingleCourse = this.editSingleCourse.bind(this);
     this.updateCourseInDB = this.updateCourseInDB.bind(this);
@@ -117,6 +119,7 @@ class DashboardPage extends Component {
     this.deleteCourseInDB = this.deleteCourseInDB.bind(this);
     this.wrapperForCourseSearch = this.wrapperForCourseSearch.bind(this);
     this.PaymentMode = this.PaymentMode.bind(this);
+    this.profileMenu = this.profileMenu.bind(this);
 
     this.state = {
       isHomePageHidden: false,
@@ -136,6 +139,7 @@ class DashboardPage extends Component {
       isViewProfessorsHidden: true,
       isIndividualCoursePageHidden: true,
       isCartPageHidden:true,
+      isChatPageHidden:true,
       selectedRadioValue: [],
       mon: false,
       tue: false,
@@ -192,7 +196,10 @@ class DashboardPage extends Component {
       cartCost:0,
       finanical_aid:0,
       isPaymentModeCardHidden:true,
-      isPaymentSuccessfulCardHidden:true
+      isPaymentSuccessfulCardHidden:true,
+
+      chatUser: {},
+      anchorEl: null
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -254,7 +261,54 @@ handleChangeForRating(e){
   this.setState({courseRating: e})
 }
 
+// Below is for Account popdown menu state setting
+// null means no menu item clicked
+handleClose = () => {
+    this.setState({ anchorEl: null });
+  };
 
+//Sets one particular popdown menu item as true...
+profileMenu(event){
+  this.setState({ anchorEl: event.currentTarget });
+}
+
+
+//LOGS OUT USER!!!
+logout(e){
+
+   // Leaving chat room
+    this.state.chatUser.leaveRoom({ roomId: '19420562' })
+    .then(room => {
+      console.log(`Left room with ID: ${room.id}`)
+    })
+    .catch(err => {
+      console.log(`Error leaving room ${"19420562"}: ${err}`)
+    })
+
+  // Resetting session variables
+  sessionStorage.setItem('token','')
+  sessionStorage.setItem('user_role','')
+  sessionStorage.setItem('user_id','')
+  sessionStorage.setItem('user_first_name','')
+  sessionStorage.setItem('user_email','')
+
+  //Resetting state vars for all page flags...go back to Sign in Page!!
+  this.setState({isHomePageHidden: true});
+  this.setState({isPaymentPortalHidden: true});
+  this.setState({isCalendarHidden: true});
+  this.setState({isSearchHidden: true});
+  this.setState({isAddNewCourseHidden: true});
+  this.setState({isEditCourseHidden: true});
+  this.setState({isViewStudentsHidden: true});
+  this.setState({isViewProfessorsHidden: true});
+  this.setState({isEditSingleCourseHidden: true})
+  this.setState({isPaymentModeCardHidden: true});
+  this.setState({isPaymentSuccessfulCardHidden: true});
+  this.setState({isIndividualCoursePageHidden: true});
+  this.setState({isCartPageHidden: true});
+  this.setState({isChatPageHidden: true})
+
+}
 // Below is handle change specifically for course search field
 handleChangeAndGetMatchingCourses(e){
       let change = {}
@@ -329,6 +383,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
+      this.setState({isChatPageHidden: true})
       this.setState({isThisAnEnrolledCourse: false})
       this.componentDidMount()
 
@@ -353,6 +408,7 @@ handleChangeAndGetMatchingCourses(e){
           this.setState({allProfessorsForSelect: returnVal});
       })
       .catch(err => console.log("Axios err at add course: ", err))
+      this.setState({isChatPageHidden: true})
     }
 
     else if(value == 'edit'){
@@ -369,7 +425,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
-
+      this.setState({isChatPageHidden: true})
       this.componentDidMount()
       this.getAllProfessorsForSelect().then((returnVal) => {
           this.setState({allProfessorsForSelect: returnVal});
@@ -391,7 +447,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
-
+      this.setState({isChatPageHidden: true})
       this.getAllStudents().then((returnVal) => {
         this.setState({allStudents: returnVal});
 
@@ -413,7 +469,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
-
+      this.setState({isChatPageHidden: true})
       this.getAllProfessorsForSelect().then((returnVal) => {
         this.setState({allProfessors: returnVal});
 
@@ -437,7 +493,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({searchCourseName: ''});
       this.setState({searchResults: []});
       this.setState({isCartPageHidden: true});
-
+      this.setState({isChatPageHidden: true})
       this.setState({isThisAnEnrolledCourse: false})
     }
 
@@ -456,6 +512,7 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
+      this.setState({isChatPageHidden: true})
     }
 
     else if(value=='calendar'){
@@ -473,12 +530,30 @@ handleChangeAndGetMatchingCourses(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
-
+      this.setState({isChatPageHidden: true})
       if(sessionStorage.getItem('user_role')==2)
       {
         this.getProfessorSchedule()
 
       }
+    }
+
+    else if(value == 'chat'){
+      this.setState({isHomePageHidden: true});
+      this.setState({isPaymentPortalHidden: true});
+      this.setState({isCalendarHidden: true});
+      this.setState({isSearchHidden: true});
+      this.setState({isAddNewCourseHidden: true});
+      this.setState({isEditCourseHidden: true});
+      this.setState({isViewStudentsHidden: true});
+      this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
+      this.setState({isThisAnEnrolledCourse: false})
+      this.setState({isChatPageHidden: false})
 
     }
   }
@@ -546,12 +621,11 @@ handleChangeAndGetMatchingCourses(e){
       'Authorization': sessionStorage.getItem('token')}
     })
     .then((response)=>{
-      console.log(response);
       if(response.status == 200)
       {
          var filtered = []
           for(let item of response.data){if(item.length != 0) { filtered.push(item)}}
-          console.log('ff',filtered);
+
           for(let i = 0; i < filtered.length; i++){
             filtered[i]['days'].forEach(function(item,index){
               switch(item){
@@ -564,7 +638,6 @@ handleChangeAndGetMatchingCourses(e){
             })
           }
 
-          console.log('FETCHED STUDENTS ENROLLED DETAILS!',filtered);
           this.setState({studentEnrolledCourses: filtered})
       }
       else{
@@ -583,7 +656,7 @@ handleChangeAndGetMatchingCourses(e){
 //----------------------------------
 componentDidMount() {
   let currentUserRole = sessionStorage.getItem('user_role')
-  console.log('inside mount',currentUserRole);
+
   this.setState({loggedinUserFirstName: sessionStorage.getItem('user_first_name')})
 
     // ADMIN SECTION
@@ -624,6 +697,21 @@ componentDidMount() {
     this.setState({isAdmin: false });
     this.getProfessorSchedule()
   }
+
+// chat user
+const chatManager = new Chatkit.ChatManager({
+  instanceLocator: 'v1:us1:1a111cfa-e268-4391-84a5-484c7faccc84',
+  userId: sessionStorage.getItem('user_email'),
+  tokenProvider: new Chatkit.TokenProvider({
+    url: 'https://us1.pusherplatform.io/services/chatkit_token_provider/v1/1a111cfa-e268-4391-84a5-484c7faccc84/token?user_id='+sessionStorage.getItem('user_email'),
+  }),
+})
+
+chatManager
+  .connect()
+  .then(currentUser => {
+    this.setState({chatUser: currentUser });
+  })
 
 }
 
@@ -995,6 +1083,8 @@ getCartDetails(id){
 // GIVEN USER ID
 // Sets state with cart data
 goToCartPage(id,e){
+
+
   this.getCartDetails(id).then((returnVal) => {
 
     for(let i = 0; i < returnVal.length; i++){
@@ -1550,7 +1640,9 @@ dropEnrolledCourse(element,v){
                 Course360
               </Typography>
               <IconButton color="inherit" aria-label="Menu">
-               <AccountCircle />
+               <AccountCircle aria-owns={anchorEl ? 'simple-menu' : undefined}
+                 aria-haspopup="true"
+                 />
              </IconButton>
             </Toolbar>
           </AppBar>
@@ -1645,6 +1737,13 @@ dropEnrolledCourse(element,v){
                 this.state.studentEnrolledCourses.length == 0 &&
                 <p> You are not enrolled to any courses!</p>
               }
+          </main>
+      }
+
+      if(!(this.state.isChatPageHidden)){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+              <ChatScreen currentUser = {this.state.currentUser}/>
           </main>
       }
 
@@ -2011,8 +2110,19 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                         <ShoppingCartIcon />
                    </IconButton>
 
-                    <IconButton color="inherit" aria-label="Menu">
+                    <IconButton color="inherit" aria-label="Menu" aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
+                      aria-haspopup="true"
+                      onClick = {this.profileMenu.bind(this)}  >
                      <AccountCircle />
+                       <Menu
+                          id="simple-menu"
+                          anchorEl={this.state.anchorEl}
+                          open={Boolean(this.state.anchorEl)}
+                          onClose={this.handleClose}
+                          >
+                        <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
+                        <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
+                      </Menu>
                    </IconButton>
                 </Toolbar>
               </AppBar>
@@ -2051,6 +2161,13 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                         <CalendarTodayIcon />
                       </ListItemIcon>
                       <ListItemText primary="Calendar" />
+                    </ListItem>
+
+                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
+                      <ListItemIcon>
+                        <CalendarTodayIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Chat" />
                     </ListItem>
 
                 </List>
@@ -2292,6 +2409,13 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                         <CalendarTodayIcon />
                       </ListItemIcon>
                       <ListItemText primary="Calendar" />
+                    </ListItem>
+
+                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
+                      <ListItemIcon>
+                        <CalendarTodayIcon />
+                      </ListItemIcon>
+                      <ListItemText primary="Chat" />
                     </ListItem>
 
                 </List>

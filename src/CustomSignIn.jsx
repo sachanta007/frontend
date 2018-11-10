@@ -82,6 +82,7 @@ class SignInCard extends Component {
       sessionStorage.setItem('user_role','')
       sessionStorage.setItem('user_id','')
       sessionStorage.setItem('user_first_name','')
+      sessionStorage.setItem('user_email','')
   }
 
 // Below is a common handleChange function
@@ -139,6 +140,7 @@ handleSubmit(e) {
             sessionStorage.setItem('user_role',returnVal['role_id'])
             sessionStorage.setItem('user_id',returnVal['user_id'])
             sessionStorage.setItem('user_first_name', returnVal['first_name'])
+            sessionStorage.setItem('user_email', returnVal['email'])
             this.setState({loginSuccess: true});
           }
         else{
