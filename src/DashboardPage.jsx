@@ -44,6 +44,7 @@ import StarRatings from 'react-star-ratings';
 import BigCalendar from 'react-big-calendar'
 import moment from 'moment'
 import '!style-loader!css-loader!react-big-calendar/lib/css/react-big-calendar.css';
+import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 
 
 // -------------------- Declaring constants here -------------------//
@@ -202,7 +203,8 @@ class DashboardPage extends Component {
       isPaymentModeCardHidden:true,
       isPaymentSuccessfulCardHidden:true,
 
-      anchorEl: null
+      anchorEl: null,
+      open: false,
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -323,20 +325,29 @@ logout(e){
   this.setState({isChatPageHidden: true})
 }
 
+// Used for closing menu when clicked elsewhere
+handleClickAway = () => {
+    this.setState({ open: false});
+  };
+
+
 // Below is for Account popdown menu state setting
 // null means no menu item clicked
 handleClose = () => {
     this.setState({ anchorEl: null });
   };
 
-//Sets one particular popdown menu item as true...
+//Opens the dropdown menu
 profileMenu(event){
-  this.setState({ anchorEl: event.currentTarget });
+  this.setState(state => ({
+      open: !this.state.open,
+    }));
+
+    this.setState({ anchorEl: event.currentTarget })
 }
 
 //navigates to profile page
 goToMyProfilePage(e){
-  this.handleClose()
   console.log("Moving to person's profile");
 }
 
@@ -604,12 +615,10 @@ goToMyProfilePage(e){
       'Authorization': sessionStorage.getItem('token')}
     })
     .then((response)=>{
-      console.log(response);
       if(response.status == 200)
       {
          var filtered = []
           for(let item of response.data){if(item.length != 0) { filtered.push(item)}}
-          console.log('ff',filtered);
           for(let i = 0; i < filtered.length; i++){
             filtered[i]['days'].forEach(function(item,index){
               switch(item){
@@ -622,7 +631,6 @@ goToMyProfilePage(e){
             })
           }
 
-          console.log('FETCHED STUDENTS ENROLLED DETAILS!',filtered);
           this.setState({studentEnrolledCourses: filtered})
       }
       else{
@@ -641,7 +649,6 @@ goToMyProfilePage(e){
 //----------------------------------
 componentDidMount() {
   let currentUserRole = sessionStorage.getItem('user_role')
-  console.log('inside mount',currentUserRole);
   this.setState({loggedinUserFirstName: sessionStorage.getItem('user_first_name')})
 
     // ADMIN SECTION
@@ -995,7 +1002,6 @@ getLatestCourseDetails(course_id){
     'Authorization': sessionStorage.getItem('token')}
   })
   .then((response)=>{
-    console.log(response.data);
     this.setState({dataOfClickedCourse: response.data})
   });
 }
@@ -1038,7 +1044,6 @@ getCartDetails(id){
   })
   .then((response)=>{
     console.log('response code',response.status);
-    console.log('rrr',response.data);
     if(response.status ==200)
       {
         return(response.data);
@@ -1607,20 +1612,21 @@ dropEnrolledCourse(element,v){
               <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
                 Course 360
               </Typography>
-              <IconButton color="inherit" aria-label="Menu" aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
-                      aria-haspopup="true"
-                      onClick = {this.profileMenu.bind(this)}  >
-                     <AccountCircle />
-                       <Menu
-                          id="simple-menu"
-                          anchorEl={this.state.anchorEl}
-                          open={Boolean(this.state.anchorEl)}
-                          onClose={this.handleClose}
-                          >
+              <IconButton color="inherit" onClick = {this.profileMenu.bind(this)}
+                aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
+                aria-haspopup="true">
+                  <AccountCircle />
+                </IconButton>
+                       <div>
+                           <Menu
+                              anchorEl ={this.state.anchorEl}
+                              open={Boolean(this.state.anchorEl)}
+                              onClose={this.handleClose}
+                              >
 
-                        <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
-                      </Menu>
-                   </IconButton>
+                            <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
+                          </Menu>
+                       </div>
             </Toolbar>
           </AppBar>
 
@@ -2080,20 +2086,21 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                         <ShoppingCartIcon />
                    </IconButton>
 
-                   <IconButton color="inherit" aria-label="Menu" aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
-                       aria-haspopup="true"
-                       onClick = {this.profileMenu.bind(this)}  >
-                      <AccountCircle />
-                        <Menu
-                           id="simple-menu"
-                           anchorEl={this.state.anchorEl}
-                           open={Boolean(this.state.anchorEl)}
-                           onClose={this.handleClose}
-                           >
-                         <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
-                         <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
-                       </Menu>
-                    </IconButton>
+                       <IconButton color="inherit" onClick = {this.profileMenu.bind(this)}
+                         aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
+                         aria-haspopup="true">
+                           <AccountCircle />
+                         </IconButton>
+                                <div>
+                                    <Menu
+                                       anchorEl ={this.state.anchorEl}
+                                       open={Boolean(this.state.anchorEl)}
+                                       onClose={this.handleClose}
+                                       >
+                                     <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
+                                     <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
+                                   </Menu>
+                                </div>
                 </Toolbar>
               </AppBar>
 
@@ -2339,20 +2346,21 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                       Course 360
                     </Typography>
 
-                    <IconButton color="inherit" aria-label="Menu" aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
-                      aria-haspopup="true"
-                      onClick = {this.profileMenu.bind(this)}  >
-                     <AccountCircle />
-                       <Menu
-                          id="simple-menu"
-                          anchorEl={this.state.anchorEl}
-                          open={Boolean(this.state.anchorEl)}
-                          onClose={this.handleClose}
-                          >
-                        <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
-                        <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
-                      </Menu>
-                   </IconButton>
+                    <IconButton color="inherit" onClick = {this.profileMenu.bind(this)}
+                      aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
+                      aria-haspopup="true">
+                        <AccountCircle />
+                      </IconButton>
+                             <div>
+                                 <Menu
+                                    anchorEl ={this.state.anchorEl}
+                                    open={Boolean(this.state.anchorEl)}
+                                    onClose={this.handleClose}
+                                    >
+                                  <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
+                                  <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
+                                </Menu>
+                             </div>
                 </Toolbar>
               </AppBar>
 
