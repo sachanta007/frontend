@@ -29,6 +29,7 @@ import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardActionArea from '@material-ui/core/CardActionArea';
 import CardContent from '@material-ui/core/CardContent';
+import CardMedia from '@material-ui/core/CardMedia';
 import FormControl from '@material-ui/core/FormControl';
 import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -45,7 +46,11 @@ import BigCalendar from 'react-big-calendar'
 import moment from 'moment'
 import '!style-loader!css-loader!react-big-calendar/lib/css/react-big-calendar.css';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
-
+import {ToastContainer, ToastStore} from 'react-toasts'
+import FormHelperText from '@material-ui/core/FormHelperText';
+import InputLabel from '@material-ui/core/InputLabel';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import Input from '@material-ui/core/Input';
 
 // -------------------- Declaring constants here -------------------//
 const drawerWidth = 240;
@@ -77,6 +82,21 @@ let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
     width: drawerWidth,
 
   },
+  margin: {
+  margin: theme.spacing.unit,
+},
+margin1: {
+margin: theme.spacing.unit*3,
+},
+card: {
+  marginTop: 80,
+  width: 700,
+  height:900,
+  margin: 'auto'
+},
+media:{
+  height:140,
+},
   content: {
     flexGrow: 1,
     backgroundColor: '#F5F5F5',
@@ -110,6 +130,11 @@ let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
   },
   subheading:{
     fontFamily:'Saira Semi Condensed'
+  },
+  bulletpoint:{
+    display: 'list-item',
+    listStyleType: "disc",
+    listStylePosition: "inside"
   }
 });
 
@@ -133,9 +158,10 @@ class DashboardPage extends Component {
       isCalendarHidden: true,
       isSearchHidden: true,
       courseCardStyle: {marginBottom: 18, width: 440},
+      widthForGrid: {width: '75%'},
       inheritWidth: {width: 'inherit'},
       courseNameStyle: {fontSize: 20, fontWeight: 'bold', fontFamily: 'Comfortaa'},
-      spacing : '16',
+      spacing : '8',
       loggedinUserFirstName: '',
       isAdmin: false,
       isAddNewCourseHidden: true,
@@ -144,6 +170,7 @@ class DashboardPage extends Component {
       isViewStudentsHidden: true,
       isViewProfessorsHidden: true,
       isIndividualCoursePageHidden: true,
+      isStudentDetailsFormHidden: true,
       isCartPageHidden:true,
       selectedRadioValue: [],
       mon: false,
@@ -190,7 +217,9 @@ class DashboardPage extends Component {
 
       cartData: [],
       profSchedule:[],
+      studentSchedule: [],
       eventsForProfessorCalendar:[],
+      eventsForStudentCalendar: [],
       studentEnrolledCourses: [],
       isThisAnEnrolledCourse: false,
 
@@ -205,6 +234,7 @@ class DashboardPage extends Component {
 
       anchorEl: null,
       open: false,
+      studentsEnrolledForCourse: []
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -323,6 +353,8 @@ logout(e){
   this.setState({isIndividualCoursePageHidden: true});
   this.setState({isCartPageHidden: true});
   this.setState({isChatPageHidden: true})
+  this.setState({isStudentDetailsFormHidden: true})
+  window.location = '#/'
 }
 
 // Used for closing menu when clicked elsewhere
@@ -344,11 +376,27 @@ profileMenu(event){
     }));
 
     this.setState({ anchorEl: event.currentTarget })
+
 }
 
 //navigates to profile page
 goToMyProfilePage(e){
   console.log("Moving to person's profile");
+  this.handleClose()
+  this.setState({isHomePageHidden: true});
+  this.setState({isPaymentPortalHidden: true});
+  this.setState({isCalendarHidden: true});
+  this.setState({isSearchHidden: true});
+  this.setState({isAddNewCourseHidden: true});
+  this.setState({isEditCourseHidden: true});
+  this.setState({isViewStudentsHidden: true});
+  this.setState({isViewProfessorsHidden: true});
+  this.setState({isEditSingleCourseHidden: true})
+  this.setState({isPaymentModeCardHidden: true});
+  this.setState({isPaymentSuccessfulCardHidden: true});
+  this.setState({isIndividualCoursePageHidden: true});
+  this.setState({isCartPageHidden: true});
+  this.setState({isStudentDetailsFormHidden:false});
 }
 
  //-------------------------------------------
@@ -399,8 +447,9 @@ goToMyProfilePage(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
-      this.componentDidMount()
+      this.setState({isStudentDetailsFormHidden: true})
 
+      this.componentDidMount()
 
     }
     else if(value == 'add'){
@@ -417,6 +466,8 @@ goToMyProfilePage(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
+      this.setState({isStudentDetailsFormHidden: true})
+
       // hits api, when result is returned, update state var
       this.getAllProfessorsForSelect().then((returnVal) => {
           this.setState({allProfessorsForSelect: returnVal});
@@ -438,7 +489,7 @@ goToMyProfilePage(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
-
+      this.setState({isStudentDetailsFormHidden: true})
       this.componentDidMount()
       this.getAllProfessorsForSelect().then((returnVal) => {
           this.setState({allProfessorsForSelect: returnVal});
@@ -459,6 +510,7 @@ goToMyProfilePage(e){
       this.setState({isPaymentModeCardHidden: true});
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isStudentDetailsFormHidden: true})
       this.setState({isCartPageHidden: true});
 
       this.getAllStudents().then((returnVal) => {
@@ -482,7 +534,7 @@ goToMyProfilePage(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
-
+      this.setState({isStudentDetailsFormHidden: true})
       this.getAllProfessorsForSelect().then((returnVal) => {
         this.setState({allProfessors: returnVal});
 
@@ -506,7 +558,7 @@ goToMyProfilePage(e){
       this.setState({searchCourseName: ''});
       this.setState({searchResults: []});
       this.setState({isCartPageHidden: true});
-
+      this.setState({isStudentDetailsFormHidden: true})
       this.setState({isThisAnEnrolledCourse: false})
     }
 
@@ -525,6 +577,8 @@ goToMyProfilePage(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
+      this.setState({isStudentDetailsFormHidden: true})
+
     }
 
     else if(value=='calendar'){
@@ -542,11 +596,15 @@ goToMyProfilePage(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
+      this.setState({isStudentDetailsFormHidden: true})
 
       if(sessionStorage.getItem('user_role')==2)
       {
         this.getProfessorSchedule()
 
+      }
+      else if(sessionStorage.getItem('user_role')==3){
+        this.getStudentSchedule()
       }
 
     }
@@ -570,6 +628,7 @@ goToMyProfilePage(e){
           {
             this.setState({cartCost: 7800});
             this.setState({finanical_aid: 2532});
+            this.setState({isStudentDetailsFormHidden: true})
 
             this.setState({isPaymentPortalHidden: true});
             this.setState({isPaymentModeCardHidden: false});
@@ -583,6 +642,7 @@ goToMyProfilePage(e){
             this.setState({isPaymentModeCardHidden: true});
             this.setState({isPaymentSuccessfulCardHidden: true});
             this.setState({isIndividualCoursePageHidden: true});
+            this.setState({isStudentDetailsFormHidden: true})
             this.setState({isCartPageHidden: false});
             console.log("Error in enrollment");
           }
@@ -597,6 +657,7 @@ goToMyProfilePage(e){
        this.setState({isPaymentSuccessfulCardHidden: false});
        this.setState({isIndividualCoursePageHidden: true});
        this.setState({isCartPageHidden: true});
+       this.setState({isStudentDetailsFormHidden: true})
    }
 //-------------- End of Kriti's functions ---//
 
@@ -681,6 +742,7 @@ componentDidMount() {
   {
     this.setState({isAdmin: false });
     this.getListOfEnrolledCourses()
+    this.getStudentSchedule()
   }
 
 // PROFESSOR
@@ -789,6 +851,7 @@ hitAPIForAdminHomePageCourses(){
               this.setState({isAddNewCourseHidden: true});
               this.setState({isHomePageHidden: false});
               this.setState({isIndividualCoursePageHidden: true});
+              this.setState({isStudentDetailsFormHidden: true})
 
             }
         });
@@ -884,6 +947,8 @@ hitAPIForAdminHomePageCourses(){
               this.setState({isEditSingleCourseHidden: true})
               this.setState({isEditCourseHidden: false})
               this.setState({isIndividualCoursePageHidden: true});
+              this.setState({isStudentDetailsFormHidden: true})
+
             }
         });
 
@@ -935,25 +1000,23 @@ hitAPIForAdminHomePageCourses(){
   // showing only details of that particular card2
   //-----------------
   goToCoursePage(courseClicked,v){
-      console.log('COURSE CLICKED!!',courseClicked.course_id);
-      console.log('all enrolled', this.state.studentEnrolledCourses);
-
       if(sessionStorage.getItem('user_role') == 3){
         var allEnrolledCoursesOfStudent = this.state.studentEnrolledCourses
 
         for(var i=0; i<allEnrolledCoursesOfStudent.length; i++){
           if(allEnrolledCoursesOfStudent[i].course_id == courseClicked.course_id ){
-            console.log('Yep enrolled to', allEnrolledCoursesOfStudent[i].course_id);
-
             this.setState({isThisAnEnrolledCourse: true})
-            console.log('enrolled inside?',this.state.isThisAnEnrolledCourse);
           }
 
         }
       }
+      if(sessionStorage.getItem('user_role') == 2){
+            this.getEnrolledStudentsForCourse(courseClicked.course_id)
+      }
       this.setState({dataOfClickedCourse: courseClicked})
+      console.log("Clicked course",courseClicked);
       this.setState({isIndividualCoursePageHidden: false});
-      console.log('enrolled??',this.state.isThisAnEnrolledCourse);
+
   }
 
 //-------------------
@@ -1133,10 +1196,45 @@ getProfessorSchedule(){
   });
 }
 
+
+///////////
+// Get Student Schedule
+//////////
+getStudentSchedule(){
+  let user_id = sessionStorage.getItem('user_id')
+  axios({
+    method:'get',
+    url:'http://course360.herokuapp.com/getStudentSchedule/id/'+user_id,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    if(response.status == 200){
+      for(let i = 0; i < response.data.length; i++){
+        response.data[i]['days'].forEach(function(item,index){
+
+          switch(item){
+            case 1: response.data[i]['days'][index] = "Mon"; break;
+            case 2: response.data[i]['days'][index] = "Tue"; break;
+            case 3: response.data[i]['days'][index] = "Wed"; break;
+            case 4: response.data[i]['days'][index] = "Thu"; break;
+            case 5: response.data[i]['days'][index] = "Fri"; break;
+          }
+        })
+      }
+      this.setState({studentSchedule: response.data});
+      this.populateEventsForStudentCalendar() //events array being populated for calendar
+    }
+  }).catch(err => {
+    console.log("COULDN'T FETCH STUDENT SCHEDULE!!!", err)
+    this.setState({studentSchedule : []})
+  });;
+}
+
+
 //// PROF CALENDAR EVENTS DATA POPULATION //////
 populateEventsForProfCalendar(){
   let profSchedule = this.state.profSchedule
-  console.log('Schedule BEFORE',profSchedule);
   let events = []
   profSchedule.map(function(element){
     for(var i =0; i < element.start_dates.length; i++)
@@ -1152,6 +1250,41 @@ populateEventsForProfCalendar(){
    }
  });
 
+  let repeatedEvents = []
+  for(var j=0; j < events.length; j++){
+    for(var counter = 1; counter < 6; counter++){
+      let temp_event = {
+        id: events[j].id,
+        title: events[j].title,
+        desc: events[j].desc,
+        start: new Date(events[j].start.setTime( events[j].start.getTime() + 7*(counter) * 86400000 )),
+        end: new Date(events[j].end.setTime( events[j].end.getTime() + 7*(counter)  * 86400000 ))
+      }
+      repeatedEvents.push(temp_event)
+    }
+  }
+  this.setState({eventsForProfessorCalendar : repeatedEvents})
+}
+
+//////////////////////////////
+// STUDENT CALENDAR
+//////////////////////////////
+populateEventsForStudentCalendar(){
+  let studentSchedule = this.state.studentSchedule
+  let events = []
+  studentSchedule.map(function(element){
+    for(var i =0; i < element.start_dates.length; i++)
+    {
+          let temp_event = {
+          id: element.course_id,
+          title: element.course_name,
+          desc: element.location,
+          start: new Date(element.start_dates[i]+'T'+element.start_time),
+          end: new Date(element.start_dates[i]+'T'+element.end_time)
+        }
+        events.push(temp_event)
+   }
+ });
 
   let repeatedEvents = []
   for(var j=0; j < events.length; j++){
@@ -1166,9 +1299,32 @@ populateEventsForProfCalendar(){
       repeatedEvents.push(temp_event)
     }
   }
-  console.log('EVENT ARRAY ----',repeatedEvents);
+  this.setState({eventsForStudentCalendar : repeatedEvents})
+}
 
-  this.setState({eventsForProfessorCalendar : repeatedEvents})
+// Get students who have enrolled to a course, given prof id and course id
+getEnrolledStudentsForCourse(courseId){
+  var profId = sessionStorage.getItem('user_id')
+  console.log('Course clicked',courseId,'For professor',profId);
+  axios({
+    method:'get',
+    url:'http://localhost:5000/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    if(response.status == 200){
+      this.setState({studentsEnrolledForCourse : response.data.students})
+      console.log('students here',response.data.students);
+    }
+    else{
+      this.setState({studentsEnrolledForCourse : []})
+    }
+  }).catch(err => {
+    console.log("Most probably this course is taught by another prof and NOT YOU!!! ", err)
+    this.setState({studentsEnrolledForCourse : []})
+  });
+
 }
 
 //dummy function fr showing alert after payment Success
@@ -1187,7 +1343,7 @@ dummySuccessPayment(){
   this.setState({isPaymentSuccessfulCardHidden: true});
   this.setState({isIndividualCoursePageHidden: true});
   this.setState({isCartPageHidden: true});
-
+  this.setState({isStudentDetailsFormHidden: true})
   this.componentDidMount();
 
 }
@@ -1218,7 +1374,7 @@ dropEnrolledCourse(element,v){
         this.setState({isPaymentSuccessfulCardHidden: true});
         this.setState({isIndividualCoursePageHidden: true});
         this.setState({isCartPageHidden: true});
-
+        this.setState({isStudentDetailsFormHidden: true})
         this.componentDidMount()
 
     }
@@ -1689,39 +1845,53 @@ dropEnrolledCourse(element,v){
 
       //---------------------------- HOME PAGE OF STUDENT ---------------------------------------------//
       if(!(this.state.isHomePageHidden)){
-        currentContent =   <main className={classes.content}>
-            <div className={classes.toolbar} />
-              <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses</h2>
-              {
-                this.state.studentEnrolledCourses.map((element,i) => {
-                  return(<div key={i}>
-                    <Card  style={this.state.courseCardStyle}>
-                          <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
-                            <CardContent>
-                              <div name="courseNameAndDrop">
-                                  <Typography className ={classes.displayInline} style={this.state.courseNameStyle} >
-                                      {element.course_name}
-                                  </Typography>
-                              </div>
-                            {element.professor.first_name} {element.professor.last_name} || &nbsp;
-                            {element.location} || {
-                              element.days.map(function(e){
+        currentContent = <main className={classes.content}>
+          <div className={classes.toolbar} />
+           <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses</h2>
+          <Grid container spacing={0}>
+                 <Grid container className={classes.demo}
+                   justify="flex-start"
+                   style={this.state.widthForGrid}
+                   alignItems="flex-start"
+                   direction="column">
+                   {
+                     this.state.studentEnrolledCourses.map((element,i) => {
+                       return(
+                         <Grid key={i} item xs={6}>
+                           <Card style={this.state.courseCardStyle}>
+                                 <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
+                                   <CardMedia
+                                       className={classes.media}
+                                       image="build/computer-science.jpg"
+                                       title="Course Banner"
+                                     />
+                                   <CardContent>
+                                     <div name="courseNameAndDrop">
+                                         <Typography className ={classes.displayInline} style={this.state.courseNameStyle} >
+                                             {element.course_name}
+                                         </Typography>
+                                     </div>
 
-                                return <span>{e} &nbsp;</span>
-                              })
-                            } || {element.start_time} - {element.end_time}
-                            </CardContent>
-                          </CardActionArea>
-                  </Card>
-                </div>)
-                })
-              }
-              {
-                this.state.studentEnrolledCourses.length == 0 &&
-                <p> You are not enrolled to any courses!</p>
-              }
-          </main>
+                                   {element.location} || {
+                                     element.days.map(function(e){
+                                       return <span>{e} &nbsp;</span>
+                                     })
+                                   }
+                                   {element.professor.first_name} {element.professor.last_name} || &nbsp;
+                                    || {element.start_time} - {element.end_time}
+                                   </CardContent>
+                                 </CardActionArea>
+                               </Card>
+                       </Grid>)
+
+                     })
+                   }
+                 </Grid>
+        </Grid>
+      </main>
       }
+
+
 
       // --------------- SEARCH COURSES FOR STUDENT ------------------------------//
       else if(!(this.state.isSearchHidden)){
@@ -1946,6 +2116,28 @@ dropEnrolledCourse(element,v){
           </main>
       }
 
+  //--------- CALENDAR SCHEDULE VIEW FOR STUDENT --------//
+      if(!(this.state.isCalendarHidden)){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+              <h2> Your Schedule</h2>
+                <div>
+                  <Card>
+                    <BigCalendar
+                      events={this.state.eventsForStudentCalendar}
+                      views={allViews}
+                      step={60}
+                      timeslots={8}
+                      style={{height:'-webkit-fill-available'}}
+                      defaultView={BigCalendar.Views.MONTH}
+                      defaultDate={new Date(2018, 7, 1)}
+                      localizer={localizer}
+                    />
+                </Card>
+              </div>
+          </main>
+      }
+
       // ---------- KRITI'S PAYMENT PORTAL SECTION --------------------------//
         else if(!(this.state.isPaymentPortalHidden)){
           currentContent = <main className={classes.content}>
@@ -2071,6 +2263,162 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
   </main>
 }
 
+// Individual profile page @author: Kriti shree
+else if(!(this.state.isStudentDetailsFormHidden)){
+    currentContent =  <main className={classes.content}>
+      <div className={classes.toolbar} />
+        <div>
+    <Card className={classes.card}>
+              <CardContent>
+              <div>
+              <Typography class='login-page-headers' color="primary">
+                Student Details
+              </Typography>
+                   <FormControl >
+                     <InputLabel htmlFor="input-with-icon-adornment">First Name</InputLabel>
+                     <Input
+                       id="input-with-icon-adornment"
+                       startAdornment={
+                         <InputAdornment position="start">
+                           <AccountCircle />
+                         </InputAdornment>
+                       }
+                     />
+                   </FormControl>
+
+                   <FormControl className={classes.margin}>
+                     <InputLabel htmlFor="input-with-icon-adornment">Middle Name</InputLabel>
+                     <Input
+                       id="input-with-icon-adornment"
+                       startAdornment={
+                         <InputAdornment position="start">
+                           <AccountCircle />
+                         </InputAdornment>
+                       }
+                     />
+                   </FormControl>
+
+                   <FormControl className={classes.margin}>
+                     <InputLabel htmlFor="input-with-icon-adornment">Last Name</InputLabel>
+                     <Input
+                       id="input-with-icon-adornment"
+                       startAdornment={
+                         <InputAdornment position="start">
+                           <AccountCircle />
+                         </InputAdornment>
+                       }
+                     />
+                   </FormControl>
+                <form className={classes.container} noValidate>
+                 <TextField
+                   id="date"
+                   label="Birthday"
+                   type="date"
+                   defaultValue="2018-10-29"
+                   className={classes.textField}
+                   InputLabelProps={{
+                   shrink: true,
+                   }}
+                  />
+
+<Typography style={{display: 'inline-block'}}></Typography>
+                       <FormControl className={classes.formControl, classes.margin1}>
+                         <InputLabel htmlFor="Gender-simple">Gender</InputLabel>
+                         <Select
+                           value={this.state.Gender}
+                           onChange={this.handleChange}
+                           inputProps={{
+                             name: 'Gender',
+                             id: 'Gender-simple',
+                           }}
+                         >
+                           <MenuItem value="">
+                             <em>N/A</em>
+                           </MenuItem>
+                           <MenuItem value={0}>Male</MenuItem>
+                           <MenuItem value={1}>Female</MenuItem>
+
+                         </Select>
+                       </FormControl>
+                       </form>
+
+                    <form>
+                      <TextField
+                       id="standard-multiline-static"
+                       label="Permanent Address"
+                       multiline
+                       rows="4"
+                       defaultValue="Street 1"
+                       className={classes.textField}
+                       margin="normal"
+                      />
+
+                      <FormControl className={classes.margin1}>
+                      <TextField
+                      id="standard-multiline-static"
+                       label="Temporary Address"
+                       multiline
+                       rows="4"
+                       defaultValue="Street 1"
+                       className={classes.textField}
+                       margin="normal"
+                      />
+                        </FormControl>
+                      </form>
+
+                      <form>
+                      <TextField
+                        id="email-input"
+                        type="email"
+                        name="newEmail"
+                        label="Email"
+                        value={this.state.newEmail}
+                        className={classes.textField}
+                        margin="normal"
+                        InputLabelProps={{
+                        shrink: true,
+                        }}
+                        />
+
+                        <FormControl className={classes.margin1}>
+                        <TextField
+                        label="Mobile Number"
+                        id="margin-none"
+                        defaultValue="+ code"
+                        className={classes.textField}
+                        helperText="Enter US number"
+                        />
+                        </FormControl>
+                        </form>
+
+                        <form>
+                        <TextField
+                        label="CGPA"
+                        id="margin-none"
+                        defaultValue=" "
+                        className={classes.textField}
+                        helperText="upto Current semester"
+                        />
+
+                        <FormControl className={classes.margin1}>
+                        <TextField
+                        label="Program"
+                        id="margin-none"
+                        defaultValue=" "
+                        className={classes.textField}
+                        helperText="e.g CS/DS etc."
+                        />
+                        </FormControl>
+                        </form>
+                       <Button variant="outlined"  onClick={() => ToastStore.success(" Submitted the form successfully!!")}  className = {classes.marginBottom}  color="primary">Submit</Button>
+
+                      <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} lightBackground store={ToastStore}/>
+                 </div>
+              </CardContent>
+          </Card>
+          </div >
+      </main>
+}
 
       // ------------------------------ SIDE NAV FOR STUDENT ALWAYS EXISTS ---------------------------------------//
       sideNav =
@@ -2151,7 +2499,7 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
 
 
     ////////////////////////////////////////////////////////
-    // ------------------ PROFS VIEW ------           /////
+    // ------------------ PROF VIEW ------           //////
     ///////////////////////////////////////////////////////
 
     if(sessionStorage.getItem('user_role')==2){
@@ -2309,6 +2657,31 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
                     }
                 </CardContent>
               </Card>
+
+              <br />
+
+              {
+                this.state.dataOfClickedCourse.professor['user_id'] == sessionStorage.getItem('user_id') &&
+              <Card>
+                <CardContent>
+                    <h1> Students roster</h1>
+                      {
+                        this.state.studentsEnrolledForCourse.length > 0 &&
+                        this.state.studentsEnrolledForCourse.map((el,i) => (
+                          <div name="enrolledStudentsDiv" key={i}>
+                            <span className={classes.bulletpoint} name="name">{el.first_name} {el.last_name}</span>
+                          </div>
+                        ))
+                      }
+                      {
+                        this.state.studentsEnrolledForCourse.length ==0 &&
+                        <div>
+                          No students have enrolled for this course so far!
+                        </div>
+                      }
+                </CardContent>
+              </Card>
+            }
               <br /> <br />
               </div>
            }
@@ -2405,6 +2778,7 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
     return (
       <div>
         {sideNav}
+        <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} lightBackground store={ToastStore}/>
       </div>
     )
   }
