@@ -25,6 +25,7 @@ import FaceIcon from '@material-ui/icons/Face';
 import SearchIcon from '@material-ui/icons/Search';
 import HomeIcon from '@material-ui/icons/Home';
 import CalendarTodayIcon from '@material-ui/icons/CalendarToday';
+import TodayIcon from '@material-ui/icons/Today';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardActionArea from '@material-ui/core/CardActionArea';
@@ -157,10 +158,11 @@ class DashboardPage extends Component {
       isPaymentPortalHidden: true,
       isCalendarHidden: true,
       isSearchHidden: true,
-      courseCardStyle: {marginBottom: 18, width: 440},
+      courseCardStyle: {paddingBottom: 18, width: 380},
       widthForGrid: {width: '75%'},
       inheritWidth: {width: 'inherit'},
-      courseNameStyle: {fontSize: 20, fontWeight: 'bold', fontFamily: 'Comfortaa'},
+      courseNameStyle: {fontSize: 20, fontWeight: 'bold', fontFamily: 'Saira Semi Condensed'},
+      courseCardIcons: {width:15, height:15},
       spacing : '8',
       loggedinUserFirstName: '',
       isAdmin: false,
@@ -306,7 +308,7 @@ handleChangeAndGetMatchingCourses(e){
       //Hit API and get results that matches
       return axios({
         method:'get',
-        url:'http://course360.herokuapp.com/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
+        url:'http://localhost:5000/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
@@ -618,7 +620,7 @@ goToMyProfilePage(e){
       }
       axios({
         method:'post',
-        url:'http://course360.herokuapp.com/enrollCourses',
+        url:'http://localhost:5000/enrollCourses',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -671,7 +673,7 @@ goToMyProfilePage(e){
     this.setState({studentEnrolledCourses: []})
     axios({
       method:'get',
-      url:'http://course360.herokuapp.com/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
+      url:'http://localhost:5000/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -759,7 +761,7 @@ componentDidMount() {
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getAllCourses/start/0/end/100000',
+    url:'http://localhost:5000/getAllCourses/start/0/end/100000',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -774,7 +776,7 @@ hitAPIForAdminHomePageCourses(){
   getAllProfessorsForSelect(){
     return axios({
       method:'get',
-      url:'http://course360.herokuapp.com/getAllProfessors/start/0/end/100000',
+      url:'http://localhost:5000/getAllProfessors/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -792,7 +794,7 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'http://course360.herokuapp.com/getAllStudents/start/0/end/100000',
+      url:'http://localhost:5000/getAllStudents/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -830,7 +832,7 @@ hitAPIForAdminHomePageCourses(){
         console.log(dataJSON);
         axios({
           method:'post',
-          url:'http://course360.herokuapp.com/insertCourses',
+          url:'http://localhost:5000/insertCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -925,7 +927,7 @@ hitAPIForAdminHomePageCourses(){
         console.log('data to be sent',dataJSON);
         axios({
           method:'post',
-          url:'http://course360.herokuapp.com/updateCourses',
+          url:'http://localhost:5000/updateCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -965,7 +967,7 @@ hitAPIForAdminHomePageCourses(){
 
     axios({
           method:'post',
-          url:'http://course360.herokuapp.com/deleteCourses',
+          url:'http://localhost:5000/deleteCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1032,7 +1034,7 @@ submitComment(e){
 
   axios({
         method:'post',
-        url:'http://course360.herokuapp.com/commentOnACourse',
+        url:'http://localhost:5000/commentOnACourse',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1060,7 +1062,7 @@ submitComment(e){
 getLatestCourseDetails(course_id){
   return axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getCourseBy/course/'+course_id,
+    url:'http://localhost:5000/getCourseBy/course/'+course_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1079,7 +1081,7 @@ addCourseToCart(id,e){
       }
   axios({
         method:'post',
-        url:'http://course360.herokuapp.com/addToCart',
+        url:'http://localhost:5000/addToCart',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1101,7 +1103,7 @@ addCourseToCart(id,e){
 getCartDetails(id){
   return axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getCart/userId/'+id,
+    url:'http://localhost:5000/getCart/userId/'+id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1153,7 +1155,7 @@ deleteFromCart(id,e){
   let user_id = sessionStorage.getItem('user_id')
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/delete/course/'+id+'/fromCart/for/user/'+user_id,
+    url:'http://localhost:5000/delete/course/'+id+'/fromCart/for/user/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1171,7 +1173,7 @@ getProfessorSchedule(){
   console.log('Professor ID is:',user_id);
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getProfessorSchedule/id/'+user_id,
+    url:'http://localhost:5000/getProfessorSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1204,7 +1206,7 @@ getStudentSchedule(){
   let user_id = sessionStorage.getItem('user_id')
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getStudentSchedule/id/'+user_id,
+    url:'http://localhost:5000/getStudentSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1354,7 +1356,7 @@ dropEnrolledCourse(element,v){
 
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/dropCourse/courseId/'+element+'/userId/'+sessionStorage.getItem('user_id'),
+    url:'http://localhost:5000/dropCourse/courseId/'+element+'/userId/'+sessionStorage.getItem('user_id'),
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1768,21 +1770,24 @@ dropEnrolledCourse(element,v){
               <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
                 Course 360
               </Typography>
-              <IconButton color="inherit" onClick = {this.profileMenu.bind(this)}
-                aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
-                aria-haspopup="true">
-                  <AccountCircle />
-                </IconButton>
-                       <div>
-                           <Menu
-                              anchorEl ={this.state.anchorEl}
-                              open={Boolean(this.state.anchorEl)}
-                              onClose={this.handleClose}
-                              >
 
-                            <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
-                          </Menu>
-                       </div>
+              <div name="ActionIconsDiv" style={{marginLeft:60}}>
+                    <IconButton color="inherit" onClick = {this.profileMenu.bind(this)}
+                      aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
+                      aria-haspopup="true">
+                        <AccountCircle />
+                      </IconButton>
+                             <div>
+                                 <Menu
+                                    anchorEl ={this.state.anchorEl}
+                                    open={Boolean(this.state.anchorEl)}
+                                    onClose={this.handleClose}
+                                    >
+
+                                  <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
+                                </Menu>
+                             </div>
+                     </div>
             </Toolbar>
           </AppBar>
 
@@ -1848,12 +1853,13 @@ dropEnrolledCourse(element,v){
         currentContent = <main className={classes.content}>
           <div className={classes.toolbar} />
            <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses</h2>
-          <Grid container spacing={0}>
-                 <Grid container className={classes.demo}
+
+                 <Grid container
+                   spacing = {24}
                    justify="flex-start"
                    style={this.state.widthForGrid}
                    alignItems="flex-start"
-                   direction="column">
+                   >
                    {
                      this.state.studentEnrolledCourses.map((element,i) => {
                        return(
@@ -1866,19 +1872,45 @@ dropEnrolledCourse(element,v){
                                        title="Course Banner"
                                      />
                                    <CardContent>
-                                     <div name="courseNameAndDrop">
+                                     <div name="courseNameAndDrop" style={{paddingBottom:15}}>
                                          <Typography className ={classes.displayInline} style={this.state.courseNameStyle} >
                                              {element.course_name}
                                          </Typography>
                                      </div>
 
-                                   {element.location} || {
-                                     element.days.map(function(e){
-                                       return <span>{e} &nbsp;</span>
-                                     })
-                                   }
-                                   {element.professor.first_name} {element.professor.last_name} || &nbsp;
-                                    || {element.start_time} - {element.end_time}
+                                  <div name="InfoContainer">
+                                    <div style={{float:'left'}} name="leftDetails">
+                                      <div name="locationDiv" style={{paddingBottom:5}}>
+                                          <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
+                                          <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
+                                            <span className={classes.subheading}>{element.location} </span>
+                                          </div>
+                                      </div>
+
+                                          <div style={{paddingBottom:5}}>
+                                            <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
+                                            <span className={classes.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
+                                          </div>
+                                    </div>
+
+                                    <div style={{float:'right'}} name="rightDetails">
+                                      <div name="daysOfferedMainDiv" style={{paddingBottom:5}}>
+                                            <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
+                                            <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
+                                              {
+                                               element.days.map(function(e){
+                                                 return <span className={classes.subheading}>{e} </span>
+                                               })
+                                             }
+                                            </div>
+                                        </div>
+                                        <div name="classTimeDiv" style={{paddingBottom:5}}>
+                                          <i class="far fa-clock" style={{paddingRight: 7}}></i>
+                                          <span className={classes.subheading}>{element.start_time} - {element.end_time}</span>
+                                        </div>
+                                    </div>
+                                  </div>
+
                                    </CardContent>
                                  </CardActionArea>
                                </Card>
@@ -1887,7 +1919,11 @@ dropEnrolledCourse(element,v){
                      })
                    }
                  </Grid>
-        </Grid>
+
+            {
+               this.state.studentEnrolledCourses.length == 0 &&
+               <p> You are not enrolled to any courses!</p>
+             }
       </main>
       }
 
@@ -2426,29 +2462,32 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
               <AppBar position="absolute" className={classes.appBar}>
                 <Toolbar>
-                    <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
-                      Course 360
-                    </Typography>
 
-                    <IconButton color="inherit" aria-label="ShoppingCartNav" onClick={this.goToCartPage.bind(this, sessionStorage.getItem('user_id'))}>
-                        <ShoppingCartIcon />
-                   </IconButton>
+                      <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
+                        Course 360
+                      </Typography>
 
-                       <IconButton color="inherit" onClick = {this.profileMenu.bind(this)}
-                         aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
-                         aria-haspopup="true">
-                           <AccountCircle />
+                      <div name="ActionIconsDiv" style={{marginLeft:60}}>
+                          <IconButton color="inherit" aria-label="ShoppingCartNav" onClick={this.goToCartPage.bind(this, sessionStorage.getItem('user_id'))}>
+                              <ShoppingCartIcon />
                          </IconButton>
-                                <div>
-                                    <Menu
-                                       anchorEl ={this.state.anchorEl}
-                                       open={Boolean(this.state.anchorEl)}
-                                       onClose={this.handleClose}
-                                       >
-                                     <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
-                                     <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
-                                   </Menu>
-                                </div>
+                             <IconButton color="inherit" onClick = {this.profileMenu.bind(this)}
+                               aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
+                               aria-haspopup="true">
+                                 <AccountCircle />
+                               </IconButton>
+                                      <div>
+                                          <Menu
+                                             anchorEl ={this.state.anchorEl}
+                                             open={Boolean(this.state.anchorEl)}
+                                             onClose={this.handleClose}
+                                             >
+                                           <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
+                                           <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
+                                         </Menu>
+                                      </div>
+                          </div>
+
                 </Toolbar>
               </AppBar>
 
@@ -2719,21 +2758,23 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                       Course 360
                     </Typography>
 
-                    <IconButton color="inherit" onClick = {this.profileMenu.bind(this)}
-                      aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
-                      aria-haspopup="true">
-                        <AccountCircle />
-                      </IconButton>
-                             <div>
-                                 <Menu
-                                    anchorEl ={this.state.anchorEl}
-                                    open={Boolean(this.state.anchorEl)}
-                                    onClose={this.handleClose}
-                                    >
-                                  <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
-                                  <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
-                                </Menu>
-                             </div>
+                    <div name="ActionIconsDiv" style={{marginLeft:60}}>
+                          <IconButton color="inherit" onClick = {this.profileMenu.bind(this)}
+                            aria-owns={this.state.anchorEl ? 'simple-menu' : undefined}
+                            aria-haspopup="true">
+                              <AccountCircle />
+                            </IconButton>
+                                   <div>
+                                       <Menu
+                                          anchorEl ={this.state.anchorEl}
+                                          open={Boolean(this.state.anchorEl)}
+                                          onClose={this.handleClose}
+                                          >
+                                        <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
+                                        <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
+                                      </Menu>
+                                   </div>
+                           </div>
                 </Toolbar>
               </AppBar>
 
