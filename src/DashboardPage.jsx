@@ -848,7 +848,8 @@ hitAPIForAdminHomePageCourses(){
             if(response.data != 'Error : Something went wrong')
             {
               this.componentDidMount()
-              alert('Course has been added successfully!!')
+
+              ToastStore.success('Course has been added successfully!!',4000)
               this.setState({newCourseName: ''});
               this.setState({newCourseDesc: ''});
               this.setState({newCourseLocation: ''});
@@ -942,7 +943,8 @@ hitAPIForAdminHomePageCourses(){
         .then((response) => {
             if(response.data != 'Error : Something went wrong')
             {
-              alert('Course has been updated successfully!!')
+
+              ToastStore.success('Course has been updated successfully!!',4000)
               this.setState({editCourseName: ''});
               this.setState({editCourseDesc: ''});
               this.setState({editCourseLocation: ''});
@@ -982,7 +984,8 @@ hitAPIForAdminHomePageCourses(){
         .then((response) => {
             if(response.data != 'Error : Something went wrong')
             {
-              alert('Course has been deleted successfully!!')
+
+              ToastStore.success('Course has been deleted successfully!!',4000)
               this.setState({editCourseName: ''});
               this.setState({editCourseDesc: ''});
               this.setState({editCourseLocation: ''});
@@ -1049,7 +1052,8 @@ submitComment(e){
       .then((response) => {
           if(response.data != 'Error : Something went wrong')
           {
-            alert("Thank you for your review! We appreciate it!")
+
+            ToastStore.info("Thank you for your review! We appreciate it!",4000)
             this.setState({courseComment: ''});
             this.setState({courseRating: 0});
             this.getLatestCourseDetails(this.state.dataOfClickedCourse['course_id'])
@@ -1096,7 +1100,8 @@ addCourseToCart(id,e){
       .then((response) => {
           if(response.data != 'Error : Something went wrong')
           {
-            alert("Success! You can checkout now!!!")
+
+            ToastStore.success("Success! You can checkout now!!!",4000)
           }
       }).catch(err => {
         console.log("ADD TO CART ERR: ", err)
@@ -1167,7 +1172,8 @@ deleteFromCart(id,e){
     'Authorization': sessionStorage.getItem('token')}
   })
   .then((response)=>{
-    alert('Course Deleted From Cart!!')
+
+    ToastStore.info('Course Deleted From Cart!!')
     this.goToCartPage(user_id,e)
   });
 }
@@ -1338,7 +1344,8 @@ getEnrolledStudentsForCourse(courseId){
 
 //dummy function fr showing alert after payment Success
 dummySuccessPayment(){
-  alert("Congratulations! You have enrolled for the chosen courses!")
+
+  ToastStore.success("Congratulations! You have enrolled for the chosen courses!",4000)
   this.setState({isHomePageHidden: false});
   this.setState({isPaymentPortalHidden: true});
   this.setState({isCalendarHidden: true});
@@ -1369,7 +1376,8 @@ dropEnrolledCourse(element,v){
   })
   .then((response)=>{
     if(response.status == 200){
-        alert('This course has been dropped from your schedule!')
+
+        ToastStore.info('This course has been dropped from your schedule!',4000)
         this.setState({isHomePageHidden: false});
         this.setState({isPaymentPortalHidden: true});
         this.setState({isCalendarHidden: true});
@@ -2496,9 +2504,9 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                         />
                         </FormControl>
                         </form>
-                       <Button variant="outlined"  onClick={() => ToastStore.success(" Submitted the form successfully!!")}  className = {classes.marginBottom}  color="primary">Submit</Button>
+                       <Button variant="outlined"  onClick={() => ToastStore.success(" Submitted the form successfully!!",4000)}  className = {classes.marginBottom}  color="primary">Submit</Button>
 
-                      <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} lightBackground store={ToastStore}/>
+                      <ToastContainer position={ToastContainer.POSITION.TOP_RIGHT} lightBackground store={ToastStore}/>
                  </div>
               </CardContent>
           </Card>
@@ -2967,7 +2975,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
     return (
       <div>
         {sideNav}
-        <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} lightBackground store={ToastStore}/>
+        <ToastContainer position={ToastContainer.POSITION.TOP_RIGHT} lightBackground store={ToastStore}/>
       </div>
     )
   }

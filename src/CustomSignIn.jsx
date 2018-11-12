@@ -14,6 +14,7 @@ import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FacebookLogin from 'react-facebook-login';
+import {ToastContainer, ToastStore} from 'react-toasts'
 
 const styles = {
   card: {
@@ -33,7 +34,10 @@ const styles = {
     marginBottom: 12,
   },
   marginAuto:{
-    margin:'auto'
+    margin:'auto',
+    backgroundColor: '#ff6660',
+    color:'white'
+
   },
   forgotPassword :{
     fontSize: 12,
@@ -119,12 +123,13 @@ sendOTPForLogin = (event) =>{
       })
       .then((response)=>{
         if(response.status != 500){
-          alert("An email with an OTP has been sent to you! Please enter it in the next screen!")
+
+          ToastStore.success("An email with an OTP has been sent to you!",4000)
           this.setState({isSignInCardHidden: true});
           this.setState({isVerifyOTPForSigninMFAHidden: false});
         }
         else{
-          alert("Ooops! Something went wrong! Please check your email and password again!!")
+          ToastStore.error("Ooops! Something went wrong! Please check your email and password again!!",6000)
           console.log('OTP SENDING FAIL!',response);
           this.setState({loginSuccess: false});
           this.goBackToSignIn(event)
@@ -146,7 +151,7 @@ handleSubmit(e) {
           }
         else{
           console.log('ERROR OCCURRED',returnVal);
-          alert('OOPS!! Wrong OTP...Try again!!')
+          ToastStore.error("OOPS! Wrong OTP..Try again!",5000)
           this.goBackToSignIn()
         }
   });
@@ -218,7 +223,7 @@ verifySecurityAnswer(event){
     }
 
     else{ //answer was wrong...go back to sign in
-      alert('Sorry!! Wrong answer! Try again!')
+      ToastStore.error("Sorry!! Wrong answer! Try again!!",5000)
       this.goBackToSignIn(event)
     }
   });
@@ -258,19 +263,21 @@ updateNewPassword(event){
     })
     .then((response)=>{
       if(response.data['wasUpdateSuccessful']){
-        alert("Password changed successfully!!! Please sign in again!!!")
+
+        ToastStore.success("Password changed successfully!!! Please sign in again!!!",4000)
         this.goBackToSignIn(event)
       }
 
       else{
-        alert('Sorry!! Something messed up.... :(')
+        ToastStore.error("Sorry!! Something messed up.... :(",5000)
+
         this.goBackToSignIn(event)
       }
     });
   }
 
   else{
-    alert("passwords do not match!!!!")
+      ToastStore.error("Passwords do not match!!!!",5000)
   }
 
 }
@@ -298,7 +305,7 @@ fetchSecurityQuestion(event){
     }
 
     else{
-      alert("Ooops! Something went wrong!")
+      ToastStore.error("Sorry!! Something messed up.... :(",5000)
       this.goBackToSignIn(event);
 
     }
@@ -339,7 +346,7 @@ registerNewUser = (event) =>{
        headers: {'Access-Control-Allow-Origin': '*'},
      })
      .then( (response) => {
-       alert("Thank you! An email with an activation link has been sent to your email! Please activate your account :)")
+       ToastStore.success("Thank you! An email with an activation link has been sent to your email! Please activate your account :)",5000)
        // Reset all state variables for registration so that new users do not see it again
        this.setState({firstName: ''});
        this.setState({lastName: ''});
@@ -481,16 +488,18 @@ registerNewUser = (event) =>{
                 <a href="#" onClick={this.handleForgotPassword.bind(this)} className = {classes.forgotPassword}> Forgot Password?</a>
 
                 <CardActions>
-                  <Button variant="contained" onClick = {this.sendOTPForLogin.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
+                  <Button variant="contained"
+                    onClick = {this.sendOTPForLogin.bind(this)} className = {classes.marginAuto} value="Submit" >Sign In</Button>
                 </CardActions>
                 <br/>
-                <Typography color="textSecondary">
-                  or
-                </Typography>
+
                 <FacebookLogin
                   appId="1932450986840445"
                   autoLoad={false}
                   fields="name,email,picture"
+                  textButton="   Login with Facebook"
+                  icon="fa-facebook"
+                  cssClass="btn"
                   callback={(response)=>this.responseFacebook(response)} />
               </form>
             }
@@ -588,9 +597,9 @@ registerNewUser = (event) =>{
 
           <form>
             <p class='comfortaa-font small-font-size'>
-              We sent an OTP to your email :)
+              We sent a One Time Password to your email :)
             </p>
-            <p class='comfortaa-font '>Enter the OTP :</p>
+            <p class='comfortaa-font '>Enter the One Time Password :</p>
             <TextField
               id="otp"
               className={classes.textField}
@@ -769,6 +778,7 @@ registerNewUser = (event) =>{
     return (
       <div>
         {currentCard}
+        <ToastContainer position={ToastContainer.POSITION.TOP_RIGHT} lightBackground store={ToastStore}/>
       </div>
     );
   }
