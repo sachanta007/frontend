@@ -15,7 +15,7 @@ class SignInPage extends Component {
     return (
       <div >
         <img src='build/login_bg.png' className="bg" />
-        <h1 className="login-banner"> Course360</h1>
+        <h1 className="login-banner"> Course 360</h1>
         <SignInCard />
      </div>
     )

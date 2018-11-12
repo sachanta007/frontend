@@ -1,6 +1,6 @@
 
 .login-page-headers {
-  font-family: 'Comfortaa', sans-serif;
+  font-family: 'Saira Semi Condensed', sans-serif;
   color:tomato;
   font-size: 25px;
   font-weight: bold;
@@ -27,9 +27,9 @@ body {
   font-size: 11px
 }
 .login-banner{
-  font-family: 'Comfortaa', sans-serif;
+  font-family: 'Lobster', cursive;
   color: white;
-  font-size: 50px;
+  font-size: 60px;
   text-align: center;
   font-weight: bold;
 }
@@ -60,4 +60,93 @@ img.bg {
     left: 50%;
     margin-left: -512px;   /* 50% */
   }
+}
+
+.drawerFont > span {
+  font-family: 'Saira Semi Condensed', sans-serif;
+  font-size: 17px
+}
+/* FOR DRAWER PROFILE PIC */
+.profile {
+  height: 120px;
+  top: 50%;
+  left: 50%;
+
+}
+.profile figure, .profile figure img, .profile figure .back, .profile figure .front, .profile figure .back span {
+  width: 90px;
+  height: 90px;
+  -webkit-border-radius: 500px;
+  -moz-border-radius: 500px;
+  -ms-border-radius: 500px;
+  -o-border-radius: 500px;
+  border-radius: 500px;
+}
+.profile figure {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  background: #e0e0e0;
+  padding: 5px;
+  border-right: solid 1px #bdc6e7;
+}
+.profile figure img {
+  -webkit-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+.profile figure .front, .profile figure .back {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  -ms-backface-visibility: hidden;
+  -o-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transition: all 500ms;
+  -moz-transition: all 500ms;
+  -o-transition: all 500ms;
+  transition: all 500ms;
+}
+.profile figure .front {
+  z-index: 1;
+}
+.profile figure .back {
+  -webkit-transform: rotateX(180deg);
+  -moz-transform: rotateX(180deg);
+  -ms-transform: rotateX(180deg);
+  -o-transform: rotateX(180deg);
+  transform: rotateX(180deg);
+}
+.profile figure .back span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 2;
+  text-align: center;
+  color: #ffffff;
+  line-height: 88px;
+  font-size: 20px;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+.profile figure .back span:active {
+  -webkit-box-shadow: 0 0 25px 20px rgba(0, 0, 0, 0.1) inset;
+  -moz-box-shadow: 0 0 25px 20px rgba(0, 0, 0, 0.1) inset;
+  box-shadow: 0 0 25px 20px rgba(0, 0, 0, 0.1) inset;
+}
+.profile figure:hover .front {
+  -webkit-transform: rotateX(180deg);
+  -moz-transform: rotateX(180deg);
+  -ms-transform: rotateX(180deg);
+  -o-transform: rotateX(180deg);
+  transform: rotateX(180deg);
+}
+.profile figure:hover .back {
+  -webkit-transform: rotateX(0deg);
+  -moz-transform: rotateX(0deg);
+  -ms-transform: rotateX(0deg);
+  -o-transform: rotateX(0deg);
+  transform: rotateX(0deg);
 }

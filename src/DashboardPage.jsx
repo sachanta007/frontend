@@ -136,6 +136,13 @@ media:{
     display: 'list-item',
     listStyleType: "disc",
     listStylePosition: "inside"
+  },
+  userDrawerPic:{
+  display: "inline-block",
+  width: 50,
+  height: 5,
+  borderRadius: "50%",
+  objectFit: "cover"
   }
 });
 
@@ -1393,7 +1400,7 @@ dropEnrolledCourse(element,v){
   render() {
     const { classes } = this.props;
     const { spacing } = this.state; // this is for student grid in admin
-    let sideNav; //this contains the html for the page to be viewed now
+    let sideNav; //this contains the html for the sideNav of page to be viewed now
     let currentContent;
 
     // --------------------------------- CURRENT USER IS AN ADMIN ------------------------------------//
@@ -1803,35 +1810,35 @@ dropEnrolledCourse(element,v){
                 <ListItemIcon>
                   <HomeIcon />
                 </ListItemIcon>
-                <ListItemText primary="Home" />
+                <ListItemText class="drawerFont" primary="Home" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "add")}>
                 <ListItemIcon>
                   <AddCircle />
                 </ListItemIcon>
-                <ListItemText primary="Add New Course" />
+                <ListItemText class="drawerFont" primary="Add New Course" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "edit")}>
                 <ListItemIcon>
                   <EditIcon />
                 </ListItemIcon>
-                <ListItemText primary="Edit Course" />
+                <ListItemText class="drawerFont" primary="Edit Course" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "view students")}>
                 <ListItemIcon>
                   <FaceIcon />
                 </ListItemIcon>
-                <ListItemText primary="View Students" />
+                <ListItemText class="drawerFont" primary="View Students" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "view profs")}>
                 <ListItemIcon>
                   <SchoolIcon />
                 </ListItemIcon>
-                <ListItemText primary="View Professors" />
+                <ListItemText class="drawerFont" primary="View Professors" />
               </ListItem>
 
           </List>
@@ -1869,7 +1876,7 @@ dropEnrolledCourse(element,v){
                                    <CardMedia
                                        className={classes.media}
                                        image="build/computer-science.jpg"
-                                       title="Course Banner"
+
                                      />
                                    <CardContent>
                                      <div name="courseNameAndDrop" style={{paddingBottom:15}}>
@@ -1963,7 +1970,7 @@ dropEnrolledCourse(element,v){
                                   <CardMedia
                                       className={classes.media}
                                       image="build/computer-science.jpg"
-                                      title="Course Banner"
+
                                     />
                                   <CardContent>
                                     <div name="courseNameAndDrop" style={{paddingBottom:15}}>
@@ -2034,8 +2041,6 @@ dropEnrolledCourse(element,v){
               <div>
                 <Card>
                   <CardContent>
-
-
                     <div name="courseNameAndAdd">
                       <h1> {this.state.dataOfClickedCourse.course_code} - {this.state.dataOfClickedCourse.course_name}</h1>
                         {!(this.state.isThisAnEnrolledCourse) &&
@@ -2504,10 +2509,8 @@ else if(!(this.state.isStudentDetailsFormHidden)){
       // ------------------------------ SIDE NAV FOR STUDENT ALWAYS EXISTS ---------------------------------------//
       sideNav =
           <div className={classes.root}>
-
               <AppBar position="absolute" className={classes.appBar}>
                 <Toolbar>
-
                       <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
                         Course 360
                       </Typography>
@@ -2532,7 +2535,6 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                          </Menu>
                                       </div>
                           </div>
-
                 </Toolbar>
               </AppBar>
 
@@ -2543,33 +2545,42 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                 }}
               >
                 <div className={classes.toolbar} />
-                <List >
+                <List>
+                  <div name="profileSectionDiv" style={{textAlign:"center", paddingBottom:25}}>
+                    <div style={{display:"inline-block", width:"80%"}}>
+                      <section class="profile">
+                          <figure>
+                            <div class="front">
+                              <img src = "build/P_20150718_120437_HDR.jpg" alt="Your photo"/>
+                            </div>
+
+                            <div class="back">
+                              <span> CGPA: 3.9</span>
+                            </div>
+                            </figure>
+                        </section>
+                        </div>
+                      </div>
+
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "home")}  >
                       <ListItemIcon>
                         <HomeIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Home" />
+                      <ListItemText class="drawerFont" primary="Home" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "search")}>
                       <ListItemIcon>
                         <SearchIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Course Search" />
-                    </ListItem>
-
-                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "payment")}>
-                      <ListItemIcon>
-                        <AttachMoneyIcon />
-                      </ListItemIcon>
-                      <ListItemText primary="Payment Portal" />
+                      <ListItemText class="drawerFont" primary="Course Search" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "calendar")}>
                       <ListItemIcon>
                         <CalendarTodayIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Calendar" />
+                      <ListItemText class="drawerFont" primary="Calendar" />
                     </ListItem>
 
                 </List>
@@ -2608,7 +2619,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                    <CardMedia
                                        className={classes.media}
                                        image="build/computer-science.jpg"
-                                       title="Course Banner"
+
                                      />
                                    <CardContent>
                                      <div name="courseNameAndDrop" style={{paddingBottom:15}}>
@@ -2700,7 +2711,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                   <CardMedia
                                       className={classes.media}
                                       image="build/computer-science.jpg"
-                                      title="Course Banner"
+
                                     />
                                   <CardContent>
                                     <div name="courseNameAndDrop" style={{paddingBottom:15}}>
@@ -2927,21 +2938,21 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                       <ListItemIcon>
                         <HomeIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Home" />
+                      <ListItemText class="drawerFont" primary="Home" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "search")}>
                       <ListItemIcon>
                         <SearchIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Course Search" />
+                      <ListItemText class="drawerFont" primary="Course Search" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "calendar")}>
                       <ListItemIcon>
                         <CalendarTodayIcon />
                       </ListItemIcon>
-                      <ListItemText primary="Calendar" />
+                      <ListItemText class="drawerFont" primary="Calendar" />
                     </ListItem>
 
                 </List>
