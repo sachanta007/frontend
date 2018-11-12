@@ -315,7 +315,7 @@ handleChangeAndGetMatchingCourses(e){
       //Hit API and get results that matches
       return axios({
         method:'get',
-        url:'http://course360.herokuapp.com/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
+        url:'https://course360.herokuapp.com/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
@@ -627,7 +627,7 @@ goToMyProfilePage(e){
       }
       axios({
         method:'post',
-        url:'http://course360.herokuapp.com/enrollCourses',
+        url:'https://course360.herokuapp.com/enrollCourses',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -680,7 +680,7 @@ goToMyProfilePage(e){
     this.setState({studentEnrolledCourses: []})
     axios({
       method:'get',
-      url:'http://course360.herokuapp.com/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
+      url:'https://course360.herokuapp.com/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -768,7 +768,7 @@ componentDidMount() {
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getAllCourses/start/0/end/100000',
+    url:'https://course360.herokuapp.com/getAllCourses/start/0/end/100000',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -783,7 +783,7 @@ hitAPIForAdminHomePageCourses(){
   getAllProfessorsForSelect(){
     return axios({
       method:'get',
-      url:'http://course360.herokuapp.com/getAllProfessors/start/0/end/100000',
+      url:'https://course360.herokuapp.com/getAllProfessors/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -801,7 +801,7 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'http://course360.herokuapp.com/getAllStudents/start/0/end/100000',
+      url:'https://course360.herokuapp.com/getAllStudents/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -839,7 +839,7 @@ hitAPIForAdminHomePageCourses(){
         console.log(dataJSON);
         axios({
           method:'post',
-          url:'http://course360.herokuapp.com/insertCourses',
+          url:'https://course360.herokuapp.com/insertCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -934,7 +934,7 @@ hitAPIForAdminHomePageCourses(){
         console.log('data to be sent',dataJSON);
         axios({
           method:'post',
-          url:'http://course360.herokuapp.com/updateCourses',
+          url:'https://course360.herokuapp.com/updateCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -974,7 +974,7 @@ hitAPIForAdminHomePageCourses(){
 
     axios({
           method:'post',
-          url:'http://course360.herokuapp.com/deleteCourses',
+          url:'https://course360.herokuapp.com/deleteCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1041,7 +1041,7 @@ submitComment(e){
 
   axios({
         method:'post',
-        url:'http://course360.herokuapp.com/commentOnACourse',
+        url:'https://course360.herokuapp.com/commentOnACourse',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1069,7 +1069,7 @@ submitComment(e){
 getLatestCourseDetails(course_id){
   return axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getCourseBy/course/'+course_id,
+    url:'https://course360.herokuapp.com/getCourseBy/course/'+course_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1088,7 +1088,7 @@ addCourseToCart(id,e){
       }
   axios({
         method:'post',
-        url:'http://course360.herokuapp.com/addToCart',
+        url:'https://course360.herokuapp.com/addToCart',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1110,7 +1110,7 @@ addCourseToCart(id,e){
 getCartDetails(id){
   return axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getCart/userId/'+id,
+    url:'https://course360.herokuapp.com/getCart/userId/'+id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1162,7 +1162,7 @@ deleteFromCart(id,e){
   let user_id = sessionStorage.getItem('user_id')
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/delete/course/'+id+'/fromCart/for/user/'+user_id,
+    url:'https://course360.herokuapp.com/delete/course/'+id+'/fromCart/for/user/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1180,7 +1180,7 @@ getProfessorSchedule(){
   console.log('Professor ID is:',user_id);
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getProfessorSchedule/id/'+user_id,
+    url:'https://course360.herokuapp.com/getProfessorSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1213,7 +1213,7 @@ getStudentSchedule(){
   let user_id = sessionStorage.getItem('user_id')
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getStudentSchedule/id/'+user_id,
+    url:'https://course360.herokuapp.com/getStudentSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1317,7 +1317,7 @@ getEnrolledStudentsForCourse(courseId){
   console.log('Course clicked',courseId,'For professor',profId);
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
+    url:'https://course360.herokuapp.com/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1363,7 +1363,7 @@ dropEnrolledCourse(element,v){
 
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/dropCourse/courseId/'+element+'/userId/'+sessionStorage.getItem('user_id'),
+    url:'https://course360.herokuapp.com/dropCourse/courseId/'+element+'/userId/'+sessionStorage.getItem('user_id'),
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })

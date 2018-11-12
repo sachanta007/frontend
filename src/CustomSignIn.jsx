@@ -113,7 +113,7 @@ sendOTPForLogin = (event) =>{
 
       axios({
         method:'post',
-        url:'http://course360.herokuapp.com/authenticate',
+        url:'https://course360.herokuapp.com/authenticate',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*'},
       })
@@ -164,7 +164,7 @@ handleSubmit(e) {
 
     return axios({
       method:'post',
-      url:'http://course360.herokuapp.com/login',
+      url:'https://course360.herokuapp.com/login',
       data: dataJSON,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
@@ -204,7 +204,7 @@ verifySecurityAnswer(event){
 
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/sendOtp/email/'+this.state.emailForForgotPassword+'/answer/'+this.state.securityAnswer,
+    url:'https://course360.herokuapp.com/sendOtp/email/'+this.state.emailForForgotPassword+'/answer/'+this.state.securityAnswer,
     headers: {'Access-Control-Allow-Origin': '*'},
   })
   .then((response)=>{
@@ -252,7 +252,7 @@ updateNewPassword(event){
 
     axios({
       method:'post',
-      url:'http://course360.herokuapp.com/updatePassword',
+      url:'https://course360.herokuapp.com/updatePassword',
       data: dataJSON,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
@@ -281,7 +281,7 @@ fetchSecurityQuestion(event){
 
   axios({
     method:'get',
-    url:'http://course360.herokuapp.com/securityQuestion/'+this.state.emailForForgotPassword,
+    url:'https://course360.herokuapp.com/securityQuestion/'+this.state.emailForForgotPassword,
     headers: {'Access-Control-Allow-Origin': '*'},
   })
   .then((response)=>{
@@ -334,7 +334,7 @@ registerNewUser = (event) =>{
          console.log(registrationData);
      axios({
        method:'post',
-       url:'http://course360.herokuapp.com/register',
+       url:'https://course360.herokuapp.com/register',
        data: registrationData,
        headers: {'Access-Control-Allow-Origin': '*'},
      })
@@ -357,7 +357,7 @@ registerNewUser = (event) =>{
   tryToLogin = (email) =>{
     axios({
       method:'get',
-      url:'http://course360.herokuapp.com/checkFbUserExistence/email/'+email,
+      url:'https://course360.herokuapp.com/checkFbUserExistence/email/'+email,
       headers: {'Access-Control-Allow-Origin': '*'}
     })
     .then( (response) => {
@@ -390,7 +390,7 @@ registerNewUser = (event) =>{
         }
     axios({
       method:'post',
-      url:'http://course360.herokuapp.com/registerFbUser',
+      url:'https://course360.herokuapp.com/registerFbUser',
       data: registrationData,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
