@@ -91,8 +91,14 @@ margin: theme.spacing.unit*3,
 },
 card: {
   marginTop: 80,
-  width: 700,
+   width: 700,
   height:900,
+  margin: 'auto'
+
+},
+myProfileCard:{
+  marginTop: 80,
+   width: 1000,
   margin: 'auto'
 },
 media:{
@@ -138,11 +144,11 @@ media:{
     listStylePosition: "inside"
   },
   userDrawerPic:{
-  display: "inline-block",
-  width: 50,
-  height: 5,
-  borderRadius: "50%",
-  objectFit: "cover"
+      display: "inline-block",
+      width: 50,
+      height: 5,
+      borderRadius: "50%",
+      objectFit: "cover"
   }
 });
 
@@ -1420,24 +1426,72 @@ dropEnrolledCourse(element,v){
         currentContent =   <main className={classes.content}>
             <div className={classes.toolbar} />
             <h2> Hello, Admin! Here are all the courses available now!</h2>
-              {
-                this.state.allCoursesForAdminHome.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
-                  <CardContent>
-                    <Typography style={this.state.courseNameStyle} >
-                        {el.course_name}
-                    </Typography>
-                    {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
-                    {el.location} || {
-                      el.days.map(function(element){
+              <Grid container
+                spacing = {24}
+                justify="flex-start"
+                style={this.state.widthForGrid}
+                alignItems="flex-start"
+                >
+                {
+                  this.state.allCoursesForAdminHome.map((element,i) => {
+                    return(
+                      <Grid key={i} item xs={6}>
+                        <Card style={this.state.courseCardStyle}>
+                              <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
+                                <CardMedia
+                                    className={classes.media}
+                                    image="build/computer-science.jpg"
 
-                        return <span>{element} &nbsp;</span>
-                      })
-                    }
-                       || {el.start_time} - {el.end_time}
-                     <br /> <br />
-                  </CardContent>
-                </Card>))
-              }
+                                  />
+                                <CardContent>
+                                  <div name="courseNameAndDrop" style={{paddingBottom:15}}>
+                                      <Typography className ={classes.displayInline} style={this.state.courseNameStyle} >
+                                          {element.course_name}
+                                      </Typography>
+                                  </div>
+
+                               <div name="InfoContainer">
+                                 <div style={{float:'left'}} name="leftDetails">
+                                   <div name="locationDiv" style={{paddingBottom:5}}>
+                                       <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
+                                       <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
+                                         <span className={classes.subheading}>{element.location} </span>
+                                       </div>
+                                   </div>
+
+                                       <div style={{paddingBottom:5}}>
+                                         <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
+                                         <span className={classes.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
+                                       </div>
+                                 </div>
+
+                                 <div style={{float:'right'}} name="rightDetails">
+                                   <div name="daysOfferedMainDiv" style={{paddingBottom:5}}>
+                                         <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
+                                         <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
+                                           {
+                                            element.days.map(function(e){
+                                              return <span className={classes.subheading}>{e} </span>
+                                            })
+                                          }
+                                         </div>
+                                     </div>
+                                     <div name="classTimeDiv" style={{paddingBottom:5}}>
+                                       <i class="far fa-clock" style={{paddingRight: 7}}></i>
+                                       <span className={classes.subheading}>{element.start_time} - {element.end_time}</span>
+                                     </div>
+                                 </div>
+                               </div>
+
+                                </CardContent>
+                              </CardActionArea>
+                            </Card>
+                    </Grid>)
+
+                  })
+                }
+              </Grid>
+
           </main>
       }
 
@@ -2360,18 +2414,18 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
 // Individual profile page @author: Kriti shree
 else if(!(this.state.isStudentDetailsFormHidden)){
     currentContent =  <main className={classes.content}>
-      <div className={classes.toolbar} />
         <div>
-    <Card className={classes.card}>
+          <Card className={classes.myProfileCard}>
               <CardContent>
               <div>
               <Typography class='login-page-headers' color="primary">
-                Student Details
+                Your Details
               </Typography>
                    <FormControl >
                      <InputLabel htmlFor="input-with-icon-adornment">First Name</InputLabel>
                      <Input
                        id="input-with-icon-adornment"
+                       value="Aravind"
                        startAdornment={
                          <InputAdornment position="start">
                            <AccountCircle />
@@ -2384,6 +2438,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                      <InputLabel htmlFor="input-with-icon-adornment">Middle Name</InputLabel>
                      <Input
                        id="input-with-icon-adornment"
+                       value=""
                        startAdornment={
                          <InputAdornment position="start">
                            <AccountCircle />
@@ -2396,6 +2451,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                      <InputLabel htmlFor="input-with-icon-adornment">Last Name</InputLabel>
                      <Input
                        id="input-with-icon-adornment"
+                       value="Parappil"
                        startAdornment={
                          <InputAdornment position="start">
                            <AccountCircle />
@@ -2403,6 +2459,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                        }
                      />
                    </FormControl>
+
                 <form className={classes.container} noValidate>
                  <TextField
                    id="date"
@@ -2419,7 +2476,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                        <FormControl className={classes.formControl, classes.margin1}>
                          <InputLabel htmlFor="Gender-simple">Gender</InputLabel>
                          <Select
-                           value={this.state.Gender}
+                           value={0}
                            onChange={this.handleChange}
                            inputProps={{
                              name: 'Gender',
@@ -2442,21 +2499,21 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                        label="Permanent Address"
                        multiline
                        rows="4"
-                       defaultValue="Street 1"
+                       defaultValue="Luxe Gardens, Koppam, Palakkad, Kerala, India"
                        className={classes.textField}
                        margin="normal"
                       />
 
                       <FormControl className={classes.margin1}>
-                      <TextField
-                      id="standard-multiline-static"
-                       label="Temporary Address"
-                       multiline
-                       rows="4"
-                       defaultValue="Street 1"
-                       className={classes.textField}
-                       margin="normal"
-                      />
+                          <TextField
+                          id="standard-multiline-static"
+                           label="Temporary Address"
+                           multiline
+                           rows="4"
+                           defaultValue="C101 1750 N Range Rd Bloomington Indiana"
+                           className={classes.textField}
+                           margin="normal"
+                          />
                         </FormControl>
                       </form>
 
@@ -2466,7 +2523,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                         type="email"
                         name="newEmail"
                         label="Email"
-                        value={this.state.newEmail}
+                        value="aravindparappil@gmail.com"
                         className={classes.textField}
                         margin="normal"
                         InputLabelProps={{
@@ -2478,7 +2535,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                         <TextField
                         label="Mobile Number"
                         id="margin-none"
-                        defaultValue="+ code"
+                        defaultValue="+ 8123254730"
                         className={classes.textField}
                         helperText="Enter US number"
                         />
@@ -2489,7 +2546,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                         <TextField
                         label="CGPA"
                         id="margin-none"
-                        defaultValue=" "
+                        defaultValue="3.9"
                         className={classes.textField}
                         helperText="upto Current semester"
                         />
@@ -2498,7 +2555,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                         <TextField
                         label="Program"
                         id="margin-none"
-                        defaultValue=" "
+                        defaultValue="Computer Science"
                         className={classes.textField}
                         helperText="e.g CS/DS etc."
                         />
