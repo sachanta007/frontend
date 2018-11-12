@@ -158,7 +158,7 @@ class DashboardPage extends Component {
       isPaymentPortalHidden: true,
       isCalendarHidden: true,
       isSearchHidden: true,
-      courseCardStyle: {paddingBottom: 18, width: 380},
+      courseCardStyle: {marginBottom: 18, width: 380},
       widthForGrid: {width: '75%'},
       inheritWidth: {width: 'inherit'},
       courseNameStyle: {fontSize: 20, fontWeight: 'bold', fontFamily: 'Saira Semi Condensed'},
@@ -2544,36 +2544,81 @@ else if(!(this.state.isStudentDetailsFormHidden)){
     if(sessionStorage.getItem('user_role')==2){
       //---------------------------- HOME PAGE OF PROF ---------------------------------------------//
       if(!(this.state.isHomePageHidden)){
-        currentContent =   <main className={classes.content}>
-            <div className={classes.toolbar} />
-              <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses!</h2>
+        currentContent = <main className={classes.content}>
+          <div className={classes.toolbar} />
+           <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses</h2>
 
-                {
-                  this.state.profSchedule.length>0 &&
-                  this.state.profSchedule.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
-                    <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, el)}>
-                      <CardContent>
-                        <Typography style={this.state.courseNameStyle} >
-                            {el.course_name}
-                        </Typography>
+                 <Grid container
+                   spacing = {24}
+                   justify="flex-start"
+                   style={this.state.widthForGrid}
+                   alignItems="flex-start"
+                   >
+                   {
+                     this.state.profSchedule.map((element,i) => {
+                       return(
+                         <Grid key={i} item xs={6}>
+                           <Card style={this.state.courseCardStyle}>
+                                 <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
+                                   <CardMedia
+                                       className={classes.media}
+                                       image="build/computer-science.jpg"
+                                       title="Course Banner"
+                                     />
+                                   <CardContent>
+                                     <div name="courseNameAndDrop" style={{paddingBottom:15}}>
+                                         <Typography className ={classes.displayInline} style={this.state.courseNameStyle} >
+                                             {element.course_name}
+                                         </Typography>
+                                     </div>
 
-                      {el.location} || {
-                        el.days.map(function(element){
-                          return <span>{element} &nbsp;</span>
-                        })
-                      }|| {el.start_time} - {el.end_time}
-                         <br /> <br />
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>))
-                }
+                                  <div name="InfoContainer">
+                                    <div style={{float:'left'}} name="leftDetails">
+                                      <div name="locationDiv" style={{paddingBottom:5}}>
+                                          <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
+                                          <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
+                                            <span className={classes.subheading}>{element.location} </span>
+                                          </div>
+                                      </div>
 
-                {
-                  this.state.profSchedule.length == 0 &&
-                  <h2> You are not teaching any courses :( </h2>
-                }
+                                          <div style={{paddingBottom:5}}>
+                                            <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
+                                            <span className={classes.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
+                                          </div>
+                                    </div>
 
-          </main>
+                                    <div style={{float:'right'}} name="rightDetails">
+                                      <div name="daysOfferedMainDiv" style={{paddingBottom:5}}>
+                                            <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
+                                            <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
+                                              {
+                                               element.days.map(function(e){
+                                                 return <span className={classes.subheading}>{e} </span>
+                                               })
+                                             }
+                                            </div>
+                                        </div>
+                                        <div name="classTimeDiv" style={{paddingBottom:5}}>
+                                          <i class="far fa-clock" style={{paddingRight: 7}}></i>
+                                          <span className={classes.subheading}>{element.start_time} - {element.end_time}</span>
+                                        </div>
+                                    </div>
+                                  </div>
+
+                                   </CardContent>
+                                 </CardActionArea>
+                               </Card>
+                       </Grid>)
+
+                     })
+                   }
+                 </Grid>
+
+            {
+               this.state.profSchedule.length == 0 &&
+               <p> You are not teaching any courses :(</p>
+             }
+      </main>
       }
 
       // --------------- SEARCH COURSES FOR PROFESSOR ------------------------------//
@@ -2595,32 +2640,79 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                      shrink: true,
                    }}
                 />
-                {
-                  this.state.searchResults.length>0 &&
-                  this.state.searchResults.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
-                    <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, el)}>
-                      <CardContent>
-                        <Typography style={this.state.courseNameStyle} >
-                            {el.course_name}
-                        </Typography>
-                        {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
-                      {el.location} || {
-                        el.days.map(function(element){
-                          return <span>{element} &nbsp;</span>
-                        })
-                      }|| {el.start_time} - {el.end_time}
-                         <br /> <br />
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>))
-                }
+                <Grid container
+                  spacing = {24}
+                  justify="flex-start"
+                  style={this.state.widthForGrid}
+                  alignItems="flex-start"
+                  >
+                  {
+                    this.state.searchResults.map((element,i) => {
+                      return(
+                        <Grid key={i} item xs={6}>
+                          <Card style={this.state.courseCardStyle}>
+                                <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
+                                  <CardMedia
+                                      className={classes.media}
+                                      image="build/computer-science.jpg"
+                                      title="Course Banner"
+                                    />
+                                  <CardContent>
+                                    <div name="courseNameAndDrop" style={{paddingBottom:15}}>
+                                        <Typography className ={classes.displayInline} style={this.state.courseNameStyle} >
+                                            {element.course_name}
+                                        </Typography>
+                                    </div>
+
+                                 <div name="InfoContainer">
+                                   <div style={{float:'left'}} name="leftDetails">
+                                     <div name="locationDiv" style={{paddingBottom:5}}>
+                                         <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
+                                         <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
+                                           <span className={classes.subheading}>{element.location} </span>
+                                         </div>
+                                     </div>
+
+                                         <div style={{paddingBottom:5}}>
+                                           <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
+                                           <span className={classes.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
+                                         </div>
+                                   </div>
+
+                                   <div style={{float:'right'}} name="rightDetails">
+                                     <div name="daysOfferedMainDiv" style={{paddingBottom:5}}>
+                                           <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
+                                           <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
+                                             {
+                                              element.days.map(function(e){
+                                                return <span className={classes.subheading}>{e} </span>
+                                              })
+                                            }
+                                           </div>
+                                       </div>
+                                       <div name="classTimeDiv" style={{paddingBottom:5}}>
+                                         <i class="far fa-clock" style={{paddingRight: 7}}></i>
+                                         <span className={classes.subheading}>{element.start_time} - {element.end_time}</span>
+                                       </div>
+                                   </div>
+                                 </div>
+
+                                  </CardContent>
+                                </CardActionArea>
+                              </Card>
+                      </Grid>)
+
+                    })
+                  }
+                </Grid>
+
                 {
                   this.state.searchResults.length == 0 && this.state.searchCourseName.length !=0 &&
                   <h2> No results found!</h2>
                 }
                 {
                   this.state.searchCourseName.length == 0 &&
-                  <p> Start typing to search for courses!</p>
+                  <p style={{paddingTop:10}}> Start typing to search for courses!</p>
                 }
           </main>
       }

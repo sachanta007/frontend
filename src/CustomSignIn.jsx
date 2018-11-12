@@ -484,7 +484,7 @@ registerNewUser = (event) =>{
                   <Button variant="contained" onClick = {this.sendOTPForLogin.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
                 </CardActions>
                 <br/>
-                <Typography class='login-page-headers' color="textSecondary">
+                <Typography color="textSecondary">
                   or
                 </Typography>
                 <FacebookLogin
