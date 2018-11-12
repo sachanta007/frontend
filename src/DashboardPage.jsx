@@ -98,7 +98,7 @@ card: {
 },
 myProfileCard:{
   marginTop: 80,
-   width: 1000,
+   width: 800,
   margin: 'auto'
 },
 media:{
@@ -3031,6 +3031,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
     return (
       <div>
+
         {sideNav}
         <ToastContainer position={ToastContainer.POSITION.TOP_RIGHT} lightBackground store={ToastStore}/>
       </div>
