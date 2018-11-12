@@ -855,7 +855,7 @@ hitAPIForAdminHomePageCourses(){
             {
               this.componentDidMount()
 
-              ToastStore.success('Course has been added successfully!!',4000)
+              ToastStore.success('Course has been added successfully!!',4000,"whiteFont")
               this.setState({newCourseName: ''});
               this.setState({newCourseDesc: ''});
               this.setState({newCourseLocation: ''});
@@ -950,7 +950,7 @@ hitAPIForAdminHomePageCourses(){
             if(response.data != 'Error : Something went wrong')
             {
 
-              ToastStore.success('Course has been updated successfully!!',4000)
+              ToastStore.success('Course has been updated successfully!!',4000,"whiteFont")
               this.setState({editCourseName: ''});
               this.setState({editCourseDesc: ''});
               this.setState({editCourseLocation: ''});
@@ -991,7 +991,7 @@ hitAPIForAdminHomePageCourses(){
             if(response.data != 'Error : Something went wrong')
             {
 
-              ToastStore.success('Course has been deleted successfully!!',4000)
+              ToastStore.success('Course has been deleted successfully!!',4000,"whiteFont")
               this.setState({editCourseName: ''});
               this.setState({editCourseDesc: ''});
               this.setState({editCourseLocation: ''});
@@ -1059,7 +1059,7 @@ submitComment(e){
           if(response.data != 'Error : Something went wrong')
           {
 
-            ToastStore.info("Thank you for your review! We appreciate it!",4000)
+            ToastStore.success("Thank you for your review! We appreciate it!",4000,"whiteFont")
             this.setState({courseComment: ''});
             this.setState({courseRating: 0});
             this.getLatestCourseDetails(this.state.dataOfClickedCourse['course_id'])
@@ -1107,7 +1107,7 @@ addCourseToCart(id,e){
           if(response.data != 'Error : Something went wrong')
           {
 
-            ToastStore.success("Success! You can checkout now!!!",4000)
+            ToastStore.success("Success! You can checkout now!",4000,"whiteFont")
           }
       }).catch(err => {
         console.log("ADD TO CART ERR: ", err)
@@ -1179,7 +1179,7 @@ deleteFromCart(id,e){
   })
   .then((response)=>{
 
-    ToastStore.info('Course Deleted From Cart!!')
+    ToastStore.success('Course Deleted From Cart!!',4000,"whiteFont")
     this.goToCartPage(user_id,e)
   });
 }
@@ -1351,7 +1351,7 @@ getEnrolledStudentsForCourse(courseId){
 //dummy function fr showing alert after payment Success
 dummySuccessPayment(){
 
-  ToastStore.success("Congratulations! You have enrolled for the chosen courses!",4000)
+  ToastStore.success("Congratulations! You have enrolled for the chosen courses!",4000,"whiteFont")
   this.setState({isHomePageHidden: false});
   this.setState({isPaymentPortalHidden: true});
   this.setState({isCalendarHidden: true});
@@ -1383,7 +1383,7 @@ dropEnrolledCourse(element,v){
   .then((response)=>{
     if(response.status == 200){
 
-        ToastStore.info('This course has been dropped from your schedule!',4000)
+        ToastStore.success('This course has been dropped from your schedule!',4000,"whiteFont")
         this.setState({isHomePageHidden: false});
         this.setState({isPaymentPortalHidden: true});
         this.setState({isCalendarHidden: true});
@@ -1403,8 +1403,12 @@ dropEnrolledCourse(element,v){
     }
     else{
       console.log("Error with dropping course");
+      ToastStore.error("Oops! We couldn't process that right now! Sorry!",4000,"whiteFont")
     }
-  });
+  }).catch(err => {
+    ToastStore.error("Oops! We couldn't process that right now! Sorry!",4000,"whiteFont")
+    console.log("Error with dropping course",err);
+  });;
 
 }
 
@@ -2561,9 +2565,9 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                         />
                         </FormControl>
                         </form>
-                       <Button variant="outlined"  onClick={() => ToastStore.success(" Submitted the form successfully!!",4000)}  className = {classes.marginBottom}  color="primary">Submit</Button>
+                       <Button variant="outlined"  onClick={() => ToastStore.success(" Submitted the form successfully!!",4000,"whiteFont")}  className = {classes.marginBottom}  color="primary">Submit</Button>
 
-                      <ToastContainer position={ToastContainer.POSITION.TOP_RIGHT} lightBackground store={ToastStore}/>
+                      <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} store={ToastStore}/>
                  </div>
               </CardContent>
           </Card>
@@ -3033,7 +3037,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
       <div>
 
         {sideNav}
-        <ToastContainer position={ToastContainer.POSITION.TOP_RIGHT} lightBackground store={ToastStore}/>
+        <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} store={ToastStore}/>
       </div>
     )
   }

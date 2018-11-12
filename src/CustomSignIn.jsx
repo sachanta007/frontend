@@ -113,8 +113,6 @@ sendOTPForLogin = (event) =>{
         'password': this.state.password
       }
 
-      console.log('SENDING OTP',dataJSON);
-
       axios({
         method:'post',
         url:'https://course360.herokuapp.com/authenticate',
@@ -124,16 +122,20 @@ sendOTPForLogin = (event) =>{
       .then((response)=>{
         if(response.status != 500){
 
-          ToastStore.success("An email with an OTP has been sent to you!",4000)
+          ToastStore.success("An email with an OTP has been sent to you!",4000,"whiteFont")
           this.setState({isSignInCardHidden: true});
           this.setState({isVerifyOTPForSigninMFAHidden: false});
         }
         else{
-          ToastStore.error("Ooops! Something went wrong! Please check your email and password again!!",6000)
+          ToastStore.error("Ooops! Something went wrong! Please check your email and password again!!",6000,"whiteFont")
           console.log('OTP SENDING FAIL!',response);
           this.setState({loginSuccess: false});
           this.goBackToSignIn(event)
         }
+      }).catch(err => {
+        ToastStore.error("Ooops! Something went wrong! Please check your email and password again!!",6000,"whiteFont")
+        console.log('Probably wrong creds!!',err);
+
       });
 }
 
@@ -165,7 +167,6 @@ handleSubmit(e) {
       'password': this.state.password,
       'otp': this.state.OTPForLogin
     }
-    console.log('Trying with OTP',dataJSON);
 
     return axios({
       method:'post',
@@ -182,6 +183,7 @@ handleSubmit(e) {
         return(false)
       }
     }).catch(err => {
+      ToastStore.error("Ooops! Something went wrong! Please check your details!!",6000,"whiteFont")
       console.log('LOGIN error occurred',err);
       return(false)
     })
@@ -264,7 +266,7 @@ updateNewPassword(event){
     .then((response)=>{
       if(response.data['wasUpdateSuccessful']){
 
-        ToastStore.success("Password changed successfully!!! Please sign in again!!!",4000)
+        ToastStore.success("Password changed successfully!!! Please sign in again!!!",4000,"whiteFont")
         this.goBackToSignIn(event)
       }
 
@@ -503,8 +505,8 @@ registerNewUser = (event) =>{
                   callback={(response)=>this.responseFacebook(response)} />
               </form>
             }
+            <div className = {classes.newUserText} >New User? <a onClick = {this.showRegistrationCard.bind(this)} href="#">Register Here!</a></div>
         </CardContent>
-        <p onClick = {this.showRegistrationCard.bind(this)} className = {classes.newUserText} >New User? <a href="#">Register Here!</a></p>
       </Card>
     }
 
@@ -778,7 +780,7 @@ registerNewUser = (event) =>{
     return (
       <div>
         {currentCard}
-        <ToastContainer position={ToastContainer.POSITION.TOP_RIGHT} lightBackground store={ToastStore}/>
+        <ToastContainer position={ToastContainer.POSITION.TOP_RIGHT} store={ToastStore}/>
       </div>
     );
   }
