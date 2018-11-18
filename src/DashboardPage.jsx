@@ -81,12 +81,10 @@ let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
     backgroundColor: '#4285f4!important',
-
   },
   drawerPaper: {
     position: 'relative',
     width: drawerWidth,
-
   },
   margin: {
   margin: theme.spacing.unit,
@@ -141,7 +139,8 @@ media:{
     width: 850
   },
   subheading:{
-    fontFamily:'Saira Semi Condensed'
+    fontFamily:'Saira Semi Condensed',
+    color:"black"
   },
   bulletpoint:{
     display: 'list-item',
@@ -172,6 +171,13 @@ class DashboardPage extends Component {
 
 
     this.state = {
+
+      drawerPaper : {position: 'relative',width: drawerWidth},
+      subheading: {fontFamily:'Saira Semi Condensed',color:"black"},
+      appBar: {zIndex: 3, backgroundColor: '#4285f4!important'},
+      content: {flexGrow: 1, backgroundColor: '#F5F5F5', padding: 13, overflowY: 'auto'},
+      navDrawerIcon: {color: "black"},
+
       isHomePageHidden: false,
       isPaymentPortalHidden: true,
       isCalendarHidden: true,
@@ -437,7 +443,6 @@ leaveAllChatRooms(){
         console.log('Error leaving PUBLIC room ${"19420562"}',err)
       })
 }
-
 
 
 // Used for closing menu when clicked elsewhere
@@ -1602,7 +1607,7 @@ dropEnrolledCourse(element,v){
       // ------------- ADMIN HOME PAGE -------------------------- //
       if(!(this.state.isHomePageHidden))
       {
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
             <h2> Hello, Admin! Here are all the courses available now!</h2>
               <Grid container
@@ -1634,13 +1639,13 @@ dropEnrolledCourse(element,v){
                                    <div name="locationDiv" style={{paddingBottom:5}}>
                                        <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
                                        <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
-                                         <span className={classes.subheading}>{element.location} </span>
+                                         <span style={this.state.subheading}>{element.location} </span>
                                        </div>
                                    </div>
 
                                        <div style={{paddingBottom:5}}>
                                          <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
-                                         <span className={classes.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
+                                         <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                        </div>
                                  </div>
 
@@ -1650,14 +1655,14 @@ dropEnrolledCourse(element,v){
                                          <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                            {
                                             element.days.map(function(e){
-                                              return <span className={classes.subheading}>{e} </span>
+                                              return <span style={this.state.subheading}>{e} </span>
                                             })
                                           }
                                          </div>
                                      </div>
                                      <div name="classTimeDiv" style={{paddingBottom:5}}>
                                        <i class="far fa-clock" style={{paddingRight: 7}}></i>
-                                       <span className={classes.subheading}>{element.start_time} - {element.end_time}</span>
+                                       <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                      </div>
                                  </div>
                                </div>
@@ -1676,7 +1681,7 @@ dropEnrolledCourse(element,v){
 
       // ------------- ADMIN ADD NEW COURSE ---------------------//
       if(!(this.state.isAddNewCourseHidden)){
-        currentContent = <main className = {classes.content}>
+        currentContent = <main style={this.state.content}>
           <div className = {classes.toolbar} />
 
           <h2> Details of new course</h2>
@@ -1796,7 +1801,7 @@ dropEnrolledCourse(element,v){
 
       //------------------ ADMIN VIEW ALL STUDENTS PAGE ----------------------------------//
       if(!this.state.isViewStudentsHidden){
-        currentContent = <main className = {classes.content}>
+        currentContent = <main style={this.state.content}>
           <div className = {classes.toolbar} />
             <Grid container spacing={16}>
                  <Grid item xs={12}>
@@ -1824,7 +1829,7 @@ dropEnrolledCourse(element,v){
 
       //--------------------- ADMIN VIEW ALL PROFESSORS ---------------------------------//
       if(!this.state.isViewProfessorsHidden){
-        currentContent = <main className = {classes.content}>
+        currentContent = <main style={this.state.content}>
           <div className = {classes.toolbar} />
             <Grid container spacing={16}>
                  <Grid item xs={12}>
@@ -1852,7 +1857,7 @@ dropEnrolledCourse(element,v){
 
       // ---------------- ADMIN GRID VIEW TO EDIT A COURSE ---------------------------------------------//
       if(!(this.state.isEditCourseHidden)){
-        currentContent = <main className = {classes.content}>
+        currentContent = <main style={this.state.content}>
           <div className = {classes.toolbar} />
             <Grid container spacing={16}>
                  <Grid item xs={12}>
@@ -1881,7 +1886,7 @@ dropEnrolledCourse(element,v){
 
       //------------------------- ADMIN EDITS DETAILS OF A SINGLE COURSE ----------------------------------- //
       if(!(this.state.isEditSingleCourseHidden)){
-        currentContent = <main className = {classes.content}>
+        currentContent = <main style={this.state.content}>
           <div className = {classes.toolbar} />
             <Card>
               <CardContent>
@@ -2013,7 +2018,7 @@ dropEnrolledCourse(element,v){
       //------------------- ADMIN SIDE NAV IS ALWAYS PRESENT --------------------//
       sideNav =
         <div className={classes.root}>
-          <AppBar position="absolute" className={classes.appBar} >
+          <AppBar position="absolute" style={this.state.appBar} >
             <Toolbar>
               <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
                 Course 360
@@ -2041,42 +2046,40 @@ dropEnrolledCourse(element,v){
 
         <Drawer
           variant="permanent"
-          classes={{
-            paper: classes.drawerPaper,
-          }}
+          style={this.state.drawerPaper}
         >
           <div className={classes.toolbar} />
           <List>
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "home")}>
-                <ListItemIcon>
+                <ListItemIcon style={this.state.navDrawerIcon}>
                   <HomeIcon />
                 </ListItemIcon>
                 <ListItemText class="drawerFont" primary="Home" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "add")}>
-                <ListItemIcon>
+                <ListItemIcon style={this.state.navDrawerIcon}>
                   <AddCircle />
                 </ListItemIcon>
                 <ListItemText class="drawerFont" primary="Add New Course" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "edit")}>
-                <ListItemIcon>
+                <ListItemIcon style={this.state.navDrawerIcon}>
                   <EditIcon />
                 </ListItemIcon>
                 <ListItemText class="drawerFont" primary="Edit Course" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "view students")}>
-                <ListItemIcon>
+                <ListItemIcon style={this.state.navDrawerIcon}>
                   <FaceIcon />
                 </ListItemIcon>
                 <ListItemText class="drawerFont" primary="View Students" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "view profs")}>
-                <ListItemIcon>
+                <ListItemIcon style={this.state.navDrawerIcon}>
                   <SchoolIcon />
                 </ListItemIcon>
                 <ListItemText class="drawerFont" primary="View Professors" />
@@ -2098,7 +2101,7 @@ dropEnrolledCourse(element,v){
 
       //---------------------------- HOME PAGE OF STUDENT ---------------------------------------------//
       if(!(this.state.isHomePageHidden)){
-        currentContent = <main className={classes.content}>
+        currentContent = <main style={this.state.content}>
           <div className={classes.toolbar} />
            <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses</h2>
 
@@ -2131,13 +2134,13 @@ dropEnrolledCourse(element,v){
                                       <div name="locationDiv" style={{paddingBottom:5}}>
                                           <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
                                           <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
-                                            <span className={classes.subheading}>{element.location} </span>
+                                            <span style={this.state.subheading}>{element.location} </span>
                                           </div>
                                       </div>
 
                                           <div style={{paddingBottom:5}}>
                                             <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
-                                            <span className={classes.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
+                                            <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                           </div>
                                     </div>
 
@@ -2147,14 +2150,14 @@ dropEnrolledCourse(element,v){
                                             <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                               {
                                                element.days.map(function(e){
-                                                 return <span className={classes.subheading}>{e} </span>
+                                                 return <span style={this.state.subheading}>{e} </span>
                                                })
                                              }
                                             </div>
                                         </div>
                                         <div name="classTimeDiv" style={{paddingBottom:5}}>
                                           <i class="far fa-clock" style={{paddingRight: 7}}></i>
-                                          <span className={classes.subheading}>{element.start_time} - {element.end_time}</span>
+                                          <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                         </div>
                                     </div>
                                   </div>
@@ -2176,7 +2179,7 @@ dropEnrolledCourse(element,v){
       }
 
       if(!(this.state.isChatPageHidden)){
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
             <Card style={{height:400}}>
               <CardContent>
@@ -2204,7 +2207,7 @@ dropEnrolledCourse(element,v){
 
       // Nav to a private room!!
       else if(sessionStorage.getItem('personal_chat_with') != null && !this.state.isPersonalChatPageHidden){
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
             <Card >
               <CardContent>
@@ -2216,7 +2219,7 @@ dropEnrolledCourse(element,v){
 
         //// Nav to group chat room!!
       else if(!this.state.isGroupChatPageHidden){
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
             <Card>
               <CardContent>
@@ -2228,7 +2231,7 @@ dropEnrolledCourse(element,v){
 
       // --------------- SEARCH COURSES FOR STUDENT ------------------------------//
       else if(!(this.state.isSearchHidden)){
-        currentContent = <main className={classes.content}>
+        currentContent = <main style={this.state.content}>
             <div className={classes.toolbar} />
               <h2> Search for a course</h2>
                 <TextField
@@ -2274,13 +2277,13 @@ dropEnrolledCourse(element,v){
                                      <div name="locationDiv" style={{paddingBottom:5}}>
                                          <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
                                          <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
-                                           <span className={classes.subheading}>{element.location} </span>
+                                           <span style={this.state.subheading}>{element.location} </span>
                                          </div>
                                      </div>
 
                                          <div style={{paddingBottom:5}}>
                                            <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
-                                           <span className={classes.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
+                                           <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                          </div>
                                    </div>
 
@@ -2290,14 +2293,14 @@ dropEnrolledCourse(element,v){
                                            <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                              {
                                               element.days.map(function(e){
-                                                return <span className={classes.subheading}>{e} </span>
+                                                return <span style={this.state.subheading}>{e} </span>
                                               })
                                             }
                                            </div>
                                        </div>
                                        <div name="classTimeDiv" style={{paddingBottom:5}}>
                                          <i class="far fa-clock" style={{paddingRight: 7}}></i>
-                                         <span className={classes.subheading}>{element.start_time} - {element.end_time}</span>
+                                         <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                        </div>
                                    </div>
                                  </div>
@@ -2325,7 +2328,7 @@ dropEnrolledCourse(element,v){
 
       // ----- INDIVIDUAL COURSE PAGE ------------- ///
       if(!(this.state.isIndividualCoursePageHidden)){
-        currentContent = <main className={classes.content}>
+        currentContent = <main style={this.state.content}>
             <div className={classes.toolbar} />
             {
               <div>
@@ -2449,7 +2452,7 @@ dropEnrolledCourse(element,v){
 
       /////////////////// CART PAGE ///////////////////////////////////////////
       if(!(this.state.isCartPageHidden)){
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
               <h1> Your Cart</h1>
                 {
@@ -2494,7 +2497,7 @@ dropEnrolledCourse(element,v){
 
   //--------- CALENDAR SCHEDULE VIEW FOR STUDENT --------//
       if(!(this.state.isCalendarHidden)){
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
               <h2> Your Schedule</h2>
                 <div>
@@ -2516,7 +2519,7 @@ dropEnrolledCourse(element,v){
 
       // ---------- KRITI'S PAYMENT PORTAL SECTION --------------------------//
         else if(!(this.state.isPaymentPortalHidden)){
-          currentContent = <main className={classes.content}>
+          currentContent = <main style={this.state.content}>
               <div className={classes.toolbar} />
                 <div>
                   <Card className={classes.card}>
@@ -2565,7 +2568,7 @@ dropEnrolledCourse(element,v){
 else if(!(this.state.isPaymentModeCardHidden))
 {
   currentContent=
-    <main className={classes.content}>
+    <main style={this.state.content}>
         <div className={classes.toolbar} />
           <div className={classes.root}>
             <div>
@@ -2612,7 +2615,7 @@ else if(!(this.state.isPaymentModeCardHidden))
 // chose a payment mode and lands here
 else if(!(this.state.isPaymentSuccessfulCardHidden))
 {
-  currentContent =   <main className={classes.content}>
+  currentContent =   <main style={this.state.content}>
     <div className={classes.toolbar} />
         <Card className={classes.card}>
                   <CardContent>
@@ -2641,7 +2644,7 @@ else if(!(this.state.isPaymentSuccessfulCardHidden))
 
 // Individual profile page @author: Kriti shree
 else if(!(this.state.isStudentDetailsFormHidden)){
-    currentContent =  <main className={classes.content}>
+    currentContent =  <main style={this.state.content}>
         <div>
           <Card className={classes.myProfileCard}>
               <CardContent>
@@ -2802,7 +2805,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
       // ------------------------------ SIDE NAV FOR STUDENT ALWAYS EXISTS ---------------------------------------//
       sideNav =
           <div className={classes.root}>
-              <AppBar position="absolute" className={classes.appBar}>
+              <AppBar position="absolute" style={this.state.appBar} >
                 <Toolbar>
                       <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
                         Course 360
@@ -2833,9 +2836,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
               <Drawer
                 variant="permanent"
-                classes={{
-                  paper: classes.drawerPaper,
-                }}
+                style={this.state.drawerPaper}
               >
                 <div className={classes.toolbar} />
                 <List>
@@ -2856,28 +2857,28 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                       </div>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "home")}  >
-                      <ListItemIcon>
+                      <ListItemIcon style={this.state.navDrawerIcon}>
                         <HomeIcon />
                       </ListItemIcon>
                       <ListItemText class="drawerFont" primary="Home" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "search")}>
-                      <ListItemIcon>
+                      <ListItemIcon style={this.state.navDrawerIcon}>
                         <SearchIcon />
                       </ListItemIcon>
                       <ListItemText class="drawerFont" primary="Course Search" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "calendar")}>
-                      <ListItemIcon>
+                      <ListItemIcon style={this.state.navDrawerIcon}>
                         <CalendarTodayIcon />
                       </ListItemIcon>
                       <ListItemText class="drawerFont" primary="Calendar" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
-                     <ListItemIcon>
+                     <ListItemIcon style={this.state.navDrawerIcon}>
                        <ChatIcon />
                      </ListItemIcon>
                      <ListItemText class="drawerFont" primary="Chat" />
@@ -2900,7 +2901,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
     if(sessionStorage.getItem('user_role')==2){
       //---------------------------- HOME PAGE OF PROF ---------------------------------------------//
       if(!(this.state.isHomePageHidden)){
-        currentContent = <main className={classes.content}>
+        currentContent = <main style={this.state.content}>
           <div className={classes.toolbar} />
            <h2> Hello, {this.state.loggedinUserFirstName}! Here are your courses</h2>
 
@@ -2933,13 +2934,13 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                       <div name="locationDiv" style={{paddingBottom:5}}>
                                           <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
                                           <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
-                                            <span className={classes.subheading}>{element.location} </span>
+                                            <span style={this.state.subheading}>{element.location} </span>
                                           </div>
                                       </div>
 
                                           <div style={{paddingBottom:5}}>
                                             <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
-                                            <span className={classes.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
+                                            <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                           </div>
                                     </div>
 
@@ -2949,14 +2950,14 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                             <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                               {
                                                element.days.map(function(e){
-                                                 return <span className={classes.subheading}>{e} </span>
+                                                 return <span style={this.state.subheading}>{e} </span>
                                                })
                                              }
                                             </div>
                                         </div>
                                         <div name="classTimeDiv" style={{paddingBottom:5}}>
                                           <i class="far fa-clock" style={{paddingRight: 7}}></i>
-                                          <span className={classes.subheading}>{element.start_time} - {element.end_time}</span>
+                                          <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                         </div>
                                     </div>
                                   </div>
@@ -2979,7 +2980,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
       // --------------- SEARCH COURSES FOR PROFESSOR ------------------------------//
       else if(!(this.state.isSearchHidden)){
-        currentContent = <main className={classes.content}>
+        currentContent = <main style={this.state.content}>
             <div className={classes.toolbar} />
               <h2> Search for a course</h2>
                 <TextField
@@ -3025,13 +3026,13 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                      <div name="locationDiv" style={{paddingBottom:5}}>
                                          <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
                                          <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
-                                           <span className={classes.subheading}>{element.location} </span>
+                                           <span style={this.state.subheading}>{element.location} </span>
                                          </div>
                                      </div>
 
                                          <div style={{paddingBottom:5}}>
                                            <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
-                                           <span className={classes.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
+                                           <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                          </div>
                                    </div>
 
@@ -3041,14 +3042,14 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                            <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                              {
                                               element.days.map(function(e){
-                                                return <span className={classes.subheading}>{e} </span>
+                                                return <span style={this.state.subheading}>{e} </span>
                                               })
                                             }
                                            </div>
                                        </div>
                                        <div name="classTimeDiv" style={{paddingBottom:5}}>
                                          <i class="far fa-clock" style={{paddingRight: 7}}></i>
-                                         <span className={classes.subheading}>{element.start_time} - {element.end_time}</span>
+                                         <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                        </div>
                                    </div>
                                  </div>
@@ -3075,7 +3076,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
       // ----- INDIVIDUAL COURSE PAGE ------------- ///
       if(!(this.state.isIndividualCoursePageHidden)){
-        currentContent = <main className={classes.content}>
+        currentContent = <main style={this.state.content}>
             <div className={classes.toolbar} />
             {
               <div>
@@ -3177,7 +3178,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
       //---CALENDAR VIEW --//
       if(!(this.state.isCalendarHidden)){
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
               <h2> Your Schedule</h2>
                 <div>
@@ -3198,7 +3199,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
       }
 
       if(!(this.state.isChatPageHidden)){
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
             <Card style={{height:400}}>
               <CardContent>
@@ -3226,7 +3227,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
       // Nav to a private room!!
       else if(sessionStorage.getItem('personal_chat_with') != null && !this.state.isPersonalChatPageHidden){
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
             <Card >
               <CardContent>
@@ -3238,7 +3239,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
         //// Nav to group chat room!!
       else if(!this.state.isGroupChatPageHidden){
-        currentContent =   <main className={classes.content}>
+        currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
             <Card>
               <CardContent>
@@ -3251,7 +3252,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
       // ------------------------------ SIDE NAV FOR PROF ALWAYS EXISTS ---------------------------------------//
       sideNav =
           <div className={classes.root}>
-              <AppBar position="absolute" className={classes.appBar}>
+              <AppBar position="absolute" style={this.state.appBar} >
                 <Toolbar>
                     <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
                       Course 360
@@ -3279,35 +3280,33 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
               <Drawer
                 variant="permanent"
-                classes={{
-                  paper: classes.drawerPaper,
-                }}
+              style={this.state.drawerPaper}
               >
                 <div className={classes.toolbar} />
                 <List>
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "home")}>
-                      <ListItemIcon>
+                      <ListItemIcon style={this.state.navDrawerIcon}>
                         <HomeIcon />
                       </ListItemIcon>
                       <ListItemText class="drawerFont" primary="Home" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "search")}>
-                      <ListItemIcon>
+                      <ListItemIcon style={this.state.navDrawerIcon}>
                         <SearchIcon />
                       </ListItemIcon>
                       <ListItemText class="drawerFont" primary="Course Search" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "calendar")}>
-                      <ListItemIcon>
+                      <ListItemIcon style={this.state.navDrawerIcon}>
                         <CalendarTodayIcon />
                       </ListItemIcon>
                       <ListItemText class="drawerFont" primary="Calendar" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
-                     <ListItemIcon>
+                     <ListItemIcon style={this.state.navDrawerIcon}>
                        <ChatIcon />
                      </ListItemIcon>
                      <ListItemText class="drawerFont" primary="Chat" />
