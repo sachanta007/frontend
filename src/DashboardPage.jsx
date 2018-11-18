@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Redirect } from 'react-router';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
@@ -17,6 +18,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
 import EmailIcon from '@material-ui/icons/Email';
 import DeleteIcon from '@material-ui/icons/Delete';
+import ChatIcon from '@material-ui/icons/Chat';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
 import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
 import EditIcon from '@material-ui/icons/Edit';
@@ -52,6 +54,9 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 import InputLabel from '@material-ui/core/InputLabel';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Input from '@material-ui/core/Input';
+import ChatScreen from './ChatScreen.js';
+import PersonalChatList from './PersonalChatList.js';
+import Chatkit from '@pusher/chatkit-client'
 
 // -------------------- Declaring constants here -------------------//
 const drawerWidth = 240;
@@ -155,8 +160,8 @@ media:{
 // ------------------------------------------- Constants end here -----------------------------------------------//
 
 class DashboardPage extends Component {
-  constructor(){
-    super()
+  constructor(props){
+    super(props)
     this.handleMenuItemClick = this.handleMenuItemClick.bind(this);
     this.editSingleCourse = this.editSingleCourse.bind(this);
     this.updateCourseInDB = this.updateCourseInDB.bind(this);
@@ -187,6 +192,9 @@ class DashboardPage extends Component {
       isIndividualCoursePageHidden: true,
       isStudentDetailsFormHidden: true,
       isCartPageHidden:true,
+      isChatPageHidden:true,
+      isGroupChatPageHidden:true,
+      isPersonalChatPageHidden:true,
       selectedRadioValue: [],
       mon: false,
       tue: false,
@@ -249,7 +257,9 @@ class DashboardPage extends Component {
 
       anchorEl: null,
       open: false,
-      studentsEnrolledForCourse: []
+      studentsEnrolledForCourse: [],
+
+      chatUser: {}
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -311,7 +321,48 @@ handleChangeForRating(e){
   this.setState({courseRating: e})
 }
 
+//Sets state var for showing group hat pages
+goToGroupChat(e){
+  this.setState({isHomePageHidden: true});
+  this.setState({isPaymentPortalHidden: true});
+  this.setState({isCalendarHidden: true});
+  this.setState({isSearchHidden: true});
+  this.setState({isAddNewCourseHidden: true});
+  this.setState({isEditCourseHidden: true});
+  this.setState({isViewStudentsHidden: true});
+  this.setState({isViewProfessorsHidden: true});
+  this.setState({isEditSingleCourseHidden: true})
+  this.setState({isPaymentModeCardHidden: true});
+  this.setState({isPaymentSuccessfulCardHidden: true});
+  this.setState({isIndividualCoursePageHidden: true});
+  this.setState({isCartPageHidden: true});
+  this.setState({isStudentDetailsFormHidden:true});
+  this.setState({isChatPageHidden: true});
+  this.setState({isGroupChatPageHidden: false});
+  this.setState({isPersonalChatPageHidden:true})
+}
 
+// Set state for private chat on!!!
+goToPersonalChatPage(e){
+   console.log("TIME TO GO TO PRIVATE CHAAAT!!");
+    this.setState({isHomePageHidden: true});
+    this.setState({isPaymentPortalHidden: true});
+    this.setState({isCalendarHidden: true});
+    this.setState({isSearchHidden: true});
+    this.setState({isAddNewCourseHidden: true});
+    this.setState({isEditCourseHidden: true});
+    this.setState({isViewStudentsHidden: true});
+    this.setState({isViewProfessorsHidden: true});
+    this.setState({isEditSingleCourseHidden: true})
+    this.setState({isPaymentModeCardHidden: true});
+    this.setState({isPaymentSuccessfulCardHidden: true});
+    this.setState({isIndividualCoursePageHidden: true});
+    this.setState({isCartPageHidden: true});
+    this.setState({isStudentDetailsFormHidden:true});
+    this.setState({isChatPageHidden: true});
+    this.setState({isGroupChatPageHidden: true});
+    this.setState({isPersonalChatPageHidden:false})
+}
 // Below is handle change specifically for course search field
 handleChangeAndGetMatchingCourses(e){
       let change = {}
@@ -345,6 +396,8 @@ logout(e){
 
   // close pop down menu
   this.handleClose()
+  // Leaving chat room
+    this.leaveAllChatRooms();
 
   // Resetting session variables
   sessionStorage.setItem('token','')
@@ -369,8 +422,23 @@ logout(e){
   this.setState({isCartPageHidden: true});
   this.setState({isChatPageHidden: true})
   this.setState({isStudentDetailsFormHidden: true})
+  this.setState({isGroupChatPageHidden: true})
+  this.setState({isPersonalChatPageHidden: true})
   window.location = '#/'
 }
+
+// Leaves public and private room
+leaveAllChatRooms(){
+      this.state.chatUser.leaveRoom({ roomId: '19420562' })
+      .then(room => {
+        console.log("Left room public")
+      })
+      .catch(err => {
+        console.log('Error leaving PUBLIC room ${"19420562"}',err)
+      })
+}
+
+
 
 // Used for closing menu when clicked elsewhere
 handleClickAway = () => {
@@ -412,6 +480,9 @@ goToMyProfilePage(e){
   this.setState({isIndividualCoursePageHidden: true});
   this.setState({isCartPageHidden: true});
   this.setState({isStudentDetailsFormHidden:false});
+  this.setState({isChatPageHidden: true});
+  this.setState({isGroupChatPageHidden: true});
+  this.setState({isPersonalChatPageHidden:true})
 }
 
  //-------------------------------------------
@@ -463,7 +534,11 @@ goToMyProfilePage(e){
       this.setState({isCartPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
       this.setState({isStudentDetailsFormHidden: true})
+      this.setState({isChatPageHidden: true})
+      this.setState({isGroupChatPageHidden: true});
+      this.setState({isPersonalChatPageHidden:true})
 
+      this.leaveAllChatRooms();
       this.componentDidMount()
 
     }
@@ -482,7 +557,9 @@ goToMyProfilePage(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isStudentDetailsFormHidden: true})
-
+       this.setState({isChatPageHidden: true})
+       this.setState({isGroupChatPageHidden: true});
+       this.setState({isPersonalChatPageHidden:true})
       // hits api, when result is returned, update state var
       this.getAllProfessorsForSelect().then((returnVal) => {
           this.setState({allProfessorsForSelect: returnVal});
@@ -505,6 +582,9 @@ goToMyProfilePage(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isStudentDetailsFormHidden: true})
+      this.setState({isChatPageHidden: true})
+      this.setState({isGroupChatPageHidden: true});
+      this.setState({isPersonalChatPageHidden:true})
       this.componentDidMount()
       this.getAllProfessorsForSelect().then((returnVal) => {
           this.setState({allProfessorsForSelect: returnVal});
@@ -527,6 +607,10 @@ goToMyProfilePage(e){
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isStudentDetailsFormHidden: true})
       this.setState({isCartPageHidden: true});
+      this.setState({isChatPageHidden: true})
+      this.setState({isGroupChatPageHidden: true});
+      this.setState({isPersonalChatPageHidden:true})
+      this.leaveAllChatRooms();
 
       this.getAllStudents().then((returnVal) => {
         this.setState({allStudents: returnVal});
@@ -549,7 +633,10 @@ goToMyProfilePage(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
+      this.setState({isChatPageHidden: true})
       this.setState({isStudentDetailsFormHidden: true})
+      this.setState({isGroupChatPageHidden: true});
+      this.setState({isPersonalChatPageHidden:true})
       this.getAllProfessorsForSelect().then((returnVal) => {
         this.setState({allProfessors: returnVal});
 
@@ -571,10 +658,15 @@ goToMyProfilePage(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({searchCourseName: ''});
+      this.setState({isChatPageHidden: true});
       this.setState({searchResults: []});
       this.setState({isCartPageHidden: true});
       this.setState({isStudentDetailsFormHidden: true})
       this.setState({isThisAnEnrolledCourse: false})
+      this.setState({isGroupChatPageHidden: true});
+      this.setState({isPersonalChatPageHidden:true})
+
+      this.leaveAllChatRooms();
     }
 
     else if(value=='payment'){
@@ -591,9 +683,13 @@ goToMyProfilePage(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
+      this.setState({isChatPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
       this.setState({isStudentDetailsFormHidden: true})
+      this.setState({isGroupChatPageHidden: true});
+      this.setState({isPersonalChatPageHidden:true})
 
+      this.leaveAllChatRooms();
     }
 
     else if(value=='calendar'){
@@ -610,8 +706,13 @@ goToMyProfilePage(e){
       this.setState({isPaymentSuccessfulCardHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
+      this.setState({isChatPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
       this.setState({isStudentDetailsFormHidden: true})
+      this.setState({isGroupChatPageHidden: true});
+      this.setState({isPersonalChatPageHidden:true})
+
+      this.leaveAllChatRooms();
 
       if(sessionStorage.getItem('user_role')==2)
       {
@@ -623,6 +724,26 @@ goToMyProfilePage(e){
       }
 
     }
+
+    else if(value == 'chat'){
+      this.setState({isHomePageHidden: true});
+      this.setState({isPaymentPortalHidden: true});
+      this.setState({isCalendarHidden: true});
+      this.setState({isSearchHidden: true});
+      this.setState({isAddNewCourseHidden: true});
+      this.setState({isEditCourseHidden: true});
+      this.setState({isViewStudentsHidden: true});
+      this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
+      this.setState({isThisAnEnrolledCourse: false})
+      this.setState({isChatPageHidden: false});
+      this.setState({isGroupChatPageHidden: true});
+      this.setState({isPersonalChatPageHidden:true})
+     }
   }
 
 
@@ -650,7 +771,8 @@ goToMyProfilePage(e){
             this.setState({isPaymentSuccessfulCardHidden: true});
             this.setState({isIndividualCoursePageHidden: true});
             this.setState({isCartPageHidden: true});
-
+            this.setState({isGroupChatPageHidden: true});
+            this.setState({isPersonalChatPageHidden:true})
           }
           else{
             this.setState({isPaymentPortalHidden: true});
@@ -659,6 +781,8 @@ goToMyProfilePage(e){
             this.setState({isIndividualCoursePageHidden: true});
             this.setState({isStudentDetailsFormHidden: true})
             this.setState({isCartPageHidden: false});
+            this.setState({isGroupChatPageHidden: true});
+            this.setState({isPersonalChatPageHidden:true})
             console.log("Error in enrollment");
           }
       });
@@ -673,6 +797,8 @@ goToMyProfilePage(e){
        this.setState({isIndividualCoursePageHidden: true});
        this.setState({isCartPageHidden: true});
        this.setState({isStudentDetailsFormHidden: true})
+       this.setState({isGroupChatPageHidden: true});
+       this.setState({isPersonalChatPageHidden:true})
    }
 //-------------- End of Kriti's functions ---//
 
@@ -767,6 +893,25 @@ componentDidMount() {
     this.getProfessorSchedule()
   }
 
+  // chat user
+    const chatManager = new Chatkit.ChatManager({
+      instanceLocator: 'v1:us1:1a111cfa-e268-4391-84a5-484c7faccc84',
+      userId: sessionStorage.getItem('user_email'),
+      tokenProvider: new Chatkit.TokenProvider({
+        url: 'https://us1.pusherplatform.io/services/chatkit_token_provider/v1/1a111cfa-e268-4391-84a5-484c7faccc84/token?user_id='+sessionStorage.getItem('user_email'),
+      }),
+    })
+     chatManager
+      .connect()
+      .then(currentUser => {
+        this.setState({chatUser: currentUser });
+      })
+
+      // on browser tab Close
+      window.addEventListener("beforeunload", (ev) =>
+      {
+        this.leaveAllChatRooms();
+      });
 }
 
 // Calls API for admin home page courseCard
@@ -1158,11 +1303,41 @@ goToCartPage(id,e){
 
     this.setState({cartData: returnVal});
     this.setState({isCartPageHidden: false});
+
+    this.setState({isHomePageHidden: true});
+    this.setState({isPaymentPortalHidden: true});
+    this.setState({isCalendarHidden: true});
+    this.setState({isSearchHidden: true});
+    this.setState({isAddNewCourseHidden: true});
+    this.setState({isEditCourseHidden: true});
+    this.setState({isViewStudentsHidden: true});
+    this.setState({isViewProfessorsHidden: true});
+    this.setState({isEditSingleCourseHidden: true})
+    this.setState({isPaymentModeCardHidden: true});
+    this.setState({isPaymentSuccessfulCardHidden: true});
+    this.setState({isIndividualCoursePageHidden: true});
+    this.setState({isCartPageHidden: true});
+    this.setState({isStudentDetailsFormHidden: true})
   })
   .catch(
     err => {
       this.setState({cartData: []});
       this.setState({isCartPageHidden: false});
+
+      this.setState({isHomePageHidden: true});
+      this.setState({isPaymentPortalHidden: true});
+      this.setState({isCalendarHidden: true});
+      this.setState({isSearchHidden: true});
+      this.setState({isAddNewCourseHidden: true});
+      this.setState({isEditCourseHidden: true});
+      this.setState({isViewStudentsHidden: true});
+      this.setState({isViewProfessorsHidden: true});
+      this.setState({isEditSingleCourseHidden: true})
+      this.setState({isPaymentModeCardHidden: true});
+      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isIndividualCoursePageHidden: true});
+      this.setState({isCartPageHidden: true});
+      this.setState({isStudentDetailsFormHidden: true})
     });
 }
 
@@ -2000,7 +2175,56 @@ dropEnrolledCourse(element,v){
       </main>
       }
 
+      if(!(this.state.isChatPageHidden)){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+            <Card style={{height:400}}>
+              <CardContent>
+              <Grid container
+                spacing = {24}
+                justify="flex-start"
+                style={this.state.widthForGrid}
+                alignItems="flex-start"
+                >
+                  <Grid item xs={6}>
+                    <h2> Hang out with everyone!</h2>
+                    <Divider />
+                      <Button style={{marginTop:20}} onClick= {this.goToGroupChat.bind(this)}variant="contained" color="primary"> Join Public Room</Button>
+                  </Grid>
+                  <Grid item xs={6}>
+                      <h2> Personal Chat </h2>
+                        <Divider />
+                        <PersonalChatList pageChanger = {this.goToPersonalChatPage.bind(this)} isThisPersonalChatList={1}/>
+                  </Grid>
+              </Grid>
+              </CardContent>
+            </Card>
+          </main>
+      }
 
+      // Nav to a private room!!
+      else if(sessionStorage.getItem('personal_chat_with') != null && !this.state.isPersonalChatPageHidden){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+            <Card >
+              <CardContent>
+                    <ChatScreen chatWith={sessionStorage.getItem('personal_chat_with')} currentUser={this.state.chatUser}/>
+              </CardContent>
+            </Card>
+          </main>
+      }
+
+        //// Nav to group chat room!!
+      else if(!this.state.isGroupChatPageHidden){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+            <Card>
+              <CardContent>
+                  <ChatScreen chatWith={false} currentUser={this.state.chatUser}/>
+              </CardContent>
+            </Card>
+          </main>
+      }
 
       // --------------- SEARCH COURSES FOR STUDENT ------------------------------//
       else if(!(this.state.isSearchHidden)){
@@ -2652,6 +2876,13 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                       <ListItemText class="drawerFont" primary="Calendar" />
                     </ListItem>
 
+                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
+                     <ListItemIcon>
+                       <ChatIcon />
+                     </ListItemIcon>
+                     <ListItemText class="drawerFont" primary="Chat" />
+                   </ListItem>
+
                 </List>
                 <Divider />
               </Drawer>
@@ -2966,6 +3197,57 @@ else if(!(this.state.isStudentDetailsFormHidden)){
           </main>
       }
 
+      if(!(this.state.isChatPageHidden)){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+            <Card style={{height:400}}>
+              <CardContent>
+              <Grid container
+                spacing = {24}
+                justify="flex-start"
+                style={this.state.widthForGrid}
+                alignItems="flex-start"
+                >
+                  <Grid item xs={6}>
+                    <h2> Hang out with everyone!</h2>
+                    <Divider />
+                      <Button style={{marginTop:20}} onClick= {this.goToGroupChat.bind(this)}variant="contained" color="primary"> Join Public Room</Button>
+                  </Grid>
+                  <Grid item xs={6}>
+                      <h2> Personal Chat </h2>
+                        <Divider />
+                        <PersonalChatList pageChanger = {this.goToPersonalChatPage.bind(this)} isThisPersonalChatList={1}/>
+                  </Grid>
+              </Grid>
+              </CardContent>
+            </Card>
+          </main>
+      }
+
+      // Nav to a private room!!
+      else if(sessionStorage.getItem('personal_chat_with') != null && !this.state.isPersonalChatPageHidden){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+            <Card >
+              <CardContent>
+                    <ChatScreen chatWith={sessionStorage.getItem('personal_chat_with')} currentUser={this.state.chatUser}/>
+              </CardContent>
+            </Card>
+          </main>
+      }
+
+        //// Nav to group chat room!!
+      else if(!this.state.isGroupChatPageHidden){
+        currentContent =   <main className={classes.content}>
+            <div className={classes.toolbar} />
+            <Card>
+              <CardContent>
+                  <ChatScreen chatWith={false} currentUser={this.state.chatUser}/>
+              </CardContent>
+            </Card>
+          </main>
+      }
+
       // ------------------------------ SIDE NAV FOR PROF ALWAYS EXISTS ---------------------------------------//
       sideNav =
           <div className={classes.root}>
@@ -3024,6 +3306,13 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                       <ListItemText class="drawerFont" primary="Calendar" />
                     </ListItem>
 
+                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
+                     <ListItemIcon>
+                       <ChatIcon />
+                     </ListItemIcon>
+                     <ListItemText class="drawerFont" primary="Chat" />
+                   </ListItem>
+
                 </List>
                 <Divider />
               </Drawer>
@@ -3035,7 +3324,6 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
     return (
       <div>
-
         {sideNav}
         <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} store={ToastStore}/>
       </div>
