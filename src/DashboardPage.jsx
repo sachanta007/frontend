@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Redirect } from 'react-router';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
+import CssBaseline from '@material-ui/core/CssBaseline';
 import Drawer from '@material-ui/core/Drawer';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -78,14 +79,31 @@ let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
     fontFamily:'Lobster',
     fontSize: 30
   },
+  changed:{
+    position: 'relative',
+    width: drawerWidth,
+    backgroundColor:'red',
+  },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
-    backgroundColor: '#4285f4!important',
+    backgroundColor: '#4285f4',
   },
-  drawerPaper: {
+  drawerPaperDefault: {
     position: 'relative',
     width: drawerWidth,
   },
+  drawerPaperNight: {
+    position: 'relative',
+    width: drawerWidth,
+    backgroundColor: 'black'
+  },
+  drawer: {
+   width: drawerWidth,
+   flexShrink: 0,
+ },
+ paper:{
+   width: 240
+ },
   margin: {
   margin: theme.spacing.unit,
 },
@@ -169,14 +187,15 @@ class DashboardPage extends Component {
     this.wrapperForCourseSearch = this.wrapperForCourseSearch.bind(this);
     this.PaymentMode = this.PaymentMode.bind(this);
 
-
     this.state = {
 
-      drawerPaper : {position: 'relative',width: drawerWidth},
-      subheading: {fontFamily:'Saira Semi Condensed',color:"black"},
-      appBar: {zIndex: 3, backgroundColor: '#4285f4!important'},
-      content: {flexGrow: 1, backgroundColor: '#F5F5F5', padding: 13, overflowY: 'auto'},
+      drawerPaper : {position: 'relative',width: 240, backgroundColor: '#4285f4'},
+      subheading: {fontFamily:'Saira Semi Condensed', color:"black"},
+      appBar: {zIndex: 1202, backgroundColor: '#4285f4'},
+      content: {flexGrow: 1, backgroundColor: '#F5F5F5', padding: 24, overflowY: 'auto'},
       navDrawerIcon: {color: "black"},
+      drawer: {flexShrink:0, width: 240,backgroundColor: '#4285f4'},
+      currentTheme: 'default',
 
       isHomePageHidden: false,
       isPaymentPortalHidden: true,
@@ -1654,7 +1673,7 @@ dropEnrolledCourse(element,v){
                                          <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
                                          <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                            {
-                                            element.days.map(function(e){
+                                            element.days.map((e) =>{
                                               return <span style={this.state.subheading}>{e} </span>
                                             })
                                           }
@@ -2018,7 +2037,7 @@ dropEnrolledCourse(element,v){
       //------------------- ADMIN SIDE NAV IS ALWAYS PRESENT --------------------//
       sideNav =
         <div className={classes.root}>
-          <AppBar position="absolute" style={this.state.appBar} >
+          <AppBar position="absolute" style={this.state.appBar}>
             <Toolbar>
               <Typography className = {classes.appBarHeading} variant="headline" color="inherit">
                 Course 360
@@ -2149,7 +2168,7 @@ dropEnrolledCourse(element,v){
                                             <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
                                             <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                               {
-                                               element.days.map(function(e){
+                                               element.days.map((e) => {
                                                  return <span style={this.state.subheading}>{e} </span>
                                                })
                                              }
@@ -2292,7 +2311,7 @@ dropEnrolledCourse(element,v){
                                            <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
                                            <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                              {
-                                              element.days.map(function(e){
+                                              element.days.map((e)=>{
                                                 return <span style={this.state.subheading}>{e} </span>
                                               })
                                             }
@@ -2803,6 +2822,22 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 }
 
       // ------------------------------ SIDE NAV FOR STUDENT ALWAYS EXISTS ---------------------------------------//
+      if(this.state.currentTheme == 'default')
+      {
+          var drawerProps = {
+            classes: {
+              paper: classes.drawerPaperDefault
+            }
+          }
+        }
+      else if(this.state.currentTheme == 'night'){
+        var drawerProps = {
+          classes: {
+            paper: classes.drawerPaperNight
+          }
+        }
+      }
+      
       sideNav =
           <div className={classes.root}>
               <AppBar position="absolute" style={this.state.appBar} >
@@ -2834,59 +2869,61 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                 </Toolbar>
               </AppBar>
 
-              <Drawer
-                variant="permanent"
-                style={this.state.drawerPaper}
-              >
-                <div className={classes.toolbar} />
-                <List>
-                  <div name="profileSectionDiv" style={{textAlign:"center", paddingBottom:25}}>
-                    <div style={{display:"inline-block", width:"80%"}}>
-                      <section class="profile">
-                          <figure>
-                            <div class="front">
-                              <img src = "build/P_20150718_120437_HDR.jpg" alt="Your photo"/>
+                <Drawer
+                    variant="permanent"
+
+                      {...drawerProps}
+                      >
+
+                      <div className={classes.toolbar} />
+                      <List>
+                        <div name="profileSectionDiv" style={{textAlign:"center", paddingBottom:25}}>
+                          <div style={{display:"inline-block", width:"80%"}}>
+                            <section class="profile">
+                                <figure>
+                                  <div class="front">
+                                    <img src = "build/P_20150718_120437_HDR.jpg" alt="Your photo"/>
+                                  </div>
+
+                                  <div class="back">
+                                    <span> CGPA: 3.9</span>
+                                  </div>
+                                  </figure>
+                              </section>
+                              </div>
                             </div>
 
-                            <div class="back">
-                              <span> CGPA: 3.9</span>
-                            </div>
-                            </figure>
-                        </section>
-                        </div>
-                      </div>
+                          <ListItem button onClick={this.handleMenuItemClick.bind(this, "home")}  >
+                            <ListItemIcon style={this.state.navDrawerIcon}>
+                              <HomeIcon />
+                            </ListItemIcon>
+                            <ListItemText class="drawerFont" primary="Home" />
+                          </ListItem>
 
-                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "home")}  >
-                      <ListItemIcon style={this.state.navDrawerIcon}>
-                        <HomeIcon />
-                      </ListItemIcon>
-                      <ListItemText class="drawerFont" primary="Home" />
-                    </ListItem>
+                          <ListItem button onClick={this.handleMenuItemClick.bind(this, "search")}>
+                            <ListItemIcon style={this.state.navDrawerIcon}>
+                              <SearchIcon />
+                            </ListItemIcon>
+                            <ListItemText class="drawerFont" primary="Course Search" />
+                          </ListItem>
 
-                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "search")}>
-                      <ListItemIcon style={this.state.navDrawerIcon}>
-                        <SearchIcon />
-                      </ListItemIcon>
-                      <ListItemText class="drawerFont" primary="Course Search" />
-                    </ListItem>
+                          <ListItem button onClick={this.handleMenuItemClick.bind(this, "calendar")}>
+                            <ListItemIcon style={this.state.navDrawerIcon}>
+                              <CalendarTodayIcon />
+                            </ListItemIcon>
+                            <ListItemText class="drawerFont" primary="Calendar" />
+                          </ListItem>
 
-                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "calendar")}>
-                      <ListItemIcon style={this.state.navDrawerIcon}>
-                        <CalendarTodayIcon />
-                      </ListItemIcon>
-                      <ListItemText class="drawerFont" primary="Calendar" />
-                    </ListItem>
+                          <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
+                           <ListItemIcon style={this.state.navDrawerIcon}>
+                             <ChatIcon />
+                           </ListItemIcon>
+                           <ListItemText class="drawerFont" primary="Chat" />
+                         </ListItem>
 
-                    <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
-                     <ListItemIcon style={this.state.navDrawerIcon}>
-                       <ChatIcon />
-                     </ListItemIcon>
-                     <ListItemText class="drawerFont" primary="Chat" />
-                   </ListItem>
-
-                </List>
-                <Divider />
-              </Drawer>
+                      </List>
+                      <Divider />
+                </Drawer>
               {currentContent}
         </div>
     }
@@ -2949,7 +2986,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                             <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
                                             <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                               {
-                                               element.days.map(function(e){
+                                               element.days.map((e)=>{
                                                  return <span style={this.state.subheading}>{e} </span>
                                                })
                                              }
@@ -3041,7 +3078,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                            <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
                                            <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                              {
-                                              element.days.map(function(e){
+                                              element.days.map((e) => {
                                                 return <span style={this.state.subheading}>{e} </span>
                                               })
                                             }
