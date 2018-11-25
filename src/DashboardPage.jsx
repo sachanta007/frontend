@@ -96,7 +96,10 @@ let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
   drawerPaperNight: {
     position: 'relative',
     width: drawerWidth,
-    backgroundColor: 'black'
+    backgroundColor: '#2e3033'
+  },
+  drawerTextNight:{
+    color: 'yellow'
   },
   drawer: {
    width: drawerWidth,
@@ -177,7 +180,7 @@ media:{
     position: 'absolute',
     width: theme.spacing.unit * 50,
     backgroundColor: theme.palette.background.paper,
-    boxShadow: theme.shadows[5],
+    boxShadow: theme.shadows[9],
     padding: theme.spacing.unit * 4,
   },
 });
@@ -204,6 +207,7 @@ class DashboardPage extends Component {
       navDrawerIcon: {color: "black"},
       drawer: {flexShrink:0, width: 240,backgroundColor: '#4285f4'},
       currentTheme: 'default',
+      themeRadio:'1',
 
       isHomePageHidden: false,
       isPaymentPortalHidden: true,
@@ -302,7 +306,6 @@ class DashboardPage extends Component {
     if(currentUserRole == 1){
       this.state.isAdmin = true
       console.log('Admin is in the house!!!');
-
     }
 
     else if(currentUserRole == 3)
@@ -313,7 +316,26 @@ class DashboardPage extends Component {
 
     let currentUserTheme =   sessionStorage.getItem('user_theme')
     this.state.currentTheme = currentUserTheme
+    console.log("Inside constructor =>", this.state.currentTheme);
+    if(this.state.currentTheme == 'night'){
+      this.state.drawerPaper = {position: 'relative',width: 240, backgroundColor: '#070707'}
+      this.state.subheading = {fontFamily:'Saira Semi Condensed', color:"yellow"}
+      this.state.appBar = {zIndex: 1202, backgroundColor: '#0c0d0e', color:'#ffe85e'}
+      this.state.content = {flexGrow: 1, backgroundColor: '#43464A', color:'#ffe85e', padding: 24, overflowY: 'auto'}
+      this.state.navDrawerIcon = {color: "yellow"}
+      this.state.drawer = {flexShrink:0, width: 240,backgroundColor: '#4285f4'}
+      this.state.themeRadio = '2'
+    }
 
+    else if(this.state.currentTheme == 'default'){
+      this.state.drawerPaper = {position: 'relative',width: 240, backgroundColor: '#4285f4'}
+      this.state.subheading =  {fontFamily:'Saira Semi Condensed', color:"black"}
+      this.state.appBar = {zIndex: 1202, backgroundColor: '#4285f4'}
+      this.state.content = {flexGrow: 1, backgroundColor: '#F5F5F5', padding: 24, overflowY: 'auto'}
+      this.state.navDrawerIcon =  {color: "black"}
+      this.state.drawer =  {flexShrink:0, width: 240,backgroundColor: '#4285f4'}
+      this.state.themeRadio = '1'
+    }
   }
 
   // Below is a common handleChange function
@@ -351,7 +373,53 @@ class DashboardPage extends Component {
            case '5': this.state.editFri == false? this.setState({editFri: true}) : this.setState({editFri: false}) ; break;
          }
        }
+
+       // This is for theme selection view radio buttons ONLY
+       if(e.target.name == 'themeRadio')
+       {
+         console.log("Radio for css clicked",e.target.value);
+        this.setState({ themeRadio: e.target.value });
+
+        if(e.target.value == '1'){
+          this.setState({ currentTheme: 'default' }, () => {
+                  this.changeThemeStates('default')
+                  this.updateThemeInDB('default')
+                });
+      }
+
+        else if(e.target.value == '2'){
+          console.log("About to set state to night mode");
+          this.setState({ currentTheme: 'night' }, () => {
+                  this.changeThemeStates('night')
+                  this.updateThemeInDB('night')
+              });
+        } // night if ends
+
+      } // themeRadio if ends
     }
+
+// Calls api to update theme info in DB for user
+
+updateThemeInDB(theme){
+  var user_id = sessionStorage.getItem('user_id');
+  axios({
+    method:'get',
+    url:'http://localhost:5000/updateColorTheme/theme/'+theme+'/student/'+user_id,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    if(response.status == 200)
+    {
+      ToastStore.success('Updated your theme preference!',4000,"whiteFont")
+      console.log('UPDATED THEME DB',response.data)
+    }
+  }).catch(err => {
+    console.log("DAMN! Update CSS messed up ", err)
+    ToastStore.error('Oops! Please try again!',4000,"whiteFont")
+  })
+
+}
 
 // Below is custom handle Change ONLY FOR STAR Rating
 // For courses
@@ -882,6 +950,32 @@ goToMyProfilePage(e){
     })
   }
 
+changeThemeStates(theme){
+  console.log("INSIDE CHANGE THEME STATES FUNCTION!!!!!!", this.state.currentTheme);
+  if(theme == 'night'){
+    console.log("Inside night mode........");
+    this.setState({drawerPaper : {position: 'relative',width: 240, backgroundColor: '#070707'}})
+    this.setState({subheading: {fontFamily:'Saira Semi Condensed', color:"black"}})
+    this.setState({appBar: {zIndex: 1202, backgroundColor: '#0c0d0e', color:'#ffe85e'}})
+    this.setState({content: {flexGrow: 1, backgroundColor: '#43464A', color:'#ffe85e', padding: 24, overflowY: 'auto'}})
+    this.setState({navDrawerIcon: {color: "yellow"}})
+    this.setState({drawer: {flexShrink:0, width: 240,backgroundColor: '#4285f4'}})
+
+    this.state.themeRadio = '2'
+  }
+
+  if(theme == 'default'){
+
+    this.setState({drawerPaper :  {position: 'relative',width: 240, backgroundColor: '#4285f4'}})
+    this.setState({subheading: {fontFamily:'Saira Semi Condensed', color:"black"}})
+    this.setState({appBar: {zIndex: 1202, backgroundColor: '#4285f4'}})
+    this.setState({content: {flexGrow: 1, backgroundColor: '#F5F5F5', padding: 24, overflowY: 'auto'}})
+    this.setState({navDrawerIcon: {color: "black"}})
+    this.setState({drawer: {flexShrink:0, width: 240,backgroundColor: '#4285f4'}})
+
+    this.state.themeRadio = '1'
+  }
+}
 //----------------------------------
 // Lifecycle method that gets all courses
 // when 'edit' in menu is clicked and
@@ -892,7 +986,11 @@ componentDidMount() {
   this.setState({loggedinUserFirstName: sessionStorage.getItem('user_first_name')})
 
   //gettng the theme for logged in user
-  this.setState({currentTheme: sessionStorage.getItem('user_theme')})
+
+  console.log("Inside compoment did mount", this.state.currentTheme);
+  this.changeThemeStates(this.state.currentTheme)
+
+
     // ADMIN SECTION
   if(currentUserRole == 1){
     this.setState({isAdmin: true });
@@ -1633,9 +1731,9 @@ getModalStyle() {
   const left = 100;
 
   return {
-    top: `${top}%`,
-    left: `${left}%`,
-    transform: `translate(-${top}%, -${left}%)`,
+    top: `100%`,
+    left: `100%`,
+    transform: `translate(-100%, -100%)`,
   };
 }
 
@@ -1696,21 +1794,21 @@ hideThemeModal(e){
                                <div name="InfoContainer">
                                  <div style={{float:'left'}} name="leftDetails">
                                    <div name="locationDiv" style={{paddingBottom:5}}>
-                                       <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
+                                       <i class="fas fa-map-marker-alt" style={{paddingRight: 7, color:'black'}}></i>
                                        <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
                                          <span style={this.state.subheading}>{element.location} </span>
                                        </div>
                                    </div>
 
                                        <div style={{paddingBottom:5}}>
-                                         <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
+                                         <i class="fas fa-graduation-cap" style={{paddingRight: 7, color:'black'}}></i>
                                          <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                        </div>
                                  </div>
 
                                  <div style={{float:'right'}} name="rightDetails">
                                    <div name="daysOfferedMainDiv" style={{paddingBottom:5}}>
-                                         <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
+                                         <i class="far fa-calendar-alt" style={{paddingRight: 7, color:'black'}}></i>
                                          <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                            {
                                             element.days.map((e) =>{
@@ -1720,7 +1818,7 @@ hideThemeModal(e){
                                          </div>
                                      </div>
                                      <div name="classTimeDiv" style={{paddingBottom:5}}>
-                                       <i class="far fa-clock" style={{paddingRight: 7}}></i>
+                                       <i class="far fa-clock" style={{paddingRight: 7, color:'black'}}></i>
                                        <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                      </div>
                                  </div>
@@ -2089,6 +2187,12 @@ hideThemeModal(e){
             paper: classes.drawerPaperNight
           }
         }
+
+        var drawerTextColor = {
+          classes: {
+            primary: classes.drawerTextNight
+          }
+        }
       }
 
       sideNav =
@@ -2129,35 +2233,35 @@ hideThemeModal(e){
                 <ListItemIcon style={this.state.navDrawerIcon}>
                   <HomeIcon />
                 </ListItemIcon>
-                <ListItemText class="drawerFont" primary="Home" />
+                <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Home" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "add")}>
                 <ListItemIcon style={this.state.navDrawerIcon}>
                   <AddCircle />
                 </ListItemIcon>
-                <ListItemText class="drawerFont" primary="Add New Course" />
+                <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Add New Course" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "edit")}>
                 <ListItemIcon style={this.state.navDrawerIcon}>
                   <EditIcon />
                 </ListItemIcon>
-                <ListItemText class="drawerFont" primary="Edit Course" />
+                <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Edit Course" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "view students")}>
                 <ListItemIcon style={this.state.navDrawerIcon}>
                   <FaceIcon />
                 </ListItemIcon>
-                <ListItemText class="drawerFont" primary="View Students" />
+                <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="View Students" />
               </ListItem>
 
               <ListItem button onClick={this.handleMenuItemClick.bind(this, "view profs")}>
                 <ListItemIcon style={this.state.navDrawerIcon}>
                   <SchoolIcon />
                 </ListItemIcon>
-                <ListItemText class="drawerFont" primary="View Professors" />
+                <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="View Professors" />
               </ListItem>
 
           </List>
@@ -2207,21 +2311,21 @@ hideThemeModal(e){
                                   <div name="InfoContainer">
                                     <div style={{float:'left'}} name="leftDetails">
                                       <div name="locationDiv" style={{paddingBottom:5}}>
-                                          <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
+                                          <i class="fas fa-map-marker-alt" style={{paddingRight: 7, color:'black'}}></i>
                                           <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
                                             <span style={this.state.subheading}>{element.location} </span>
                                           </div>
                                       </div>
 
                                           <div style={{paddingBottom:5}}>
-                                            <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
+                                            <i class="fas fa-graduation-cap" style={{paddingRight: 7, color:'black'}}></i>
                                             <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                           </div>
                                     </div>
 
                                     <div style={{float:'right'}} name="rightDetails">
                                       <div name="daysOfferedMainDiv" style={{paddingBottom:5}}>
-                                            <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
+                                            <i class="far fa-calendar-alt" style={{paddingRight: 7, color:'black'}}></i>
                                             <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                               {
                                                element.days.map((e) => {
@@ -2231,7 +2335,7 @@ hideThemeModal(e){
                                             </div>
                                         </div>
                                         <div name="classTimeDiv" style={{paddingBottom:5}}>
-                                          <i class="far fa-clock" style={{paddingRight: 7}}></i>
+                                          <i class="far fa-clock" style={{paddingRight: 7, color:'black'}}></i>
                                           <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                         </div>
                                     </div>
@@ -2256,7 +2360,7 @@ hideThemeModal(e){
       if(!(this.state.isChatPageHidden)){
         currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
-            <Card style={{height:400}}>
+            <Card style={{height:400, color:'black'}}>
               <CardContent>
               <Grid container
                 spacing = {24}
@@ -2296,7 +2400,7 @@ hideThemeModal(e){
       else if(!this.state.isGroupChatPageHidden){
         currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
-            <Card>
+            <Card style={{color:'black'}}>
               <CardContent>
                   <ChatScreen chatWith={false} currentUser={this.state.chatUser}/>
               </CardContent>
@@ -2350,21 +2454,21 @@ hideThemeModal(e){
                                  <div name="InfoContainer">
                                    <div style={{float:'left'}} name="leftDetails">
                                      <div name="locationDiv" style={{paddingBottom:5}}>
-                                         <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
+                                         <i class="fas fa-map-marker-alt" style={{paddingRight: 7, color:'black'}}></i>
                                          <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
                                            <span style={this.state.subheading}>{element.location} </span>
                                          </div>
                                      </div>
 
                                          <div style={{paddingBottom:5}}>
-                                           <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
+                                           <i class="fas fa-graduation-cap" style={{paddingRight: 7, color:'black'}}></i>
                                            <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                          </div>
                                    </div>
 
                                    <div style={{float:'right'}} name="rightDetails">
                                      <div name="daysOfferedMainDiv" style={{paddingBottom:5}}>
-                                           <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
+                                           <i class="far fa-calendar-alt" style={{paddingRight: 7, color:'black'}}></i>
                                            <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                              {
                                               element.days.map((e)=>{
@@ -2374,7 +2478,7 @@ hideThemeModal(e){
                                            </div>
                                        </div>
                                        <div name="classTimeDiv" style={{paddingBottom:5}}>
-                                         <i class="far fa-clock" style={{paddingRight: 7}}></i>
+                                         <i class="far fa-clock" style={{paddingRight: 7, color:'black'}}></i>
                                          <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                        </div>
                                    </div>
@@ -2406,7 +2510,7 @@ hideThemeModal(e){
         currentContent = <main style={this.state.content}>
             <div className={classes.toolbar} />
             {
-              <div>
+              <div style={{color:'black'}}>
                 <Card>
                   <CardContent>
                     <div name="courseNameAndAdd">
@@ -2575,7 +2679,7 @@ hideThemeModal(e){
         currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
               <h2> Your Schedule</h2>
-                <div>
+                <div style={{color:'black'}}>
                   <Card>
                     <BigCalendar
                       events={this.state.eventsForStudentCalendar}
@@ -2892,6 +2996,11 @@ else if(!(this.state.isStudentDetailsFormHidden)){
             paper: classes.drawerPaperNight
           }
         }
+        var drawerTextColor = {
+          classes: {
+            primary: classes.drawerTextNight
+          }
+        }
       }
 
       sideNav =
@@ -2923,6 +3032,36 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                          </Menu>
                                       </div>
                           </div>
+                          <Modal
+                            aria-labelledby="simple-modal-title"
+                            aria-describedby="simple-modal-description"
+                            open={this.state.isThemeModalOpen}
+                            onClose={this.hideThemeModal.bind(this)}
+                          >
+                            <div style={{
+                              top: `50%`,
+                              left: `65%`,
+                              transform: `translate(-100%, -100%)`,
+                            }} className={classes.modalPaper}
+                            >
+
+                              <Typography class="theme-modal-font" id="modal-title">
+                                Choose a theme
+                              </Typography>
+
+                              <RadioGroup
+                                aria-label="themeRadio"
+                                name="themeRadio"
+                                className={classes.group}
+                                value={this.state.themeRadio}
+                                onChange={this.handleChange.bind(this)}>
+
+                                    <FormControlLabel  value="1" control={<Radio color="primary" checked = {this.state.themeRadio==="1"} />} label="Default" />
+                                    <FormControlLabel  value="2" control={<Radio color="primary" checked = {this.state.themeRadio==="2"}  />} label="Night Mode" />
+
+                              </RadioGroup>
+                            </div>
+                          </Modal>
                 </Toolbar>
               </AppBar>
 
@@ -2954,28 +3093,28 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                             <ListItemIcon style={this.state.navDrawerIcon}>
                               <HomeIcon />
                             </ListItemIcon>
-                            <ListItemText class="drawerFont" primary="Home" />
+                            <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Home" />
                           </ListItem>
 
                           <ListItem button onClick={this.handleMenuItemClick.bind(this, "search")}>
                             <ListItemIcon style={this.state.navDrawerIcon}>
                               <SearchIcon />
                             </ListItemIcon>
-                            <ListItemText class="drawerFont" primary="Course Search" />
+                            <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Course Search" />
                           </ListItem>
 
                           <ListItem button onClick={this.handleMenuItemClick.bind(this, "calendar")}>
                             <ListItemIcon style={this.state.navDrawerIcon}>
                               <CalendarTodayIcon />
                             </ListItemIcon>
-                            <ListItemText class="drawerFont" primary="Calendar" />
+                            <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Calendar" />
                           </ListItem>
 
                           <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
                            <ListItemIcon style={this.state.navDrawerIcon}>
                              <ChatIcon />
                            </ListItemIcon>
-                           <ListItemText class="drawerFont" primary="Chat" />
+                           <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Chat" />
                          </ListItem>
 
                       </List>
@@ -3026,21 +3165,21 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                   <div name="InfoContainer">
                                     <div style={{float:'left'}} name="leftDetails">
                                       <div name="locationDiv" style={{paddingBottom:5}}>
-                                          <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
+                                          <i class="fas fa-map-marker-alt" style={{paddingRight: 7, color:'black'}}></i>
                                           <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
                                             <span style={this.state.subheading}>{element.location} </span>
                                           </div>
                                       </div>
 
                                           <div style={{paddingBottom:5}}>
-                                            <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
+                                            <i class="fas fa-graduation-cap" style={{paddingRight: 7, color:'black'}}></i>
                                             <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                           </div>
                                     </div>
 
                                     <div style={{float:'right'}} name="rightDetails">
                                       <div name="daysOfferedMainDiv" style={{paddingBottom:5}}>
-                                            <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
+                                            <i class="far fa-calendar-alt" style={{paddingRight: 7,color:'black'}}></i>
                                             <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                               {
                                                element.days.map((e)=>{
@@ -3050,7 +3189,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                             </div>
                                         </div>
                                         <div name="classTimeDiv" style={{paddingBottom:5}}>
-                                          <i class="far fa-clock" style={{paddingRight: 7}}></i>
+                                          <i class="far fa-clock" style={{paddingRight: 7, color:'black'}}></i>
                                           <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                         </div>
                                     </div>
@@ -3118,21 +3257,21 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                  <div name="InfoContainer">
                                    <div style={{float:'left'}} name="leftDetails">
                                      <div name="locationDiv" style={{paddingBottom:5}}>
-                                         <i class="fas fa-map-marker-alt" style={{paddingRight: 7}}></i>
+                                         <i class="fas fa-map-marker-alt" style={{paddingRight: 7, color:'black'}}></i>
                                          <div className={classes.displayInlineBlock} style={{marginLeft: 10}}>
                                            <span style={this.state.subheading}>{element.location} </span>
                                          </div>
                                      </div>
 
                                          <div style={{paddingBottom:5}}>
-                                           <i class="fas fa-graduation-cap" style={{paddingRight: 7}}></i>
+                                           <i class="fas fa-graduation-cap" style={{paddingRight: 7, color:'black'}}></i>
                                            <span style={this.state.subheading}> {element.professor.first_name} {element.professor.last_name}</span>
                                          </div>
                                    </div>
 
                                    <div style={{float:'right'}} name="rightDetails">
                                      <div name="daysOfferedMainDiv" style={{paddingBottom:5}}>
-                                           <i class="far fa-calendar-alt" style={{paddingRight: 7}}></i>
+                                           <i class="far fa-calendar-alt" style={{paddingRight: 7, color:'black'}}></i>
                                            <div name="daysDiv" className={classes.displayInlineBlock} style={{marginLeft: 1}}>
                                              {
                                               element.days.map((e) => {
@@ -3142,7 +3281,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                            </div>
                                        </div>
                                        <div name="classTimeDiv" style={{paddingBottom:5}}>
-                                         <i class="far fa-clock" style={{paddingRight: 7}}></i>
+                                         <i class="far fa-clock" style={{paddingRight: 7, color:'black'}}></i>
                                          <span style={this.state.subheading}>{element.start_time} - {element.end_time}</span>
                                        </div>
                                    </div>
@@ -3173,7 +3312,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
         currentContent = <main style={this.state.content}>
             <div className={classes.toolbar} />
             {
-              <div>
+              <div style={{color:'black'}}>
                 <Card>
                   <CardContent>
                     <div name="courseNameProfView">
@@ -3275,7 +3414,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
         currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
               <h2> Your Schedule</h2>
-                <div>
+                <div style={{color:'black'}}>
                   <Card>
                     <BigCalendar
                       events={this.state.eventsForProfessorCalendar}
@@ -3295,7 +3434,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
       if(!(this.state.isChatPageHidden)){
         currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
-            <Card style={{height:400}}>
+            <Card style={{height:400, color:'black'}}>
               <CardContent>
               <Grid container
                 spacing = {24}
@@ -3335,7 +3474,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
       else if(!this.state.isGroupChatPageHidden){
         currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
-            <Card>
+            <Card style={{color:'black'}}>
               <CardContent>
                   <ChatScreen chatWith={false} currentUser={this.state.chatUser}/>
               </CardContent>
@@ -3356,6 +3495,11 @@ else if(!(this.state.isStudentDetailsFormHidden)){
         var drawerProps = {
           classes: {
             paper: classes.drawerPaperNight
+          }
+        }
+        var drawerTextColor = {
+          classes: {
+            primary: classes.drawerTextNight
           }
         }
       }
@@ -3398,28 +3542,28 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                       <ListItemIcon style={this.state.navDrawerIcon}>
                         <HomeIcon />
                       </ListItemIcon>
-                      <ListItemText class="drawerFont" primary="Home" />
+                      <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Home" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "search")}>
                       <ListItemIcon style={this.state.navDrawerIcon}>
                         <SearchIcon />
                       </ListItemIcon>
-                      <ListItemText class="drawerFont" primary="Course Search" />
+                      <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Course Search" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "calendar")}>
                       <ListItemIcon style={this.state.navDrawerIcon}>
                         <CalendarTodayIcon />
                       </ListItemIcon>
-                      <ListItemText class="drawerFont" primary="Calendar" />
+                      <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Calendar" />
                     </ListItem>
 
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "chat")}>
                      <ListItemIcon style={this.state.navDrawerIcon}>
                        <ChatIcon />
                      </ListItemIcon>
-                     <ListItemText class="drawerFont" primary="Chat" />
+                     <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Chat" />
                    </ListItem>
 
                 </List>
