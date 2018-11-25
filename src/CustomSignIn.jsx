@@ -13,6 +13,10 @@ import { Redirect } from 'react-router';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FacebookLogin from 'react-facebook-login';
+import BackgroundSlideshow from 'react-background-slideshow'
+
+import BackgroundSlider from 'react-background-slider'
 
 const styles = {
   card: {
@@ -20,7 +24,7 @@ const styles = {
     margin: 'auto'
   },
   registrationCard:{
-    width: 300,
+    width: 550,
     margin: 'auto'
   },
   title: {
@@ -39,13 +43,19 @@ const styles = {
     marginTop:'12',
     fontStyle: 'italic'
   },
+  margin1: {
+  marginLeft:20
+  },
   newUserText:{
     marginTop: 12,
     marginBottom: 12,
     fontSize: 12
   }
 };
+
 const axios = require('axios');
+
+
 
 class SignInCard extends Component {
   constructor()
@@ -76,13 +86,26 @@ class SignInCard extends Component {
       newUserPassword:'',
       loginSuccess:false,
       role:'',
-      selectedRadioValue: '3'
+      selectedRadioValue: '3',
+      promptRole: false,
+      fbAccessToken:''
     }
       sessionStorage.setItem('token','')
       sessionStorage.setItem('user_role','')
       sessionStorage.setItem('user_id','')
       sessionStorage.setItem('user_first_name','')
   }
+// To Upload Image
+
+state = {selectedFile: null}
+
+fileChangedHandler = (event) => {
+  this.setState({selectedFile: event.target.files[0]})
+}
+uploadHandler = () => {
+  console.log(this.state.selectedFile)
+  axios.post('my-domain.com/file-upload', this.state.selectedFile)
+}
 
 // Below is a common handleChange function
 // for use with all text fields. No need to modify this
@@ -351,6 +374,54 @@ registerNewUser = (event) =>{
 
 }
 
+  tryToLogin = (email) =>{
+    axios({
+      method:'get',
+      url:'http://course360.herokuapp.com/checkFbUserExistence/email/'+email,
+      headers: {'Access-Control-Allow-Origin': '*'}
+    })
+    .then( (response) => {
+      sessionStorage.setItem('token',response.data['token'])
+      sessionStorage.setItem('user_role',response.data['role_id'])
+      sessionStorage.setItem('user_id',response.data['user_id'])
+      sessionStorage.setItem('user_first_name', response.data['first_name'])
+      this.setState({loginSuccess: true});
+    }).catch((error)=>{
+      this.setState({promptRole: true});
+    })
+  }
+
+  responseFacebook = (response) => {
+    if(response){
+      this.setState({firstName: response.name, newEmail:response.email, fbAccessToken: response.accessToken, type: 'fb'},
+      ()=>{
+          this.tryToLogin(response.email);
+      });
+    }
+  }
+
+  sendFBData =() => {
+    const registrationData = {
+          firstName: this.state.firstName,
+          email: this.state.newEmail,
+          accessToken: this.state.fbAccessToken,
+          role: this.state.selectedRadioValue,
+          type: this.state.type
+        }
+    axios({
+      method:'post',
+      url:'http://course360.herokuapp.com/registerFbUser',
+      data: registrationData,
+      headers: {'Access-Control-Allow-Origin': '*'},
+    })
+    .then( (response) => {
+      sessionStorage.setItem('token',response.data['token'])
+      sessionStorage.setItem('user_role',response.data['role_id'])
+      sessionStorage.setItem('user_id',response.data['user_id'])
+      sessionStorage.setItem('user_first_name', response.data['first_name'])
+      this.setState({loginSuccess: true});
+    });
+  }
 
   render(){
     const { classes } = this.props;
@@ -368,56 +439,93 @@ registerNewUser = (event) =>{
     // Below chunk of code assigns the Signin card to currentCard
     // whenever signIn card is not hidden i.e. isSignInCardHidden == True
     if(!isSignInCardHidden){
-      currentCard = <Card className={classes.card}>
+
+      currentCard =
+
+      <Card className={classes.card}>
+
         <CardContent>
+
+          <input type="file" onChange={this.fileChangedHandler} />
+          <button onClick={this.uploadHandler}>Upload!</button>
+
+
 
           {/*  the class login-page-headers is defined in home.scss. A warning will show
             in console as we are not using className instead of class */ }
-          <Typography class='login-page-headers'  color="textSecondary">
-            Sign In
+          <Typography className='login-page-headers'  color="textSecondary">
+           <marquee> Sign In </marquee>
           </Typography>
+          {this.state.promptRole?
+            <CardContent>
+              <RadioGroup
+                aria-label="Role"
+                name="role"
+                className={classes.group}
+                value={this.state.role}
+                onChange={this.handleChange.bind(this)}>
 
-          <form>
-            <FormControl required>
-              <TextField
-                id="email-input"
-                type="email"
-                name="email"
-                label="Email"
-                value={this.state.email}
-                className={classes.textField}
-                margin="normal"
-                autoComplete = 'email'
-                onChange = {this.handleChange.bind(this)}
-                />
-            </FormControl>
-            <br />
+                    <FormControlLabel  value="3" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="3"} />} label="Student" />
+                    <FormControlLabel value="2" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="2"}  />} label="Professor" />
 
-            <FormControl required>
-              <TextField
-                id="password-input"
-                label="Password"
-                className={classes.textField}
-                type="password"
-                value={this.state.password}
-                onChange={this.handleChange.bind(this)}
-                autoComplete="current-password"
-                margin="normal"
-                name="password"
+              </RadioGroup>
+              <CardActions>
+                <Button variant="contained" onClick = {this.sendFBData.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
+              </CardActions>
+            </CardContent>
+            :
+              <form>
+                <FormControl required>
+                  <TextField
+                    id="email-input"
+                    type="email"
+                    name="email"
+                    label="Email"
+                    value={this.state.email}
+                    className={classes.textField}
+                    margin="normal"
+                    autoComplete = 'email'
+                    onChange = {this.handleChange.bind(this)}
+                    />
+                </FormControl>
+                <br />
 
-                />
-            </FormControl>
-            <br />
+                <FormControl required>
+                  <TextField
+                    id="password-input"
+                    label="Password"
+                    className={classes.textField}
+                    type="password"
+                    value={this.state.password}
+                    onChange={this.handleChange.bind(this)}
+                    autoComplete="current-password"
+                    margin="normal"
+                    name="password"
 
-            {/* This is the line of code that hides/shows forgot password VS signin page. Same function is used below too! */}
-            <a href="#" onClick={this.handleForgotPassword.bind(this)} className = {classes.forgotPassword}> Forgot Password?</a>
+                    />
+                </FormControl>
+                <br />
 
-            <CardActions>
-              <Button variant="contained" onClick = {this.sendOTPForLogin.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
-            </CardActions>
-          </form>
+                {/* This is the line of code that hides/shows forgot password VS signin page. Same function is used below too! */}
+                <a href="#" onClick={this.handleForgotPassword.bind(this)} className = {classes.forgotPassword}> Forgot Password?</a>
+
+                <CardActions>
+                  <Button variant="contained" onClick = {this.sendOTPForLogin.bind(this)} className = {classes.marginAuto} value="Submit" color="primary">Sign In</Button>
+                </CardActions>
+                <br/>
+                <Typography color="textSecondary">
+                  or
+                </Typography>
+                <FacebookLogin
+                  appId="1932450986840445"
+                  autoLoad={false}
+                  fields="name,email,picture"
+                  callback={(response)=>this.responseFacebook(response)} />
+              </form>
+            }
         </CardContent>
         <p onClick = {this.showRegistrationCard.bind(this)} className = {classes.newUserText} >New User? <a href="#">Register Here!</a></p>
+
       </Card>
     }
 
@@ -565,6 +673,7 @@ registerNewUser = (event) =>{
 
           <form>
   <FormControl required>
+    <form>
           <TextField
               id="firstName"
               type="text"
@@ -580,12 +689,14 @@ registerNewUser = (event) =>{
                 id="lastName"
                 type="text"
                 label="Last Name"
-                className={classes.textField}
+                className={classes.textField, classes.margin1}
                 value={this.state.lastName}
                 onChange={this.handleChange.bind(this)}
                 margin="normal"
                 name="lastName"
               />
+
+          </form>
           <br />
 
 
@@ -642,10 +753,10 @@ registerNewUser = (event) =>{
                     className={classes.group}
                     value={this.state.role}
                     onChange={this.handleChange.bind(this)}>
-
+<form>
                         <FormControlLabel  value="3" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="3"} />} label="Student" />
                         <FormControlLabel value="2" control={<Radio color="primary" checked = {this.state.selectedRadioValue==="2"}  />} label="Professor" />
-
+</form>
                   </RadioGroup>
             </FormControl>
         </FormControl>
@@ -690,8 +801,16 @@ registerNewUser = (event) =>{
 
     return (
       <div>
-        {currentCard}
+      <div>
+
       </div>
+      <div>
+        <BackgroundSlider images={['build/login_bg.png', 'build/2.jpg', 'build/6.jpg', 'build/7.jpg','build/8.jpg']}
+          duration={1} transition={2}>
+        {currentCard}
+        </BackgroundSlider>
+      </div>
+    </div>
     );
   }
 }
