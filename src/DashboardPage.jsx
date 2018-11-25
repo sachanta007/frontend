@@ -58,6 +58,7 @@ import Input from '@material-ui/core/Input';
 import ChatScreen from './ChatScreen.js';
 import PersonalChatList from './PersonalChatList.js';
 import Chatkit from '@pusher/chatkit-client'
+import Modal from '@material-ui/core/Modal';
 
 // -------------------- Declaring constants here -------------------//
 const drawerWidth = 240;
@@ -171,7 +172,14 @@ media:{
       height: 5,
       borderRadius: "50%",
       objectFit: "cover"
-  }
+  },
+  modalPaper: {
+    position: 'absolute',
+    width: theme.spacing.unit * 50,
+    backgroundColor: theme.palette.background.paper,
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing.unit * 4,
+  },
 });
 
 // ------------------------------------------- Constants end here -----------------------------------------------//
@@ -220,6 +228,7 @@ class DashboardPage extends Component {
       isChatPageHidden:true,
       isGroupChatPageHidden:true,
       isPersonalChatPageHidden:true,
+      isThemeModalOpen: false,
       selectedRadioValue: [],
       mon: false,
       tue: false,
@@ -301,6 +310,10 @@ class DashboardPage extends Component {
      this.state.isAdmin = false
      this.getListOfEnrolledCourses()
     }
+
+    let currentUserTheme =   sessionStorage.getItem('user_theme')
+    this.state.currentTheme = currentUserTheme
+
   }
 
   // Below is a common handleChange function
@@ -397,7 +410,7 @@ handleChangeAndGetMatchingCourses(e){
       //Hit API and get results that matches
       return axios({
         method:'get',
-        url:'https://course360.herokuapp.com/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
+        url:'http://localhost:5000/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
@@ -430,6 +443,7 @@ logout(e){
   sessionStorage.setItem('user_id','')
   sessionStorage.setItem('user_first_name','')
   sessionStorage.setItem('user_email','')
+  sessionStorage.setItem('user_theme', '')
 
   //Resetting state vars for all page flags...go back to Sign in Page!!
   this.setState({isHomePageHidden: true});
@@ -778,7 +792,7 @@ goToMyProfilePage(e){
       }
       axios({
         method:'post',
-        url:'https://course360.herokuapp.com/enrollCourses',
+        url:'http://localhost:5000/enrollCourses',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -836,7 +850,7 @@ goToMyProfilePage(e){
     this.setState({studentEnrolledCourses: []})
     axios({
       method:'get',
-      url:'https://course360.herokuapp.com/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
+      url:'http://localhost:5000/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -877,6 +891,8 @@ componentDidMount() {
   let currentUserRole = sessionStorage.getItem('user_role')
   this.setState({loggedinUserFirstName: sessionStorage.getItem('user_first_name')})
 
+  //gettng the theme for logged in user
+  this.setState({currentTheme: sessionStorage.getItem('user_theme')})
     // ADMIN SECTION
   if(currentUserRole == 1){
     this.setState({isAdmin: true });
@@ -943,7 +959,7 @@ componentDidMount() {
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getAllCourses/start/0/end/100000',
+    url:'http://localhost:5000/getAllCourses/start/0/end/100000',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -958,7 +974,7 @@ hitAPIForAdminHomePageCourses(){
   getAllProfessorsForSelect(){
     return axios({
       method:'get',
-      url:'https://course360.herokuapp.com/getAllProfessors/start/0/end/100000',
+      url:'http://localhost:5000/getAllProfessors/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -976,7 +992,7 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'https://course360.herokuapp.com/getAllStudents/start/0/end/100000',
+      url:'http://localhost:5000/getAllStudents/start/0/end/100000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1014,7 +1030,7 @@ hitAPIForAdminHomePageCourses(){
         console.log(dataJSON);
         axios({
           method:'post',
-          url:'https://course360.herokuapp.com/insertCourses',
+          url:'http://localhost:5000/insertCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1110,7 +1126,7 @@ hitAPIForAdminHomePageCourses(){
         console.log('data to be sent',dataJSON);
         axios({
           method:'post',
-          url:'https://course360.herokuapp.com/updateCourses',
+          url:'http://localhost:5000/updateCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1151,7 +1167,7 @@ hitAPIForAdminHomePageCourses(){
 
     axios({
           method:'post',
-          url:'https://course360.herokuapp.com/deleteCourses',
+          url:'http://localhost:5000/deleteCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1219,7 +1235,7 @@ submitComment(e){
 
   axios({
         method:'post',
-        url:'https://course360.herokuapp.com/commentOnACourse',
+        url:'http://localhost:5000/commentOnACourse',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1248,7 +1264,7 @@ submitComment(e){
 getLatestCourseDetails(course_id){
   return axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getCourseBy/course/'+course_id,
+    url:'http://localhost:5000/getCourseBy/course/'+course_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1267,7 +1283,7 @@ addCourseToCart(id,e){
       }
   axios({
         method:'post',
-        url:'https://course360.herokuapp.com/addToCart',
+        url:'http://localhost:5000/addToCart',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1290,7 +1306,7 @@ addCourseToCart(id,e){
 getCartDetails(id){
   return axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getCart/userId/'+id,
+    url:'http://localhost:5000/getCart/userId/'+id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1372,7 +1388,7 @@ deleteFromCart(id,e){
   let user_id = sessionStorage.getItem('user_id')
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/delete/course/'+id+'/fromCart/for/user/'+user_id,
+    url:'http://localhost:5000/delete/course/'+id+'/fromCart/for/user/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1391,7 +1407,7 @@ getProfessorSchedule(){
   console.log('Professor ID is:',user_id);
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getProfessorSchedule/id/'+user_id,
+    url:'http://localhost:5000/getProfessorSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1424,7 +1440,7 @@ getStudentSchedule(){
   let user_id = sessionStorage.getItem('user_id')
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getStudentSchedule/id/'+user_id,
+    url:'http://localhost:5000/getStudentSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1528,7 +1544,7 @@ getEnrolledStudentsForCourse(courseId){
   console.log('Course clicked',courseId,'For professor',profId);
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
+    url:'http://localhost:5000/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1575,7 +1591,7 @@ dropEnrolledCourse(element,v){
 
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/dropCourse/courseId/'+element+'/userId/'+sessionStorage.getItem('user_id'),
+    url:'http://localhost:5000/dropCourse/courseId/'+element+'/userId/'+sessionStorage.getItem('user_id'),
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1610,6 +1626,30 @@ dropEnrolledCourse(element,v){
   });;
 
 }
+
+// Adjusts the position of the modal
+getModalStyle() {
+  const top = 100;
+  const left = 100;
+
+  return {
+    top: `${top}%`,
+    left: `${left}%`,
+    transform: `translate(-${top}%, -${left}%)`,
+  };
+}
+
+// Show Change theme modal
+showThemeModal(e){
+  this.setState({ isThemeModalOpen: true });
+}
+
+// Hide the change theme modal
+hideThemeModal(e){
+  this.setState({ isThemeModalOpen: false });
+}
+
+
 
 /////////////////////////////////////////////////////////
 /////////////// RENDER FUNCTION /////////////////////////
@@ -2035,6 +2075,22 @@ dropEnrolledCourse(element,v){
       }
 
       //------------------- ADMIN SIDE NAV IS ALWAYS PRESENT --------------------//
+      if(this.state.currentTheme == 'default')
+      {
+          var drawerProps = {
+            classes: {
+              paper: classes.drawerPaperDefault
+            }
+          }
+        }
+      else if(this.state.currentTheme == 'night'){
+        var drawerProps = {
+          classes: {
+            paper: classes.drawerPaperNight
+          }
+        }
+      }
+
       sideNav =
         <div className={classes.root}>
           <AppBar position="absolute" style={this.state.appBar}>
@@ -2065,7 +2121,7 @@ dropEnrolledCourse(element,v){
 
         <Drawer
           variant="permanent"
-          style={this.state.drawerPaper}
+          {...drawerProps}
         >
           <div className={classes.toolbar} />
           <List>
@@ -2837,7 +2893,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
           }
         }
       }
-      
+
       sideNav =
           <div className={classes.root}>
               <AppBar position="absolute" style={this.state.appBar} >
@@ -2862,6 +2918,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                                              onClose={this.handleClose}
                                              >
                                            <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
+                                           <MenuItem onClick={this.showThemeModal.bind(this)}>Change Theme</MenuItem>
                                            <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
                                          </Menu>
                                       </div>
@@ -3287,6 +3344,22 @@ else if(!(this.state.isStudentDetailsFormHidden)){
       }
 
       // ------------------------------ SIDE NAV FOR PROF ALWAYS EXISTS ---------------------------------------//
+      if(this.state.currentTheme == 'default')
+      {
+          var drawerProps = {
+            classes: {
+              paper: classes.drawerPaperDefault
+            }
+          }
+        }
+      else if(this.state.currentTheme == 'night'){
+        var drawerProps = {
+          classes: {
+            paper: classes.drawerPaperNight
+          }
+        }
+      }
+
       sideNav =
           <div className={classes.root}>
               <AppBar position="absolute" style={this.state.appBar} >
@@ -3317,7 +3390,7 @@ else if(!(this.state.isStudentDetailsFormHidden)){
 
               <Drawer
                 variant="permanent"
-              style={this.state.drawerPaper}
+              {...drawerProps}
               >
                 <div className={classes.toolbar} />
                 <List>

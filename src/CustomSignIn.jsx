@@ -90,6 +90,7 @@ class SignInCard extends Component {
       sessionStorage.setItem('user_id','')
       sessionStorage.setItem('user_first_name','')
       sessionStorage.setItem('user_email','')
+      sessionStorage.setItem('user_theme', '')
   }
 
 // Below is a common handleChange function
@@ -116,7 +117,7 @@ sendOTPForLogin = (event) =>{
 
       axios({
         method:'post',
-        url:'https://course360.herokuapp.com/authenticate',
+        url:'http://localhost:5000/authenticate',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*'},
       })
@@ -151,6 +152,8 @@ handleSubmit(e) {
             sessionStorage.setItem('user_id',returnVal['user_id'])
             sessionStorage.setItem('user_first_name', returnVal['first_name'])
             sessionStorage.setItem('user_email', returnVal['email'])
+            sessionStorage.setItem('user_theme', returnVal['color_theme'])
+
             this.setState({loginSuccess: true});
           }
         else{
@@ -172,7 +175,7 @@ handleSubmit(e) {
 
     return axios({
       method:'post',
-      url:'https://course360.herokuapp.com/login',
+      url:'http://localhost:5000/login',
       data: dataJSON,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
@@ -213,7 +216,7 @@ verifySecurityAnswer(event){
 
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/sendOtp/email/'+this.state.emailForForgotPassword+'/answer/'+this.state.securityAnswer,
+    url:'http://localhost:5000/sendOtp/email/'+this.state.emailForForgotPassword+'/answer/'+this.state.securityAnswer,
     headers: {'Access-Control-Allow-Origin': '*'},
   })
   .then((response)=>{
@@ -261,7 +264,7 @@ updateNewPassword(event){
 
     axios({
       method:'post',
-      url:'https://course360.herokuapp.com/updatePassword',
+      url:'http://localhost:5000/updatePassword',
       data: dataJSON,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
@@ -292,7 +295,7 @@ fetchSecurityQuestion(event){
 
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/securityQuestion/'+this.state.emailForForgotPassword,
+    url:'http://localhost:5000/securityQuestion/'+this.state.emailForForgotPassword,
     headers: {'Access-Control-Allow-Origin': '*'},
   })
   .then((response)=>{
@@ -345,7 +348,7 @@ registerNewUser = (event) =>{
          console.log(registrationData);
      axios({
        method:'post',
-       url:'https://course360.herokuapp.com/register',
+       url:'http://localhost:5000/register',
        data: registrationData,
        headers: {'Access-Control-Allow-Origin': '*'},
      })
@@ -368,16 +371,19 @@ registerNewUser = (event) =>{
   tryToLogin = (email) =>{
     axios({
       method:'get',
-      url:'https://course360.herokuapp.com/checkFbUserExistence/email/'+email,
+      url:'http://localhost:5000/checkFbUserExistence/email/'+email,
       headers: {'Access-Control-Allow-Origin': '*'}
     })
     .then( (response) => {
+      console.log("LOG IN API RETURNED",response.data)
       sessionStorage.setItem('token',response.data['token'])
       sessionStorage.setItem('user_role',response.data['role_id'])
       sessionStorage.setItem('user_id',response.data['user_id'])
       sessionStorage.setItem('user_first_name', response.data['first_name'])
       sessionStorage.setItem('user_email', response.data['email'])
+      sessionStorage.setItem('user_theme', response.data['color_theme'])
       this.setState({loginSuccess: true});
+
     }).catch((error)=>{
       this.setState({promptRole: true});
     })
@@ -385,6 +391,7 @@ registerNewUser = (event) =>{
 
   responseFacebook = (response) => {
     if(response){
+      console.log("LOG IN API RETURNED",response.data)
       this.setState({firstName: response.name, newEmail:response.email, fbAccessToken: response.accessToken, type: 'fb'},
       ()=>{
           this.tryToLogin(response.email);
@@ -402,17 +409,18 @@ registerNewUser = (event) =>{
         }
     axios({
       method:'post',
-      url:'https://course360.herokuapp.com/registerFbUser',
+      url:'http://localhost:5000/registerFbUser',
       data: registrationData,
       headers: {'Access-Control-Allow-Origin': '*'},
     })
     .then( (response) => {
-      console.log("HEEEEEEEEEEEEEEEEEEEEEEEEEREEREREREREREREREER",response.data);
+      console.log("LOGIN FB SEND FB DATA",response.data);
       sessionStorage.setItem('token',response.data['token'])
       sessionStorage.setItem('user_role',response.data['role_id'])
       sessionStorage.setItem('user_id',response.data['user_id'])
       sessionStorage.setItem('user_first_name', response.data['first_name'])
       sessionStorage.setItem('user_email', response.data['email'])
+      sessionStorage.setItem('user_theme', response.data['color_theme'])
       this.setState({loginSuccess: true});
     });
   }
