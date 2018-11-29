@@ -14,6 +14,31 @@
 
 }
 
+.user-card-avatar{
+  top: calc(15% - 3rem);
+}
+.user-card-header{
+  display: none;
+}
+
+.user-card-body{
+  padding-top: 5rem;
+}
+
+.user-card-name{
+  margin-bottom: 0rem;
+}
+.card{
+  min-height: 200px;
+    background-color: white;
+    width: 220px;
+    min-width: 220px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+}
+
+.card.float:hover {
+    box-shadow: 0 8px 16px 0px #7f8c8d;
+}
 
 body {
   font-family: 'Saira Semi Condensed', sans-serif;

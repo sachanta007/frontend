@@ -24,6 +24,9 @@ module.exports = {
       }
     ]
   },
+  node:{
+    fs: 'empty'
+  },
   devServer: {
     compress: true,
     disableHostCheck: true,

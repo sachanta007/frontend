@@ -59,10 +59,13 @@ import ChatScreen from './ChatScreen.js';
 import PersonalChatList from './PersonalChatList.js';
 import Chatkit from '@pusher/chatkit-client'
 import Modal from '@material-ui/core/Modal';
+import {NewsHeaderCard, UserCard} from 'react-ui-cards';
 
 // -------------------- Declaring constants here -------------------//
 const drawerWidth = 240;
 const axios = require('axios');
+const image2base64 = require('image-to-base64');
+
 const localizer = BigCalendar.momentLocalizer(moment)
 let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
 
@@ -114,6 +117,9 @@ let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
 margin1: {
 margin: theme.spacing.unit*3,
 },
+rightIcon: {
+    marginLeft: theme.spacing.unit,
+  },
 card: {
   marginTop: 80,
    width: 700,
@@ -233,6 +239,7 @@ class DashboardPage extends Component {
       isGroupChatPageHidden:true,
       isPersonalChatPageHidden:true,
       isThemeModalOpen: false,
+      isIndividualStudentPageHidden: true,
       selectedRadioValue: [],
       mon: false,
       tue: false,
@@ -254,6 +261,8 @@ class DashboardPage extends Component {
       newCourseStartTime: '',
       newCourseEndTime: '',
       newCourseID:'',
+      newCourseImageBase64:'',
+      newCourseImageFileName:'',
 
       editCourseName: '',
       editCourseDesc: '',
@@ -263,6 +272,8 @@ class DashboardPage extends Component {
       editCourseStartTime: '',
       editCourseEndTime: '',
       editCourseID: '',
+      editCourseImageBase64:'',
+      editCourseImageFIleName:'',
 
       allProfessorsForSelect: [],
       allStudents: [],
@@ -297,7 +308,11 @@ class DashboardPage extends Component {
       open: false,
       studentsEnrolledForCourse: [],
 
-      chatUser: {}
+      chatUser: {},
+
+      isLoading: true,
+      msElapsed: 0,
+      dataofCurrentStudent: {}
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -396,6 +411,48 @@ class DashboardPage extends Component {
         } // night if ends
 
       } // themeRadio if ends
+
+      //----- When user tries to upload banner image for course ----//
+      if(e.target.name=="fileUploadInput"){
+          var fileObj = e.target.files[0]
+          var imageURL = URL.createObjectURL(fileObj)
+          this.setState({newCourseImageFileName: fileObj.name})
+          console.log("file:",fileObj,  fileObj.name);
+          console.log("image url", imageURL);
+          image2base64(imageURL)
+              .then(
+                  (response) => {
+                    var base64encoded = 'data:image/jpeg;base64,'+response
+                    this.setState({newCourseImageBase64: base64encoded})
+                  }
+              )
+              .catch(
+                  (error) => {
+                      console.log('base 64 conversion failed',error); //Exepection error....
+                  }
+                 )
+      } //file upload innput end
+
+      // when admin edits a course---------------
+      if(e.target.name=="fileUploadInputEditCourse"){
+          var fileObj = e.target.files[0]
+          var imageURL = URL.createObjectURL(fileObj)
+          this.setState({editCourseImageFileName: fileObj.name})
+          console.log("Editing imagefile:",fileObj,  fileObj.name);
+          console.log("image url", imageURL);
+          image2base64(imageURL)
+              .then(
+                  (response) => {
+                    var base64encoded = 'data:image/jpeg;base64,'+response
+                    this.setState({editCourseImageBase64: base64encoded})
+                  }
+              )
+              .catch(
+                  (error) => {
+                      console.log('base 64 conversion failed',error); //Exepection error....
+                  }
+                 )
+      } //file upload innput end
     }
 
 // Calls api to update theme info in DB for user
@@ -643,8 +700,12 @@ goToMyProfilePage(e){
       this.setState({isChatPageHidden: true})
       this.setState({isGroupChatPageHidden: true});
       this.setState({isPersonalChatPageHidden:true})
+      this.setState({isIndividualStudentPageHidden: true });
 
-      this.leaveAllChatRooms();
+      if(sessionStorage.getItem('user_role')!=1)
+      {
+        this.leaveAllChatRooms();
+      }
       this.componentDidMount()
 
     }
@@ -666,6 +727,8 @@ goToMyProfilePage(e){
        this.setState({isChatPageHidden: true})
        this.setState({isGroupChatPageHidden: true});
        this.setState({isPersonalChatPageHidden:true})
+       this.setState({isIndividualStudentPageHidden: true });
+
       // hits api, when result is returned, update state var
       this.getAllProfessorsForSelect().then((returnVal) => {
           this.setState({allProfessorsForSelect: returnVal});
@@ -691,6 +754,8 @@ goToMyProfilePage(e){
       this.setState({isChatPageHidden: true})
       this.setState({isGroupChatPageHidden: true});
       this.setState({isPersonalChatPageHidden:true})
+      this.setState({isIndividualStudentPageHidden: true });
+
       this.componentDidMount()
       this.getAllProfessorsForSelect().then((returnVal) => {
           this.setState({allProfessorsForSelect: returnVal});
@@ -716,11 +781,11 @@ goToMyProfilePage(e){
       this.setState({isChatPageHidden: true})
       this.setState({isGroupChatPageHidden: true});
       this.setState({isPersonalChatPageHidden:true})
-      this.leaveAllChatRooms();
+      this.setState({isIndividualStudentPageHidden: true });
+
 
       this.getAllStudents().then((returnVal) => {
         this.setState({allStudents: returnVal});
-
       })
       .catch(err => console.log("Something messed up with Axios!: ", err))
     }
@@ -743,6 +808,8 @@ goToMyProfilePage(e){
       this.setState({isStudentDetailsFormHidden: true})
       this.setState({isGroupChatPageHidden: true});
       this.setState({isPersonalChatPageHidden:true})
+      this.setState({isIndividualStudentPageHidden: true });
+
       this.getAllProfessorsForSelect().then((returnVal) => {
         this.setState({allProfessors: returnVal});
 
@@ -826,7 +893,7 @@ goToMyProfilePage(e){
 
       }
       else if(sessionStorage.getItem('user_role')==3){
-        this.getStudentSchedule()
+        this.getStudentSchedule(sessionStorage.getItem('user_id'))
       }
 
     }
@@ -976,6 +1043,7 @@ changeThemeStates(theme){
     this.state.themeRadio = '1'
   }
 }
+
 //----------------------------------
 // Lifecycle method that gets all courses
 // when 'edit' in menu is clicked and
@@ -987,7 +1055,7 @@ componentDidMount() {
 
   //gettng the theme for logged in user
 
-  console.log("Inside compoment did mount", this.state.currentTheme);
+  console.log("Inside compoment did mount..Theme is..", this.state.currentTheme);
   this.changeThemeStates(this.state.currentTheme)
 
 
@@ -1021,7 +1089,7 @@ componentDidMount() {
   {
     this.setState({isAdmin: false });
     this.getListOfEnrolledCourses()
-    this.getStudentSchedule()
+    this.getStudentSchedule(sessionStorage.getItem('user_id'))
   }
 
 // PROFESSOR
@@ -1032,7 +1100,9 @@ componentDidMount() {
   }
 
   // chat user
-    const chatManager = new Chatkit.ChatManager({
+   if(currentUserRole != 1)
+  {
+      const chatManager = new Chatkit.ChatManager({
       instanceLocator: 'v1:us1:1a111cfa-e268-4391-84a5-484c7faccc84',
       userId: sessionStorage.getItem('user_email'),
       tokenProvider: new Chatkit.TokenProvider({
@@ -1050,6 +1120,7 @@ componentDidMount() {
       {
         this.leaveAllChatRooms();
       });
+    }
 }
 
 // Calls API for admin home page courseCard
@@ -1090,11 +1161,12 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/getAllStudents/start/0/end/100000',
+      url:'http://localhost:5000/getAllStudents/start/0/end/100',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
     .then((response)=>{
+      console.log("Students:",response.data);
       return(response.data)
     });
   }
@@ -1122,7 +1194,8 @@ hitAPIForAdminHomePageCourses(){
             end_time: this.state.newCourseEndTime,
             course_code: this.state.newCourseID,
             role_id: sessionStorage.getItem('user_role'),
-            department: 'DEFAULT_DEPT'
+            department: 'DEFAULT_DEPT',
+            image: this.state.newCourseImageBase64
         }
 
         console.log(dataJSON);
@@ -1147,6 +1220,8 @@ hitAPIForAdminHomePageCourses(){
               this.setState({newCourseStartTime: ''});
               this.setState({newCourseEndTime: ''});
               this.setState({newCourseID: ''});
+              this.setState({newCourseImageBase64: ''});
+              this.setState({newCourseImageFileName: ''});
               this.setState({isAddNewCourseHidden: true});
               this.setState({isHomePageHidden: false});
               this.setState({isIndividualCoursePageHidden: true});
@@ -1199,6 +1274,7 @@ hitAPIForAdminHomePageCourses(){
     this.state.editCourseStartTime = (this.state.editCourseStartTime == '') ? this.state.detailsOfCurrentCourseToEdit['start_time'] : this.state.editCourseStartTime
     this.state.editCourseEndTime = (this.state.editCourseEndTime == '') ? this.state.detailsOfCurrentCourseToEdit['end_time'] : this.state.editCourseEndTime
     this.state.editCourseID = (this.state.editCourseID == '') ? this.state.detailsOfCurrentCourseToEdit['course_code'] : this.state.editCourseID
+    this.state.editCourseImageBase64 = (this.state.editCourseImageBase64 == '') ? '' : this.state.editCourseImageBase64
 
     let days_array = []
     if(this.state.editMon) {days_array.push(1)}
@@ -1219,6 +1295,7 @@ hitAPIForAdminHomePageCourses(){
             end_time: this.state.editCourseEndTime,
             course_code: this.state.editCourseID,
             role_id: sessionStorage.getItem('user_role'),
+            image: this.state.editCourseImageBase64,
             department: 'DEFAULT_DEPT'
         }
         console.log('data to be sent',dataJSON);
@@ -1230,9 +1307,8 @@ hitAPIForAdminHomePageCourses(){
           'Authorization': sessionStorage.getItem('token')},
         })
         .then((response) => {
-            if(response.data != 'Error : Something went wrong')
+            if(response.status == 200)
             {
-
               ToastStore.success('Course has been updated successfully!!',4000,"whiteFont")
               this.setState({editCourseName: ''});
               this.setState({editCourseDesc: ''});
@@ -1242,6 +1318,7 @@ hitAPIForAdminHomePageCourses(){
               this.setState({editCourseStartTime: ''});
               this.setState({editCourseEndTime: ''});
               this.setState({editCourseID: ''});
+              this.setState({editCourseImageBase64: ''});
               this.componentDidMount();
 
               this.setState({isEditSingleCourseHidden: true})
@@ -1250,6 +1327,9 @@ hitAPIForAdminHomePageCourses(){
               this.setState({isStudentDetailsFormHidden: true})
 
             }
+        }).catch(err => {
+          console.log("Update course details ERROR: ", err)
+          ToastStore.error('Oops! Something went wrong! Please try again!',4000,"whiteFont")
         });
 
   }
@@ -1271,7 +1351,7 @@ hitAPIForAdminHomePageCourses(){
           'Authorization': sessionStorage.getItem('token')},
         })
         .then((response) => {
-            if(response.data != 'Error : Something went wrong')
+            if(response.status == 200)
             {
 
               ToastStore.success('Course has been deleted successfully!!',4000,"whiteFont")
@@ -1534,8 +1614,8 @@ getProfessorSchedule(){
 ///////////
 // Get Student Schedule
 //////////
-getStudentSchedule(){
-  let user_id = sessionStorage.getItem('user_id')
+getStudentSchedule(user_id){
+console.log("Getting students schedule.....hold on");
   axios({
     method:'get',
     url:'http://localhost:5000/getStudentSchedule/id/'+user_id,
@@ -1544,6 +1624,7 @@ getStudentSchedule(){
   })
   .then((response)=>{
     if(response.status == 200){
+
       for(let i = 0; i < response.data.length; i++){
         response.data[i]['days'].forEach(function(item,index){
 
@@ -1556,6 +1637,7 @@ getStudentSchedule(){
           }
         })
       }
+      console.log("Students schedule is",response.data);
       this.setState({studentSchedule: response.data});
       this.populateEventsForStudentCalendar() //events array being populated for calendar
     }
@@ -1747,7 +1829,15 @@ hideThemeModal(e){
   this.setState({ isThemeModalOpen: false });
 }
 
+// go to a students page from admin
+moveToIndividualStudentPage(data,event){
+  console.log("data",data);
+  this.setState({isIndividualStudentPageHidden: false });
+  this.setState({isViewStudentsHidden: true});
+  this.setState({dataofCurrentStudent: data}); // does not have course info
+  this.getStudentSchedule(data.user_id) //populates state var studentSchedule
 
+}
 
 /////////////////////////////////////////////////////////
 /////////////// RENDER FUNCTION /////////////////////////
@@ -1945,10 +2035,29 @@ hideThemeModal(e){
                 <FormControlLabel control = {<Checkbox checked={this.state.thu}  name = "newCourseDays" onChange={this.handleChange.bind(this)} value="4"/>} label = "Thu"/>
                 <FormControlLabel control = {<Checkbox checked={this.state.fri}  name = "newCourseDays" onChange={this.handleChange.bind(this)} value="5"/>} label = "Fri"/>
               </FormControl>
+              <br/> <br/>
 
-              <CardActions>
-                <Button variant="contained" onClick = {this.addNewCourse.bind(this)} className = {classes.marginAuto} color="primary">Add</Button>
-              </CardActions>
+              <span className = {classes.rightSpacing25} > Upload a banner image</span>
+                <input
+                  accept="image/*"
+                  name="fileUploadInput"
+                  className={classes.input}
+                  id="contained-button-file"
+                  type="file"
+                  style={{display:'none'}}
+                  onChange={this.handleChange.bind(this)}
+                />
+                <label htmlFor="contained-button-file">
+                  <Button variant="contained" component="span" className={classes.button} style={{marginRight:25}}>
+                    Upload
+                  </Button>
+                </label>
+                 <span style={{fontStyle:'italic'}}> {this.state.newCourseImageFileName}</span>
+                  <br/> <br/>
+
+
+                <Button variant="contained" onClick = {this.addNewCourse.bind(this)} className = {classes.marginAuto} color="primary">Add Course</Button>
+
             </CardContent>
 
           </Card>
@@ -1966,14 +2075,25 @@ hideThemeModal(e){
 
                      {
                        this.state.allStudents.map((el,i) => (
-                         <Grid key={i} item>
-                           <Card >
-                             <CardContent>
-                                <FaceIcon className = {classes.rightSpacing10}/>
-                                 {el.first_name}  {el.last_name} <br />
-                               <EmailIcon className = {classes.rightSpacing10}/> {el.email}
-                             </CardContent>
-                           </Card>
+
+                         <Grid key={i} item   onClick = {this.moveToIndividualStudentPage.bind(this, el)}>
+                           <UserCard
+                              cardClass='float'
+                              avatar='https://i.imgur.com/uDYejhJ.jpg'
+                              name={el.first_name}
+                              positionName={el.email}
+
+                              stats={[
+                                {
+                                  name: 'CGPA',
+                                  value: 3.5
+                                },
+                                {
+                                  name: 'Date of Birth',
+                                  value: 'May 2, 1994'
+                                }
+                              ]}
+                          />
                          </Grid>
                        ))
                      }
@@ -2157,14 +2277,46 @@ hideThemeModal(e){
                     <FormControlLabel control = {<Checkbox checked={this.state.editFri}  name = "editCourseDays" onChange={this.handleChange.bind(this)} value="5"/>} label = "Fri"/>
                   </FormControl>
 
-                <br />
+                  <br/> <br/>
+
+                  <span className = {classes.rightSpacing25} > Upload a banner image</span>
+                    <input
+                      accept="image/*"
+                      name="fileUploadInputEditCourse"
+                      className={classes.input}
+                      id="contained-button-file"
+                      type="file"
+                      style={{display:'none'}}
+                      onChange={this.handleChange.bind(this)}
+                    />
+                    <label htmlFor="contained-button-file">
+                      <Button variant="contained" component="span" className={classes.button} style={{marginRight:25}}>
+                        Upload
+                      </Button>
+                    </label>
+                     <span style={{fontStyle:'italic'}}> {this.state.editCourseImageFileName}</span>
+                      <br/> <br/>
+
                 <CardActions>
                   <Button variant="contained" onClick = {this.updateCourseInDB.bind(this)} className = {classes.buttonStyles} color="primary">Edit</Button>
-
                   <div>
                     <Button variant="contained" onClick = {this.deleteCourseInDB.bind(this)} className = {classes.marginAuto} color="secondary">Delete</Button>
                   </div>
                 </CardActions>
+              </CardContent>
+
+            </Card>
+
+        </main>
+      }
+      // ADMIN INDIVIDUAL STUDENT PAGE
+      if(!(this.state.isIndividualStudentPageHidden)){
+        currentContent = <main style={this.state.content}>
+          <div className = {classes.toolbar} />
+            <Card>
+              <CardContent>
+                <span className = {classes.rightSpacing}>Course Title</span>
+                  {this.state.dataofCurrentStudent.first_name}
               </CardContent>
 
             </Card>
@@ -2504,6 +2656,7 @@ hideThemeModal(e){
 
           </main>
       }
+
 
       // ----- INDIVIDUAL COURSE PAGE ------------- ///
       if(!(this.state.isIndividualCoursePageHidden)){
@@ -3575,12 +3728,14 @@ else if(!(this.state.isStudentDetailsFormHidden)){
     //////////////// END OF PROF VIEW ////////////////////////
 
 
+
     return (
       <div>
         {sideNav}
         <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} store={ToastStore}/>
       </div>
     )
+
   }
 }
 
