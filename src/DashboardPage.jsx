@@ -312,7 +312,8 @@ class DashboardPage extends Component {
 
       isLoading: true,
       msElapsed: 0,
-      dataofCurrentStudent: {}
+      dataOfCurrentStudent: {},
+      finAidForStudent: 0
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -1638,12 +1639,25 @@ console.log("Getting students schedule.....hold on");
         })
       }
       console.log("Students schedule is",response.data);
-      this.setState({studentSchedule: response.data});
-      this.populateEventsForStudentCalendar() //events array being populated for calendar
-    }
+
+      if(sessionStorage.getItem('user_role') != 1) // NOT AN ADMIN
+      {
+        this.setState({studentSchedule: response.data});
+        this.populateEventsForStudentCalendar() //events array being populated for calendar
+      }
+      else{ //ADMIN
+        console.log("Admin sets student schedule.....");
+        this.setState({studentSchedule: response.data},  () => {
+
+          this.setState({isViewStudentsHidden: true});
+          this.setState({isIndividualStudentPageHidden: false });
+      });
+      }
+    } //if success
   }).catch(err => {
     console.log("COULDN'T FETCH STUDENT SCHEDULE!!!", err)
     this.setState({studentSchedule : []})
+
   });;
 }
 
@@ -1829,13 +1843,37 @@ hideThemeModal(e){
   this.setState({ isThemeModalOpen: false });
 }
 
-// go to a students page from admin
+/////////////////////////////////////////////
+//// go to a students page from admin ///////
+/////////////////////////////////////////////
 moveToIndividualStudentPage(data,event){
-  console.log("data",data);
-  this.setState({isIndividualStudentPageHidden: false });
-  this.setState({isViewStudentsHidden: true});
-  this.setState({dataofCurrentStudent: data}); // does not have course info
-  this.getStudentSchedule(data.user_id) //populates state var studentSchedule
+  this.setState({dataOfCurrentStudent: data}); // does not have course info
+  console.log("dataOfCurrentStudent",data);
+  this.setState({finAidForStudent: data.finanical_aid});
+  //populates state var studentSchedule
+  this.getStudentSchedule(data.user_id)
+}
+
+
+// Update financial aid for student
+submitFinAid(studentId, e){
+  var finAid = this.state.finAidForStudent;
+  axios({
+    method:'get',
+    url:'http://localhost:5000/updateFinancialAid/value/'+finAid+'/student/'+studentId,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    if(response.status == 200)
+    {
+      ToastStore.success('Updated financial aid successfully',4000,"whiteFont")
+
+    }
+  }).catch(err => {
+    console.log("DAMN! fin aid messed up ---> ", err)
+    ToastStore.error('Oops! Please try again!',4000,"whiteFont")
+  })
 
 }
 
@@ -2079,7 +2117,7 @@ moveToIndividualStudentPage(data,event){
                          <Grid key={i} item   onClick = {this.moveToIndividualStudentPage.bind(this, el)}>
                            <UserCard
                               cardClass='float'
-                              avatar='https://i.imgur.com/uDYejhJ.jpg'
+                              avatar={el.image}
                               name={el.first_name}
                               positionName={el.email}
 
@@ -2313,15 +2351,71 @@ moveToIndividualStudentPage(data,event){
       if(!(this.state.isIndividualStudentPageHidden)){
         currentContent = <main style={this.state.content}>
           <div className = {classes.toolbar} />
-            <Card>
-              <CardContent>
-                <span className = {classes.rightSpacing}>Course Title</span>
-                  {this.state.dataofCurrentStudent.first_name}
-              </CardContent>
+            {
+              <div style={{color:'black'}}>
+                    <Card style={{width:500}}>
+                      <CardContent>
+                          <div name="studentNameAndImage" class="box">
+                            <img style={{display:'inline-block', width:100, height:100, borderRadius:500}} src = {this.state.dataOfCurrentStudent.image} alt="studentImage"></img>
+                          <div name="studText" style={{marginLeft:25}}>
+                              <h1 style={{display:'inline-block', margin:0}}> {this.state.dataOfCurrentStudent.first_name}  {this.state.dataOfCurrentStudent.last_name}</h1>
+                              <div> {this.state.dataOfCurrentStudent.email} </div>
+                              <div> CGPA: {this.state.dataOfCurrentStudent.cgpa}</div>
+                          </div>
+                         </div>
+                      </CardContent>
+                    </Card>
+                      <br/> <br/>
 
-            </Card>
+                      <Card style={{width:500}}>
+                        <CardContent>
+                          <h1 style={{display:'inline-block',marginRight:20}}> Financial Aid</h1>
+                            <TextField
+                                style={{display:'inline-block', width:100}}
+                                id="finAidForStudent"
+                                className={classes.textField}
+                                value={this.state.finAidForStudent}
+                                onChange={this.handleChange.bind(this)}
+                                margin="normal"
+                                name="finAidForStudent"
+                              />
+                            <Button style={{marginLeft:20}} onClick= {this.submitFinAid.bind(this, this.state.dataOfCurrentStudent.user_id)}
+                              variant="contained" color="primary"> Edit</Button>
 
-        </main>
+                        </CardContent>
+                      </Card>
+                  <br/> <br/>
+
+                    <Card style={{width:500}}>
+                      <CardContent>
+                        <h1>Enrolled Courses</h1>
+                          {
+                            this.state.studentSchedule.map((el,i) => (
+                            <div name="outerWrapper" key={i}>
+                                <span className={classes.bulletpoint}>
+                                    {el.course_code} - {el.course_name} <br/>
+                                </span>
+
+                                <div style={{fontStyle:'italic', marginLeft:20}}>
+                                    {el.professor['first_name']} {el.professor['last_name']}
+                                </div>
+
+                            </div>
+                            ))
+                          }
+
+                          {
+                            this.state.studentSchedule.length ==0 &&
+                            <div>
+                              Not enrolled to any course!
+                            </div>
+                          }
+
+                      </CardContent>
+                    </Card>
+              </div>
+           }
+          </main>
       }
 
       //------------------- ADMIN SIDE NAV IS ALWAYS PRESENT --------------------//

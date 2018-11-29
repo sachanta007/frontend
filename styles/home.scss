@@ -187,6 +187,12 @@ img.bg {
   left: 50%;
 
 }
+
+.box {
+   display: flex;
+   align-items:center;
+}
+
 .profile figure, .profile figure img, .profile figure .back, .profile figure .front, .profile figure .back span {
   width: 90px;
   height: 90px;
