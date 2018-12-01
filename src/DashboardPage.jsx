@@ -1002,6 +1002,17 @@ goToMyProfilePage(e){
      }
   }
 
+  // search for a sem value in an array of obj
+   search(myArray,nameKey){
+     console.log('inside ss',myArray,nameKey);
+      for (var i=0; i < myArray.length; i++) {
+          if (myArray[i].sem['sem_name'] === nameKey) {
+              return true;
+          }
+      }
+      return false;
+  }
+
   // --------------------------------//
   // --- Kriti's functions ----------//
   // ---- CHECKOUT FROM CART --------//
@@ -2078,7 +2089,8 @@ dropEnrolledCourse(element,v){
   .then((response)=>{
     if(response.status == 200){
 
-        ToastStore.success('This course has been dropped from your schedule!',4000,"whiteFont")
+        swal('Success!','This course has been dropped from your schedule','success')
+
         this.setState({isHomePageHidden: false});
         this.setState({isPaymentPortalHidden: true});
         this.setState({isCalendarHidden: true});
@@ -2170,6 +2182,7 @@ submitFinAid(studentId, e){
     const { spacing } = this.state; // this is for student grid in admin
     let sideNav; //this contains the html for the sideNav of page to be viewed now
     let currentContent;
+    let fall;
 
     // --------------------------------- CURRENT USER IS AN ADMIN ------------------------------------//
     if(this.state.isAdmin){
@@ -3187,37 +3200,55 @@ submitFinAid(studentId, e){
         currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
               <h1> Your Cart</h1>
+
+              {
+                 this.search(this.state.cartData, 'FA18') && <h2>Fall 18</h2>
+              }
                 {
                   this.state.cartData.length > 0 &&
                   this.state.cartData.map((el,i)=>{
+
                       if(el.sem['sem_name'] == 'FA18')
                       {
-                        return <div name="Fall18">
-                            <h2> Fall 18</h2>
-                            <Card key={i} style={this.state.cartCardStyle}>
-                            <CardContent>
-                              <div name="cartCourseAndDelete">
-                                  <p className= {classes.displayInline} style={this.state.courseNameStyle} >
-                                      {el.course_name}
-                                  </p>
-                                  <IconButton onClick={this.deleteFromCart.bind(this, el)} style={{float:"right"}}>
-                                      <DeleteIcon />
-                                  </IconButton>
-                              </div>
-                              {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
-                              {el.location} || {
-                                el.days.map(function(element){
-                                  return <span>{element} &nbsp;</span>
-                                })
-                              }
-                                 || {el.start_time} - {el.end_time}
-                               <br /> <br />
-                            </CardContent>
-                          </Card>
-                        <Button variant="contained" onClick = {this.PaymentMode.bind(this, '1')} className = {classes.marginAuto} color="primary"> Checkout</Button>
-                        </div>
-                    }
+                        return <div key={i} name="Fall18">
+                                  <Card style={this.state.cartCardStyle}
+                                    >
+                                  <CardContent>
+                                    <div name="cartCourseAndDelete">
+                                        <p className= {classes.displayInline} style={this.state.courseNameStyle} >
+                                            {el.course_name}
+                                        </p>
+                                        <IconButton onClick={this.deleteFromCart.bind(this, el)} style={{float:"right"}}>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </div>
+                                    {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
+                                    {el.location} || {
+                                      el.days.map(function(element){
+                                        return <span>{element} &nbsp;</span>
+                                      })
+                                    }
+                                       || {el.start_time} - {el.end_time}
+                                     <br /> <br />
+                                  </CardContent>
+                                </Card>
 
+                        </div>
+
+                    } //if fall
+                  }) //FALL 18 map
+                }
+                {
+                   this.search(this.state.cartData, 'FA18') && <Button variant="contained" onClick = {this.PaymentMode.bind(this, '1')} className = {classes.marginAuto} color="primary"> Checkout</Button>
+                }
+
+                {
+                   this.search(this.state.cartData, 'SP19') && <h2>Spring 19</h2>
+                }
+
+                {
+                  this.state.cartData.length > 0 &&
+                    this.state.cartData.map((el,i)=>{
                     if(el.sem['sem_name'] == 'SP19'){
                       return <div name="SP19">
                           <h2> Spring 19</h2>
@@ -3241,10 +3272,21 @@ submitFinAid(studentId, e){
                              <br /> <br />
                           </CardContent>
                         </Card>
-                      <Button variant="contained" onClick = {this.PaymentMode.bind(this,"2")} className = {classes.marginAuto} color="primary"> Checkout</Button>
-                      </div>
+                    </div>
                     }
+                  }) //SPRING
+                }
+                {
+                   this.search(this.state.cartData, 'SP19') && <Button variant="contained" onClick = {this.PaymentMode.bind(this, '2')} className = {classes.marginAuto} color="primary"> Checkout</Button>
+                }
 
+                {
+                   this.search(this.state.cartData, 'SU19') && <h2>Summer 19</h2>
+                }
+
+                {
+                  this.state.cartData.length > 0 &&
+                    this.state.cartData.map((el,i)=>{
                     if(el.sem['sem_name'] == 'SU19'){
                       return <div name="SU19">
                           <h2> Summer 19</h2>
@@ -3268,12 +3310,14 @@ submitFinAid(studentId, e){
                              <br /> <br />
                           </CardContent>
                         </Card>
-                      <Button variant="contained" onClick = {this.PaymentMode.bind(this,"3")} className = {classes.marginAuto} color="primary"> Checkout</Button>
+
                       </div>
                     }
-                  })
+                  })//SUMMER
                 }
-
+                {
+                   this.search(this.state.cartData, 'SU19') && <Button variant="contained" onClick = {this.PaymentMode.bind(this, '3')} className = {classes.marginAuto} color="primary"> Checkout</Button>
+                }
 
                 {
                   this.state.cartData.length == 0 &&
