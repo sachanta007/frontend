@@ -60,11 +60,21 @@ import PersonalChatList from './PersonalChatList.js';
 import Chatkit from '@pusher/chatkit-client'
 import Modal from '@material-ui/core/Modal';
 import {NewsHeaderCard, UserCard} from 'react-ui-cards';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
+import swal from 'sweetalert'
+
+
 
 // -------------------- Declaring constants here -------------------//
 const drawerWidth = 240;
 const axios = require('axios');
 const image2base64 = require('image-to-base64');
+const pdfConverter = require('jspdf');
 
 const localizer = BigCalendar.momentLocalizer(moment)
 let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
@@ -77,6 +87,12 @@ let allViews = Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])
     overflow: 'hidden',
     position: 'relative',
     display: 'flex',
+  },
+  rootTable: {
+    width: 400,
+    marginTop: theme.spacing.unit * 3,
+    overflowX: 'auto',
+    marginBottom:25,
   },
   appBarHeading: {
     marginRight: 1160,
@@ -220,6 +236,7 @@ class DashboardPage extends Component {
       isCalendarHidden: true,
       isSearchHidden: true,
       courseCardStyle: {marginBottom: 18, width: 380},
+      cartCardStyle:{width: 470, height:100, marginBottom: 18},
       widthForGrid: {width: '75%'},
       inheritWidth: {width: 'inherit'},
       courseNameStyle: {fontSize: 20, fontWeight: 'bold', fontFamily: 'Saira Semi Condensed'},
@@ -240,6 +257,7 @@ class DashboardPage extends Component {
       isPersonalChatPageHidden:true,
       isThemeModalOpen: false,
       isIndividualStudentPageHidden: true,
+      isPayNowOrLaterHidden: true,
       selectedRadioValue: [],
       mon: false,
       tue: false,
@@ -302,7 +320,7 @@ class DashboardPage extends Component {
       cartCost:0,
       finanical_aid:0,
       isPaymentModeCardHidden:true,
-      isPaymentSuccessfulCardHidden:true,
+      isfeeReceiptPageHidden:true,
 
       anchorEl: null,
       open: false,
@@ -313,7 +331,14 @@ class DashboardPage extends Component {
       isLoading: true,
       msElapsed: 0,
       dataOfCurrentStudent: {},
-      finAidForStudent: 0
+      finAidForStudent: 0,
+      allSems :[],
+      semSelected: 1,
+      latePayPenalty:0,
+      lateRegPenalty: 0,
+      netAmount: 0,
+      payRadio: 0,
+      coursesFromPayment: []
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -413,6 +438,11 @@ class DashboardPage extends Component {
 
       } // themeRadio if ends
 
+      // PAYMENT PORTAL RADIO BUTTONS... PAYMENT MODES SELECTION
+      if(e.target.name =='payRadio'){
+          this.setState({ payRadio: e.target.value });
+      }
+
       //----- When user tries to upload banner image for course ----//
       if(e.target.name=="fileUploadInput"){
           var fileObj = e.target.files[0]
@@ -462,7 +492,7 @@ updateThemeInDB(theme){
   var user_id = sessionStorage.getItem('user_id');
   axios({
     method:'get',
-    url:'http://localhost:5000/updateColorTheme/theme/'+theme+'/student/'+user_id,
+    url:'https://course360.herokuapp.com/updateColorTheme/theme/'+theme+'/student/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -478,6 +508,7 @@ updateThemeInDB(theme){
   })
 
 }
+
 
 // Below is custom handle Change ONLY FOR STAR Rating
 // For courses
@@ -497,7 +528,7 @@ goToGroupChat(e){
   this.setState({isViewProfessorsHidden: true});
   this.setState({isEditSingleCourseHidden: true})
   this.setState({isPaymentModeCardHidden: true});
-  this.setState({isPaymentSuccessfulCardHidden: true});
+  this.setState({isfeeReceiptPageHidden: true});
   this.setState({isIndividualCoursePageHidden: true});
   this.setState({isCartPageHidden: true});
   this.setState({isStudentDetailsFormHidden:true});
@@ -519,7 +550,7 @@ goToPersonalChatPage(e){
     this.setState({isViewProfessorsHidden: true});
     this.setState({isEditSingleCourseHidden: true})
     this.setState({isPaymentModeCardHidden: true});
-    this.setState({isPaymentSuccessfulCardHidden: true});
+    this.setState({isfeeReceiptPageHidden: true});
     this.setState({isIndividualCoursePageHidden: true});
     this.setState({isCartPageHidden: true});
     this.setState({isStudentDetailsFormHidden:true});
@@ -536,13 +567,14 @@ handleChangeAndGetMatchingCourses(e){
       //Hit API and get results that matches
       return axios({
         method:'get',
-        url:'http://localhost:5000/getCourseBy/name/'+e.target.value+'/start/0/end/100000',
+        url:'https://course360.herokuapp.com/getCourseBy/name/'+e.target.value+'/start/0/end/100',
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
       .then((response)=>{
         if(response.status == 200)
         {
+          console.log("Get course by name",response.data);
           return(response.data)
         }
         else{
@@ -582,7 +614,7 @@ logout(e){
   this.setState({isViewProfessorsHidden: true});
   this.setState({isEditSingleCourseHidden: true})
   this.setState({isPaymentModeCardHidden: true});
-  this.setState({isPaymentSuccessfulCardHidden: true});
+  this.setState({isfeeReceiptPageHidden: true});
   this.setState({isIndividualCoursePageHidden: true});
   this.setState({isCartPageHidden: true});
   this.setState({isChatPageHidden: true})
@@ -640,7 +672,7 @@ goToMyProfilePage(e){
   this.setState({isViewProfessorsHidden: true});
   this.setState({isEditSingleCourseHidden: true})
   this.setState({isPaymentModeCardHidden: true});
-  this.setState({isPaymentSuccessfulCardHidden: true});
+  this.setState({isfeeReceiptPageHidden: true});
   this.setState({isIndividualCoursePageHidden: true});
   this.setState({isCartPageHidden: true});
   this.setState({isStudentDetailsFormHidden:false});
@@ -693,7 +725,7 @@ goToMyProfilePage(e){
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isfeeReceiptPageHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
@@ -702,7 +734,7 @@ goToMyProfilePage(e){
       this.setState({isGroupChatPageHidden: true});
       this.setState({isPersonalChatPageHidden:true})
       this.setState({isIndividualStudentPageHidden: true });
-
+      this.setState({isPayNowOrLaterHidden:true})
       if(sessionStorage.getItem('user_role')!=1)
       {
         this.leaveAllChatRooms();
@@ -721,7 +753,7 @@ goToMyProfilePage(e){
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isfeeReceiptPageHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isStudentDetailsFormHidden: true})
@@ -748,7 +780,7 @@ goToMyProfilePage(e){
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isfeeReceiptPageHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isStudentDetailsFormHidden: true})
@@ -775,7 +807,7 @@ goToMyProfilePage(e){
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isfeeReceiptPageHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isStudentDetailsFormHidden: true})
       this.setState({isCartPageHidden: true});
@@ -802,7 +834,7 @@ goToMyProfilePage(e){
       this.setState({isViewProfessorsHidden: false});
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isfeeReceiptPageHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isChatPageHidden: true})
@@ -829,7 +861,7 @@ goToMyProfilePage(e){
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isfeeReceiptPageHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({searchCourseName: ''});
       this.setState({isChatPageHidden: true});
@@ -839,31 +871,80 @@ goToMyProfilePage(e){
       this.setState({isThisAnEnrolledCourse: false})
       this.setState({isGroupChatPageHidden: true});
       this.setState({isPersonalChatPageHidden:true})
+      this.setState({isPayNowOrLaterHidden:true})
 
       this.leaveAllChatRooms();
     }
 
     else if(value=='payment'){
-      this.setState({isHomePageHidden: true});
-      this.setState({isPaymentPortalHidden: false});
-      this.setState({isCalendarHidden: true});
-      this.setState({isSearchHidden: true});
-      this.setState({isAddNewCourseHidden: true});
-      this.setState({isEditCourseHidden: true});
-      this.setState({isViewStudentsHidden: true});
-      this.setState({isViewProfessorsHidden: true});
-      this.setState({isEditSingleCourseHidden: true})
-      this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
-      this.setState({isIndividualCoursePageHidden: true});
-      this.setState({isCartPageHidden: true});
-      this.setState({isChatPageHidden: true});
-      this.setState({isThisAnEnrolledCourse: false})
-      this.setState({isStudentDetailsFormHidden: true})
-      this.setState({isGroupChatPageHidden: true});
-      this.setState({isPersonalChatPageHidden:true})
 
-      this.leaveAllChatRooms();
+      this.getPaymentDetails().then((returnVal) => {
+
+        if(returnVal)
+        {
+            this.setState({cartCost: returnVal['cost']})
+            this.setState({finanical_aid: returnVal['finanical_aid']})
+            this.setState({lateRegPenalty: returnVal['late_reg_penality']})
+            this.setState({latePayPenalty: returnVal['late_payment_penality']})
+            this.setState({coursesFromPayment: returnVal['courses']})
+
+            this.setState({netAmount: returnVal['cost']+ returnVal['late_reg_penality']+returnVal['late_payment_penality']- returnVal['finanical_aid']})
+            this.setState({isPaymentModeCardHidden: false});
+            this.setState({isHomePageHidden: true});
+            this.setState({isPaymentPortalHidden: true});
+            this.setState({isCalendarHidden: true});
+            this.setState({isSearchHidden: true});
+            this.setState({isAddNewCourseHidden: true});
+            this.setState({isEditCourseHidden: true});
+            this.setState({isViewStudentsHidden: true});
+            this.setState({isViewProfessorsHidden: true});
+            this.setState({isEditSingleCourseHidden: true})
+
+            this.setState({isfeeReceiptPageHidden: true});
+            this.setState({isIndividualCoursePageHidden: true});
+            this.setState({isCartPageHidden: true});
+            this.setState({isChatPageHidden: true});
+            this.setState({isThisAnEnrolledCourse: false})
+            this.setState({isStudentDetailsFormHidden: true})
+            this.setState({isGroupChatPageHidden: true});
+            this.setState({isPersonalChatPageHidden:true})
+            this.setState({isPayNowOrLaterHidden:true})
+            this.leaveAllChatRooms();
+        }
+
+        else{
+              console.log("Return Value from Payment details empty", returnVal);
+              this.setState({cartCost: 0})
+              this.setState({finanical_aid: 0})
+              this.setState({lateRegPenalty: 0})
+              this.setState({latePayPenalty: 0})
+              this.setState({coursesFromPayment: 0})
+              this.setState({netAmount: 0})
+
+              this.setState({isPaymentModeCardHidden: false});
+              this.setState({isHomePageHidden: true});
+              this.setState({isPaymentPortalHidden: true});
+              this.setState({isCalendarHidden: true});
+              this.setState({isSearchHidden: true});
+              this.setState({isAddNewCourseHidden: true});
+              this.setState({isEditCourseHidden: true});
+              this.setState({isViewStudentsHidden: true});
+              this.setState({isViewProfessorsHidden: true});
+              this.setState({isEditSingleCourseHidden: true})
+
+              this.setState({isfeeReceiptPageHidden: true});
+              this.setState({isIndividualCoursePageHidden: true});
+              this.setState({isCartPageHidden: true});
+              this.setState({isChatPageHidden: true});
+              this.setState({isThisAnEnrolledCourse: false})
+              this.setState({isStudentDetailsFormHidden: true})
+              this.setState({isGroupChatPageHidden: true});
+              this.setState({isPersonalChatPageHidden:true})
+              this.setState({isPayNowOrLaterHidden:true})
+              this.leaveAllChatRooms();
+        }
+
+      });
     }
 
     else if(value=='calendar'){
@@ -877,7 +958,7 @@ goToMyProfilePage(e){
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isfeeReceiptPageHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isChatPageHidden: true});
@@ -885,6 +966,7 @@ goToMyProfilePage(e){
       this.setState({isStudentDetailsFormHidden: true})
       this.setState({isGroupChatPageHidden: true});
       this.setState({isPersonalChatPageHidden:true})
+      this.setState({isPayNowOrLaterHidden:true})
 
       this.leaveAllChatRooms();
 
@@ -910,7 +992,7 @@ goToMyProfilePage(e){
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isfeeReceiptPageHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
       this.setState({isCartPageHidden: true});
       this.setState({isThisAnEnrolledCourse: false})
@@ -920,15 +1002,20 @@ goToMyProfilePage(e){
      }
   }
 
-
+  // --------------------------------//
   // --- Kriti's functions ----------//
-    PaymentMode(event) {
+  // ---- CHECKOUT FROM CART --------//
+  // --------------------------------//
+    PaymentMode(sem, event) {
       const dataJSON = {
-        user_id: sessionStorage.getItem('user_id')
+        user_id: sessionStorage.getItem('user_id'),
+        sem_id : sem
       }
+
+      console.log('To be sent to enroll Courses ==>',dataJSON);
       axios({
         method:'post',
-        url:'http://localhost:5000/enrollCourses',
+        url:'https://course360.herokuapp.com/enrollCourses',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -936,45 +1023,171 @@ goToMyProfilePage(e){
       .then((response) => {
           if(response.status != 500)
           {
-            this.setState({cartCost: 7800});
-            this.setState({finanical_aid: 2532});
-            this.setState({isStudentDetailsFormHidden: true})
+            console.log('enrollment response', response.data);
 
-            this.setState({isPaymentPortalHidden: true});
-            this.setState({isPaymentModeCardHidden: false});
-            this.setState({isPaymentSuccessfulCardHidden: true});
-            this.setState({isIndividualCoursePageHidden: true});
-            this.setState({isCartPageHidden: true});
-            this.setState({isGroupChatPageHidden: true});
-            this.setState({isPersonalChatPageHidden:true})
+            if(!(response.data['is_clash']))
+            {
+              this.setState({cartCost: response.data['cost']});
+              this.setState({finanical_aid: response.data['finanical_aid']});
+              this.setState({latePayPenalty: response.data['late_payment_penality']});
+              this.setState({lateRegPenalty: response.data['late_reg_penality']});
+              this.setState({netAmount: response.data['cost']+ response.data['late_reg_penality']+response.data['late_payment_penality']- response.data['finanical_aid']})
+
+
+              this.setState({isStudentDetailsFormHidden: true})
+              this.setState({isPaymentPortalHidden: true});
+              this.setState({isPayNowOrLaterHidden: false});
+              this.setState({isPaymentModeCardHidden: true});
+              this.setState({isfeeReceiptPageHidden: true});
+              this.setState({isIndividualCoursePageHidden: true});
+              this.setState({isCartPageHidden: true});
+              this.setState({isGroupChatPageHidden: true});
+              this.setState({isPersonalChatPageHidden:true})
+          }
+          else{
+            var alertMsg = "Some of your courses have overlapping times!\n\n"+response.data['courses'][0][0]+'\n'+response.data['courses'][0][1]+'\n\nPlease fix the clash to proceed.'
+            swal('Uh Oh!',alertMsg, 'error')
+
+          }
+
+          // STATUS IS 500
           }
           else{
             this.setState({isPaymentPortalHidden: true});
             this.setState({isPaymentModeCardHidden: true});
-            this.setState({isPaymentSuccessfulCardHidden: true});
+            this.setState({isfeeReceiptPageHidden: true});
+            this.setState({isPayNowOrLaterHidden: true});
             this.setState({isIndividualCoursePageHidden: true});
             this.setState({isStudentDetailsFormHidden: true})
             this.setState({isCartPageHidden: false});
             this.setState({isGroupChatPageHidden: true});
             this.setState({isPersonalChatPageHidden:true})
             console.log("Error in enrollment");
-          }
+          } //not 200 ends
       });
-
-
     }
 
-   EnterDetails(event){
-       this.setState({isPaymentPortalHidden: true});
-       this.setState({isPaymentModeCardHidden: true});
-       this.setState({isPaymentSuccessfulCardHidden: false});
-       this.setState({isIndividualCoursePageHidden: true});
-       this.setState({isCartPageHidden: true});
-       this.setState({isStudentDetailsFormHidden: true})
-       this.setState({isGroupChatPageHidden: true});
-       this.setState({isPersonalChatPageHidden:true})
+// gets payment info for that student
+getPaymentDetails(){
+      return axios({
+        method:'get',
+        url:'https://course360.herokuapp.com/getPaymentDetails/user/'+sessionStorage.getItem('user_id'),
+        headers: {'Access-Control-Allow-Origin': '*',
+        'Authorization': sessionStorage.getItem('token')}
+      })
+      .then((response)=>{
+        console.log("inside getPaymentDetails---",response.data);
+          return response.data
+      }).catch(err => {
+          console.log('Error fetching payment details',err);
+          return false
+      })
+
+}
+
+/// click submit at payment portal
+ payFee(event){
+   var dataJSON = {
+     user_id : sessionStorage.getItem('user_id'),
+     courses : this.state.coursesFromPayment
    }
-//-------------- End of Kriti's functions ---//
+
+   axios({
+     method:'post',
+     url:'https://course360.herokuapp.com/payfee',
+     data: dataJSON,
+     headers: {'Access-Control-Allow-Origin': '*',
+     'Authorization': sessionStorage.getItem('token')},
+   })
+   .then((response) => {
+       if(response.status != 500)
+       {
+         ToastStore.success("Success! You have paid your fees!", 4000, "whiteFont")
+         this.setState({isStudentDetailsFormHidden: true})
+         this.setState({isPaymentPortalHidden: true});
+         this.setState({isPayNowOrLaterHidden: true});
+         this.setState({isPaymentModeCardHidden: true});
+         this.setState({isfeeReceiptPageHidden: true});
+         this.setState({isIndividualCoursePageHidden: true});
+         this.setState({isCartPageHidden: true});
+         this.setState({isGroupChatPageHidden: true});
+         this.setState({isPersonalChatPageHidden:true})
+         this.setState({isfeeReceiptPageHidden: false})
+
+
+       }
+   });
+ }
+
+// EMAIL PAYMENT RECEIPT
+sendEmailReceipt(e){
+
+  var cartCost = this.state.cartCost
+  var financial = this.state.finanical_aid
+  var payPen = this.state.latePayPenalty
+  var regPen = this.state.lateRegPenalty
+
+  console.log("sending email...", cartCost,' ', financial,' ', regPen,"+",payPen);
+
+  axios({
+    method:'get',
+    url:'https://course360.herokuapp.com/sendReceipt/email/'+sessionStorage.getItem('user_email')+'/cost/'+cartCost+'/fiAid/'+financial+'/reg/'+regPen+'/pay/'+payPen,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    console.log("inside send email succ---",response.data);
+    ToastStore.success('Success! Check your inbox for the receipt!',4000,"whiteFont")
+  }).catch(err => {
+      console.log('Error fetching payment details',err);
+    ToastStore.error('Oops! Please try again!',4000,"whiteFont")
+  })
+}
+
+//DOWNLOAD PDF OF Receipt
+downloadPDF(e){
+  console.log("Downloading pdf");
+
+    var cartCost = this.state.cartCost
+    var financial = this.state.finanical_aid
+    var payPen = this.state.latePayPenalty
+    var regPen = this.state.lateRegPenalty
+    var netAmount = cartCost+ regPen + payPen - financial
+
+   var doc = new pdfConverter('p','pt','c6')
+   doc.setFontSize(35);
+   doc.text(70, 50, 'Course360');
+   doc.setFontSize(16);
+   doc.text(70, 80, 'Fee Payment Receipt');
+   doc.line(20,100,300,100)
+
+   doc.setFontSize(12);
+   doc.text(20, 150, 'Cost of courses enrolled:');
+   doc.text(220, 150, '$ ' + cartCost);
+
+   doc.text(20, 170, 'Late Registration Penalty:');
+   doc.text(220, 170, '$ ' + regPen);
+
+   doc.text(20, 190, 'Late Fee Payment Penalty:');
+   doc.text(220, 190, '$ ' + payPen);
+
+   doc.setFontStyle("italic")
+   doc.text(20, 240, 'Financial Aid:');
+   doc.text(220, 240, '$ ' + financial);
+
+
+   doc.text(20, 260, 'Total amount paid:');
+   doc.text(220, 260, '$ ' + netAmount);
+
+    doc.setFontStyle("normal")
+    doc.text(20, 320, 'Happy learning!');
+    doc.text(20, 340, 'Team Course 360');
+    doc.text(20, 360, 'reach.course360@gmail.com');
+    doc.line(20,380,300,380)
+
+    doc.save('Course360-Receipt.pdf')
+    ToastStore.success("Your PDF has been downloaded!", 4000, "whiteFont")
+}
 
 
 // ---------------------------
@@ -986,7 +1199,7 @@ goToMyProfilePage(e){
     this.setState({studentEnrolledCourses: []})
     axios({
       method:'get',
-      url:'http://localhost:5000/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
+      url:'https://course360.herokuapp.com/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1008,6 +1221,7 @@ goToMyProfilePage(e){
           }
 
           this.setState({studentEnrolledCourses: filtered})
+          console.log("getEnrolledCourses-------",filtered);
       }
       else{
         console.log('Status is not 200 fetching students enrolled courses!!',response);
@@ -1129,7 +1343,7 @@ componentDidMount() {
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'http://localhost:5000/getAllCourses/start/0/end/100000',
+    url:'https://course360.herokuapp.com/getAllCourses/start/0/end/100000',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1144,7 +1358,21 @@ hitAPIForAdminHomePageCourses(){
   getAllProfessorsForSelect(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/getAllProfessors/start/0/end/100000',
+      url:'https://course360.herokuapp.com/getAllProfessors/start/0/end/100000',
+      headers: {'Access-Control-Allow-Origin': '*',
+      'Authorization': sessionStorage.getItem('token')}
+    })
+    .then((response)=>{
+      return(response.data)
+    });
+  }
+
+  // Get list of all semesters to be populated
+  // in select drop down while adding new courses
+  getSemestersForSelect(){
+    return axios({
+      method:'get',
+      url:'https://course360.herokuapp.com/semesters',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1154,6 +1382,7 @@ hitAPIForAdminHomePageCourses(){
 
   }
 
+
   // ---------------------------------------------
   // Get list of all students to be shown in ADMIN
   // view, when clicked on corresponding side nav option
@@ -1162,7 +1391,7 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/getAllStudents/start/0/end/100',
+      url:'https://course360.herokuapp.com/getAllStudents/start/0/end/100',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1202,7 +1431,7 @@ hitAPIForAdminHomePageCourses(){
         console.log(dataJSON);
         axios({
           method:'post',
-          url:'http://localhost:5000/insertCourses',
+          url:'https://course360.herokuapp.com/insertCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1302,7 +1531,7 @@ hitAPIForAdminHomePageCourses(){
         console.log('data to be sent',dataJSON);
         axios({
           method:'post',
-          url:'http://localhost:5000/updateCourses',
+          url:'https://course360.herokuapp.com/updateCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1346,7 +1575,7 @@ hitAPIForAdminHomePageCourses(){
 
     axios({
           method:'post',
-          url:'http://localhost:5000/deleteCourses',
+          url:'https://course360.herokuapp.com/deleteCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1355,7 +1584,7 @@ hitAPIForAdminHomePageCourses(){
             if(response.status == 200)
             {
 
-              ToastStore.success('Course has been deleted successfully!!',4000,"whiteFont")
+              swal('Success!','Course has been deleted successfully!!','success')
               this.setState({editCourseName: ''});
               this.setState({editCourseDesc: ''});
               this.setState({editCourseLocation: ''});
@@ -1384,18 +1613,36 @@ hitAPIForAdminHomePageCourses(){
   goToCoursePage(courseClicked,v){
       if(sessionStorage.getItem('user_role') == 3){
         var allEnrolledCoursesOfStudent = this.state.studentEnrolledCourses
+        console.log("Enrolled ==", allEnrolledCoursesOfStudent);
+
+        var notEnrolledFlag = true
 
         for(var i=0; i<allEnrolledCoursesOfStudent.length; i++){
           if(allEnrolledCoursesOfStudent[i].course_id == courseClicked.course_id ){
             this.setState({isThisAnEnrolledCourse: true})
+            this.setState({dataOfClickedCourse: allEnrolledCoursesOfStudent[i]})
+            notEnrolledFlag = false
           }
-
         }
-      }
+
+        // clicked on an un-enrolled course....no sem details
+        if(notEnrolledFlag){
+          this.setState({dataOfClickedCourse: courseClicked})
+        }
+
+
+        this.getSemestersForSelect().then((returnVal) => {
+            this.setState({allSems: returnVal});
+        })
+        .catch(err => console.log("Error with fetching sems ", err))
+      } //STUDENT ENDS
+
+      // PROFESSOR
       if(sessionStorage.getItem('user_role') == 2){
             this.getEnrolledStudentsForCourse(courseClicked.course_id)
+            this.setState({dataOfClickedCourse: courseClicked})
       }
-      this.setState({dataOfClickedCourse: courseClicked})
+
       console.log("Clicked course",courseClicked);
       this.setState({isIndividualCoursePageHidden: false});
 
@@ -1414,7 +1661,7 @@ submitComment(e){
 
   axios({
         method:'post',
-        url:'http://localhost:5000/commentOnACourse',
+        url:'https://course360.herokuapp.com/commentOnACourse',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1443,7 +1690,7 @@ submitComment(e){
 getLatestCourseDetails(course_id){
   return axios({
     method:'get',
-    url:'http://localhost:5000/getCourseBy/course/'+course_id,
+    url:'https://course360.herokuapp.com/getCourseBy/course/'+course_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1459,18 +1706,19 @@ addCourseToCart(id,e){
   const dataJSON = {
           course_id: id,
           user_id: sessionStorage.getItem('user_id'),
+          sem_id: this.state.semSelected
       }
+      console.log("Data to be sent",dataJSON);
   axios({
         method:'post',
-        url:'http://localhost:5000/addToCart',
+        url:'https://course360.herokuapp.com/addToCart',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
       })
       .then((response) => {
-          if(response.data != 'Error : Something went wrong')
+          if(response.status == 200)
           {
-
             ToastStore.success("Success! You can checkout now!",4000,"whiteFont")
           }
       }).catch(err => {
@@ -1485,12 +1733,12 @@ addCourseToCart(id,e){
 getCartDetails(id){
   return axios({
     method:'get',
-    url:'http://localhost:5000/getCart/userId/'+id,
+    url:'https://course360.herokuapp.com/getCart/userId/'+id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
   .then((response)=>{
-    console.log('response code',response.status);
+    console.log('response code',response.status, response.data);
     if(response.status ==200)
       {
         return(response.data);
@@ -1505,8 +1753,8 @@ getCartDetails(id){
 // GIVEN USER ID
 // Sets state with cart data
 goToCartPage(id,e){
+  console.log("goToCartPage ID",id);
   this.getCartDetails(id).then((returnVal) => {
-
     for(let i = 0; i < returnVal.length; i++){
       returnVal[i]['days'].forEach(function(item,index){
 
@@ -1520,9 +1768,9 @@ goToCartPage(id,e){
       })
     }
 
+    console.log("Moving to cart page...............", returnVal);
     this.setState({cartData: returnVal});
     this.setState({isCartPageHidden: false});
-
     this.setState({isHomePageHidden: true});
     this.setState({isPaymentPortalHidden: true});
     this.setState({isCalendarHidden: true});
@@ -1533,16 +1781,15 @@ goToCartPage(id,e){
     this.setState({isViewProfessorsHidden: true});
     this.setState({isEditSingleCourseHidden: true})
     this.setState({isPaymentModeCardHidden: true});
-    this.setState({isPaymentSuccessfulCardHidden: true});
-    this.setState({isIndividualCoursePageHidden: true});
-    this.setState({isCartPageHidden: true});
+    this.setState({isfeeReceiptPageHidden: true});
+    this.setState({isIndividualCoursePageHidden: true});;
     this.setState({isStudentDetailsFormHidden: true})
   })
   .catch(
     err => {
+      console.log("ERO",err);
       this.setState({cartData: []});
       this.setState({isCartPageHidden: false});
-
       this.setState({isHomePageHidden: true});
       this.setState({isPaymentPortalHidden: true});
       this.setState({isCalendarHidden: true});
@@ -1553,9 +1800,8 @@ goToCartPage(id,e){
       this.setState({isViewProfessorsHidden: true});
       this.setState({isEditSingleCourseHidden: true})
       this.setState({isPaymentModeCardHidden: true});
-      this.setState({isPaymentSuccessfulCardHidden: true});
+      this.setState({isfeeReceiptPageHidden: true});
       this.setState({isIndividualCoursePageHidden: true});
-      this.setState({isCartPageHidden: true});
       this.setState({isStudentDetailsFormHidden: true})
     });
 }
@@ -1565,16 +1811,17 @@ goToCartPage(id,e){
 // -------------------------
 deleteFromCart(id,e){
   let user_id = sessionStorage.getItem('user_id')
+  console.log("Del ob",id);
   axios({
     method:'get',
-    url:'http://localhost:5000/delete/course/'+id+'/fromCart/for/user/'+user_id,
+    url:'https://course360.herokuapp.com/delete/course/'+id.course_id+'/fromCart/for/user/'+user_id+'/sem/'+id.sem['sem_id'],
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
   .then((response)=>{
-
+    console.log("DELETE RESPONSE",response);
     ToastStore.success('Course Deleted From Cart!!',4000,"whiteFont")
-    this.goToCartPage(user_id,e)
+    this.goToCartPage(user_id,id)
   });
 }
 
@@ -1586,7 +1833,7 @@ getProfessorSchedule(){
   console.log('Professor ID is:',user_id);
   axios({
     method:'get',
-    url:'http://localhost:5000/getProfessorSchedule/id/'+user_id,
+    url:'https://course360.herokuapp.com/getProfessorSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1611,6 +1858,46 @@ getProfessorSchedule(){
   });
 }
 
+// Chooses to Pay now
+goToPaymentPortal(e){
+  this.setState({isStudentDetailsFormHidden: true})
+  this.setState({isPaymentPortalHidden: true});
+  this.setState({isPayNowOrLaterHidden: true});
+  this.setState({isPaymentModeCardHidden: false});
+  this.setState({isfeeReceiptPageHidden: true});
+  this.setState({isIndividualCoursePageHidden: true});
+  this.setState({isCartPageHidden: true});
+  this.setState({isGroupChatPageHidden: true});
+  this.setState({isPersonalChatPageHidden:true});
+}
+
+// pay later option
+goToHomePage(e){
+  ToastStore.success("Please remember to pay the amount before deadlines!",4000,"whiteFont")
+  this.setState({isPaymentPortalHidden: true});
+  this.setState({isPayNowOrLaterHidden: true});
+  this.setState({isPaymentModeCardHidden: true});
+  this.setState({isfeeReceiptPageHidden: true});
+  this.setState({isCartPageHidden: true});
+
+  this.setState({isHomePageHidden: false});
+  this.setState({isPaymentPortalHidden: true});
+  this.setState({isCalendarHidden: true});
+  this.setState({isSearchHidden: true});
+  this.setState({isAddNewCourseHidden: true});
+  this.setState({isEditCourseHidden: true});
+  this.setState({isViewStudentsHidden: true});
+  this.setState({isViewProfessorsHidden: true});
+  this.setState({isEditSingleCourseHidden: true})
+  this.setState({isIndividualCoursePageHidden: true});
+  this.setState({isThisAnEnrolledCourse: false})
+  this.setState({isStudentDetailsFormHidden: true})
+  this.setState({isChatPageHidden: true})
+  this.setState({isGroupChatPageHidden: true});
+  this.setState({isPersonalChatPageHidden:true})
+  this.setState({isIndividualStudentPageHidden: true });
+
+}
 
 ///////////
 // Get Student Schedule
@@ -1619,7 +1906,7 @@ getStudentSchedule(user_id){
 console.log("Getting students schedule.....hold on");
   axios({
     method:'get',
-    url:'http://localhost:5000/getStudentSchedule/id/'+user_id,
+    url:'https://course360.herokuapp.com/getStudentSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1738,7 +2025,7 @@ getEnrolledStudentsForCourse(courseId){
   console.log('Course clicked',courseId,'For professor',profId);
   axios({
     method:'get',
-    url:'http://localhost:5000/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
+    url:'https://course360.herokuapp.com/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1771,7 +2058,7 @@ dummySuccessPayment(){
   this.setState({isViewProfessorsHidden: true});
   this.setState({isEditSingleCourseHidden: true})
   this.setState({isPaymentModeCardHidden: true});
-  this.setState({isPaymentSuccessfulCardHidden: true});
+  this.setState({isfeeReceiptPageHidden: true});
   this.setState({isIndividualCoursePageHidden: true});
   this.setState({isCartPageHidden: true});
   this.setState({isStudentDetailsFormHidden: true})
@@ -1782,10 +2069,9 @@ dummySuccessPayment(){
 // Drop enrolled course for a student
 dropEnrolledCourse(element,v){
   console.log('Dropping course',element);
-
   axios({
     method:'get',
-    url:'http://localhost:5000/dropCourse/courseId/'+element+'/userId/'+sessionStorage.getItem('user_id'),
+    url:'https://course360.herokuapp.com/dropCourse/courseId/'+element.course_id+'/userId/'+sessionStorage.getItem('user_id')+'/sem/'+element.sem['sem_id'],
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1803,7 +2089,7 @@ dropEnrolledCourse(element,v){
         this.setState({isViewProfessorsHidden: true});
         this.setState({isEditSingleCourseHidden: true})
         this.setState({isPaymentModeCardHidden: true});
-        this.setState({isPaymentSuccessfulCardHidden: true});
+        this.setState({isfeeReceiptPageHidden: true});
         this.setState({isIndividualCoursePageHidden: true});
         this.setState({isCartPageHidden: true});
         this.setState({isStudentDetailsFormHidden: true})
@@ -1860,7 +2146,7 @@ submitFinAid(studentId, e){
   var finAid = this.state.finAidForStudent;
   axios({
     method:'get',
-    url:'http://localhost:5000/updateFinancialAid/value/'+finAid+'/student/'+studentId,
+    url:'https://course360.herokuapp.com/updateFinancialAid/value/'+finAid+'/student/'+studentId,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1868,7 +2154,6 @@ submitFinAid(studentId, e){
     if(response.status == 200)
     {
       ToastStore.success('Updated financial aid successfully',4000,"whiteFont")
-
     }
   }).catch(err => {
     console.log("DAMN! fin aid messed up ---> ", err)
@@ -2763,14 +3048,35 @@ submitFinAid(studentId, e){
                     <div name="courseNameAndAdd">
                       <h1> {this.state.dataOfClickedCourse.course_code} - {this.state.dataOfClickedCourse.course_name}</h1>
                         {!(this.state.isThisAnEnrolledCourse) &&
-                        <IconButton color="inherit" title="Add to cart" onClick={this.addCourseToCart.bind(this, this.state.dataOfClickedCourse.course_id)} style={{float:"right"}}>
-                          <AddShoppingCartIcon  />
-                        </IconButton>
+                          <div>
+                              <FormControl required>
+                                <Select
+                                      value={this.state.semSelected}
+                                      onChange={this.handleChange.bind(this)}
+                                      name="semSelected"
+                                      >
+                                          {
+                                            this.state.allSems.map((el,i) => (
+                                              <MenuItem key={i} value={el.sem_id}>
+                                                {el.name}
+                                              </MenuItem>))
+                                          }
+                                    </Select>
+                              </FormControl>
+
+                            <IconButton color="inherit" title="Add to cart" onClick={this.addCourseToCart.bind(this, this.state.dataOfClickedCourse.course_id)} style={{float:"right"}}>
+                              <AddShoppingCartIcon  />
+                            </IconButton>
+                        </div>
                       }
-                      {this.state.isThisAnEnrolledCourse &&
-                        <IconButton color="inherit" title="Drop Course" onClick={this.dropEnrolledCourse.bind(this, this.state.dataOfClickedCourse.course_id)} style={{float:"right"}}>
-                          <DeleteIcon  />
-                        </IconButton>
+                      {
+                        this.state.isThisAnEnrolledCourse &&
+                        <div>
+                          <IconButton color="inherit" title="Drop Course" onClick={this.dropEnrolledCourse.bind(this, this.state.dataOfClickedCourse)} style={{float:"right"}}>
+                            <DeleteIcon  />
+                          </IconButton>
+                          <p> Semester: {this.state.dataOfClickedCourse.sem['name']}</p>
+                        </div>
                       }
                     </div>
 
@@ -2882,42 +3188,120 @@ submitFinAid(studentId, e){
             <div className={classes.toolbar} />
               <h1> Your Cart</h1>
                 {
-                  this.state.cartData.length>0 &&
-                  this.state.cartData.map((el,i) => (<Card key={i} style={this.state.courseCardStyle}>
-                    <CardContent>
-                      <div name="cartCourseAndDelete">
-                          <p className= {classes.displayInline} style={this.state.courseNameStyle} >
-                              {el.course_name}
-                          </p>
-                          <IconButton onClick={this.deleteFromCart.bind(this, el.course_id)} style={{float:"right"}}>
-                              <DeleteIcon />
-                          </IconButton>
-                      </div>
-                      {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
-                      {el.location} || {
-                        el.days.map(function(element){
-                          return <span>{element} &nbsp;</span>
-                        })
-                      }
-                         || {el.start_time} - {el.end_time}
-                       <br /> <br />
-                    </CardContent>
-                  </Card>))
-
-                }
-
-                {
                   this.state.cartData.length > 0 &&
-                  <Button variant="contained" onClick = {this.PaymentMode.bind(this)} className = {classes.marginAuto} color="primary"> Checkout</Button>
+                  this.state.cartData.map((el,i)=>{
+                      if(el.sem['sem_name'] == 'FA18')
+                      {
+                        return <div name="Fall18">
+                            <h2> Fall 18</h2>
+                            <Card key={i} style={this.state.cartCardStyle}>
+                            <CardContent>
+                              <div name="cartCourseAndDelete">
+                                  <p className= {classes.displayInline} style={this.state.courseNameStyle} >
+                                      {el.course_name}
+                                  </p>
+                                  <IconButton onClick={this.deleteFromCart.bind(this, el)} style={{float:"right"}}>
+                                      <DeleteIcon />
+                                  </IconButton>
+                              </div>
+                              {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
+                              {el.location} || {
+                                el.days.map(function(element){
+                                  return <span>{element} &nbsp;</span>
+                                })
+                              }
+                                 || {el.start_time} - {el.end_time}
+                               <br /> <br />
+                            </CardContent>
+                          </Card>
+                        <Button variant="contained" onClick = {this.PaymentMode.bind(this, '1')} className = {classes.marginAuto} color="primary"> Checkout</Button>
+                        </div>
+                    }
+
+                    if(el.sem['sem_name'] == 'SP19'){
+                      return <div name="SP19">
+                          <h2> Spring 19</h2>
+                          <Card key={i} style={this.state.cartCardStyle}>
+                          <CardContent>
+                            <div name="cartCourseAndDelete">
+                                <p className= {classes.displayInline} style={this.state.courseNameStyle} >
+                                    {el.course_name}
+                                </p>
+                                <IconButton onClick={this.deleteFromCart.bind(this, el)} style={{float:"right"}}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </div>
+                            {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
+                            {el.location} || {
+                              el.days.map(function(element){
+                                return <span>{element} &nbsp;</span>
+                              })
+                            }
+                               || {el.start_time} - {el.end_time}
+                             <br /> <br />
+                          </CardContent>
+                        </Card>
+                      <Button variant="contained" onClick = {this.PaymentMode.bind(this,"2")} className = {classes.marginAuto} color="primary"> Checkout</Button>
+                      </div>
+                    }
+
+                    if(el.sem['sem_name'] == 'SU19'){
+                      return <div name="SU19">
+                          <h2> Summer 19</h2>
+                          <Card key={i} style={this.state.cartCardStyle}>
+                          <CardContent>
+                            <div name="cartCourseAndDelete">
+                                <p className= {classes.displayInline} style={this.state.courseNameStyle} >
+                                    {el.course_name}
+                                </p>
+                                <IconButton onClick={this.deleteFromCart.bind(this, el)} style={{float:"right"}}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </div>
+                            {el.professor.first_name} {el.professor.last_name} ||  &nbsp;
+                            {el.location} || {
+                              el.days.map(function(element){
+                                return <span>{element} &nbsp;</span>
+                              })
+                            }
+                               || {el.start_time} - {el.end_time}
+                             <br /> <br />
+                          </CardContent>
+                        </Card>
+                      <Button variant="contained" onClick = {this.PaymentMode.bind(this,"3")} className = {classes.marginAuto} color="primary"> Checkout</Button>
+                      </div>
+                    }
+                  })
                 }
+
+
                 {
                   this.state.cartData.length == 0 &&
                   <div>
                       <h2>You have no courses in the cart yet!</h2>
-                      <h3>Search for a course to begin adding!!</h3>
+                      <h3>Search for a course to enroll!!</h3>
                   </div>
                 }
 
+          </main>
+      }
+
+      //-------- pay now or later --//
+      if(!(this.state.isPayNowOrLaterHidden)){
+        currentContent =   <main style={this.state.content}>
+            <div className={classes.toolbar} />
+              <h2>Payment Information</h2>
+                <div style={{color:'black'}}>
+                  <Card style={{padding: 10, marginBottom: 20}}>
+                    <div> Cost of courses:   ${this.state.cartCost}</div>
+                    <div> Financial Aid Available:   ${this.state.finanical_aid}</div>
+                    <div> Late Registration Penalty:   ${this.state.lateRegPenalty}</div>
+                    <div style={{fontWeight: "bold"}}> Total Amount to be paid:   ${this.state.netAmount}</div>
+                  </Card>
+                    <Button style={{marginRight:20}} variant="contained" onClick = {this.goToPaymentPortal.bind(this)} className = {classes.marginAuto} color="primary"> Pay Now </Button>
+                    <Button variant="contained" onClick = {this.goToHomePage.bind(this)} className = {classes.marginAuto} color="primary"> Pay Later </Button>
+
+              </div>
           </main>
       }
 
@@ -2944,132 +3328,174 @@ submitFinAid(studentId, e){
       }
 
       // ---------- KRITI'S PAYMENT PORTAL SECTION --------------------------//
-        else if(!(this.state.isPaymentPortalHidden)){
-          currentContent = <main style={this.state.content}>
-              <div className={classes.toolbar} />
-                <div>
-                  <Card className={classes.card}>
-                             <DeleteIcon className={classes.icon, classes.deleteIcon} />
-                            <CardContent>
-                              <Typography gutterBottom variant="headline" component="h2">
-                              Course 1
-                              </Typography>
-                              <Typography component="p">
-                                Mon, Tues 1:45
-                              </Typography>
-                            </CardContent>
-                        </Card>
 
-                  <Card className={classes.card1}>
-                    <DeleteIcon className={classes.icon, classes.deleteIcon} />
-                      <CardContent>
-                            <Typography gutterBottom variant="headline" component="h2">
-                                  Course 2
-                            </Typography>
-                            <Typography component="p">
-                                  Mon, Wed 4:00
-                            </Typography>
-                      </CardContent>
-                    </Card>
-                  <Card className={classes.card2}>
-                          <DeleteIcon className={classes.icon, classes.deleteIcon} />
-                            <CardContent>
-                              <Typography gutterBottom variant="headline" component="h2">
-                              Course 3
-                              </Typography>
-                              <Typography component="p">
-                              Thurs, Fri 1:00
-                              </Typography>
-                            </CardContent>
-                    </Card>
-
-                    <CardActions>
-                      <Button variant="contained" onClick = {this.PaymentMode.bind(this)} className = {classes.marginAuto}  color="primary">Checkout</Button>
-                    </CardActions>
-                  </div>
-            </main>
-        }
-
-// Hit checkout from cart and lands here
+// Hit checkout from cart and lands here...
 else if(!(this.state.isPaymentModeCardHidden))
 {
   currentContent=
     <main style={this.state.content}>
         <div className={classes.toolbar} />
           <div className={classes.root}>
-            <div>
-              <h2> Amount to be paid:</h2>
-              {this.state.cartCost}
-              <h2> Financial aid available:</h2>
-              {this.state.finanical_aid}
+            {
+              this.state.netAmount != 0 &&
+              <div name="checkIfNetAmount">
+                <div style={{marginRight:25, display:'inline-block'}}>
+                  <Paper className={classes.rootTable}>
+                     <Table className={classes.table}>
+                       <TableHead>
+                         <TableRow>
+                           <TableCell> Item</TableCell>
+                           <TableCell>Amount</TableCell>
+                         </TableRow>
+                       </TableHead>
+
+                       <TableBody>
+                             <TableRow key={1}>
+                               <TableCell component="th" scope="row">
+                                 Cost of Courses enrolled
+                               </TableCell>
+                               <TableCell >  ${this.state.cartCost}</TableCell>
+                             </TableRow>
+
+                             <TableRow key={2}>
+                               <TableCell component="th" scope="row">
+                                 Late Registration Penalty
+                               </TableCell>
+                               <TableCell >  ${this.state.lateRegPenalty}</TableCell>
+                             </TableRow>
+
+                             <TableRow key={3}>
+                               <TableCell component="th" scope="row">
+                                 Late Fee Payment Penalty
+                               </TableCell>
+                               <TableCell>  ${this.state.latePayPenalty}</TableCell>
+                             </TableRow>
+
+                             <TableRow key={4}>
+                               <TableCell component="th" scope="row">
+                                 Financial Aid
+                               </TableCell>
+                               <TableCell >  -${this.state.finanical_aid}</TableCell>
+                             </TableRow>
+
+                             <TableRow key={5}>
+                               <TableCell style={{fontWeight:"bold"}}component="th" scope="row">
+                                 Total Amount to be paid
+                               </TableCell>
+                               <TableCell style={{fontWeight:"bold"}} >  ${this.state.netAmount}</TableCell>
+                             </TableRow>
+                       </TableBody>
+                     </Table>
+                   </Paper>
             </div>
-            <br /> <br />
-            <FormControl component="fieldset" className={classes.formControl}>
-                      <FormLabel component="legend">Payment Mode</FormLabel>
-                      <RadioGroup
-                        aria-label="Payment Mode"
-                        name="Payment Mode"
-                        className={classes.group}
-                        value={this.state.value}
-                        onChange={this.handleChange.bind(this)}
-                      >
-                        <FormControlLabel
-                          value="Credit Card"
-                          control={<Radio color="primary" />}
-                          label="Credit Card"
-                        labelPlacement="end"
-                        />
-                        <FormControlLabel
-                          value="eCheck"
-                          control={<Radio color="primary" />}
-                          label="eCheck"
-                          labelPlacement="end"
-                        />
-                        <FormControlLabel
-                          value="Coupon"
-                          control={<Radio color="primary" />}
-                          label="Coupon"
-                          labelPlacement="end"
-                        />
-                      </RadioGroup>
-                      <Button variant="contained" onClick = {this.EnterDetails.bind(this)} className = {classes.marginAuto}  color="primary">Pay</Button>
-                    </FormControl>
+
+                <div name="paymentOptions" style={{display: "inline", marginLeft: 35}}>
+                  <FormControl component="fieldset" className={classes.formControl}>
+                            <h2>Payment Mode</h2>
+                              <RadioGroup
+                                aria-label="payRadio"
+                                name="payRadio"
+                                className={classes.group}
+                                value={this.state.payRadio}
+                                onChange={this.handleChange.bind(this)}>
+
+                                    <FormControlLabel  value="1" control={<Radio color="primary" checked = {this.state.payRadio==="1"} />} label="Credit Card" />
+                                    <FormControlLabel  value="2" control={<Radio color="primary" checked = {this.state.payRadio==="2"}  />} label="eCheck" />
+                                    <FormControlLabel  value="3" control={<Radio color="primary" checked = {this.state.payRadio==="3"}  />} label="Coupon" />
+
+                              </RadioGroup>
+
+                              {
+                                this.state.payRadio != 0 &&
+                                <div name="details">
+                                  <TextField
+                                      id="Details"
+                                      type="text"
+                                      label="Number"
+                                      className={classes.textField}
+                                      value={this.state.Details}
+                                      onChange={this.handleChange.bind(this)}
+                                      margin="normal"
+                                      name="Details"
+                                    />
+                                  <Button variant="contained" style={{marginTop: 25, marginLeft: 25}} onClick = {this.payFee.bind(this)} className = {classes.marginAuto}  color="primary">Pay</Button>
+                                </div>
+                              }
+                          </FormControl>
+                  </div>
+
+            </div>
+          }
+
+          {
+            this.state.netAmount == 0 &&
+            <h2> You have no outstanding balances! </h2>
+          }
             </div>
           </main>
 }
 
-// chose a payment mode and lands here
-else if(!(this.state.isPaymentSuccessfulCardHidden))
+// Finished paying fees..download receipt
+else if(!(this.state.isfeeReceiptPageHidden))
 {
   currentContent =   <main style={this.state.content}>
     <div className={classes.toolbar} />
-        <Card className={classes.card}>
-                  <CardContent>
-                        <Typography class='login-page-headers' color="textSecondary">
-                          Enter your details
-                        </Typography>
-                      <form>
-                        <FormControl required>
-                            <TextField
-                                id="Details"
-                                type="text"
-                                label="Card Number"
-                                className={classes.textField}
-                                value={this.state.Details}
-                                onChange={this.handleChange.bind(this)}
-                                margin="normal"
-                                name="Details"
-                              />
-                            <Button variant="outlined"  onClick={this.dummySuccessPayment.bind(this)} className = {classes.marginAuto}  color="primary">Submit</Button>
-                            </FormControl>
-                          </form>
-                    </CardContent>
-            </Card>
+          <h2>Your Receipt</h2>
+            <Paper className={classes.rootTable}>
+               <Table className={classes.table}>
+                 <TableHead>
+                   <TableRow>
+                     <TableCell> Item</TableCell>
+                     <TableCell>Amount</TableCell>
+                   </TableRow>
+                 </TableHead>
+
+                 <TableBody>
+                       <TableRow key={1}>
+                         <TableCell component="th" scope="row">
+                           Cost of Courses enrolled
+                         </TableCell>
+                         <TableCell >  ${this.state.cartCost}</TableCell>
+                       </TableRow>
+
+                       <TableRow key={2}>
+                         <TableCell component="th" scope="row">
+                           Late Registration Penalty
+                         </TableCell>
+                         <TableCell >  ${this.state.lateRegPenalty}</TableCell>
+                       </TableRow>
+
+                       <TableRow key={3}>
+                         <TableCell component="th" scope="row">
+                           Late Fee Payment Penalty
+                         </TableCell>
+                         <TableCell>  ${this.state.latePayPenalty}</TableCell>
+                       </TableRow>
+
+                       <TableRow key={4}>
+                         <TableCell component="th" scope="row">
+                           Financial Aid
+                         </TableCell>
+                         <TableCell >  -${this.state.finanical_aid}</TableCell>
+                       </TableRow>
+
+                       <TableRow key={5}>
+                         <TableCell style={{fontWeight:"bold"}}component="th" scope="row">
+                           Total Amount
+                         </TableCell>
+                         <TableCell style={{fontWeight:"bold"}} >  ${this.state.netAmount}</TableCell>
+                       </TableRow>
+                 </TableBody>
+               </Table>
+             </Paper>
+             <Button variant="contained" style={{marginRight:25}} onClick = {this.sendEmailReceipt.bind(this)} className = {classes.marginAuto}  color="primary">Email Receipt</Button>
+             <Button variant="contained" onClick = {this.downloadPDF.bind(this)} className = {classes.marginAuto}  color="primary">Download PDF</Button>
   </main>
 }
 
 // Individual profile page @author: Kriti shree
-else if(!(this.state.isStudentDetailsFormHidden)){
+else if(!(this.state.isStudentDetailsFormHidden))
+{
     currentContent =  <main style={this.state.content}>
         <div>
           <Card className={classes.myProfileCard}>
@@ -3363,6 +3789,13 @@ else if(!(this.state.isStudentDetailsFormHidden)){
                            </ListItemIcon>
                            <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Chat" />
                          </ListItem>
+
+                         <ListItem button onClick={this.handleMenuItemClick.bind(this, "payment")}>
+                          <ListItemIcon style={this.state.navDrawerIcon}>
+                            <AttachMoneyIcon />
+                          </ListItemIcon>
+                          <ListItemText {...drawerTextColor} style={this.state.navDrawerIcon} class="drawerFont" primary="Payment Portal" />
+                        </ListItem>
 
                       </List>
                       <Divider />

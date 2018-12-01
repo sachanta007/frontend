@@ -37,6 +37,7 @@
     "eslint": "^3.19.0",
     "eslint-plugin-react": "^6.10.3",
     "image-to-base64": "^2.0.1",
+    "jspdf": "^1.4.1",
     "material-ui": "^0.20.2",
     "moment": "^2.22.2",
     "node-sass": "^4.5.2",
@@ -54,6 +55,7 @@
     "react-ui-cards": "^1.4.0",
     "sass-loader": "^6.0.3",
     "style-loader": "^0.16.1",
+    "sweetalert": "^2.1.2",
     "webpack": "^2.4.1",
     "webpack-dev-server": "^2.4.4"
   },
