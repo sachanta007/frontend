@@ -91,6 +91,7 @@ class SignInCard extends Component {
       sessionStorage.setItem('user_first_name','')
       sessionStorage.setItem('user_email','')
       sessionStorage.setItem('user_theme', '')
+      sessionStorage.setItem('user_img', '')
   }
 
 // Below is a common handleChange function
@@ -153,6 +154,7 @@ handleSubmit(e) {
             sessionStorage.setItem('user_first_name', returnVal['first_name'])
             sessionStorage.setItem('user_email', returnVal['email'])
             sessionStorage.setItem('user_theme', returnVal['color_theme'])
+            sessionStorage.setItem('user_img', returnVal['image'])
 
             this.setState({loginSuccess: true});
           }
@@ -382,6 +384,7 @@ registerNewUser = (event) =>{
       sessionStorage.setItem('user_first_name', response.data['first_name'])
       sessionStorage.setItem('user_email', response.data['email'])
       sessionStorage.setItem('user_theme', response.data['color_theme'])
+      sessionStorage.setItem('user_img', response.data['image'])
       this.setState({loginSuccess: true});
 
     }).catch((error)=>{
@@ -421,6 +424,7 @@ registerNewUser = (event) =>{
       sessionStorage.setItem('user_first_name', response.data['first_name'])
       sessionStorage.setItem('user_email', response.data['email'])
       sessionStorage.setItem('user_theme', response.data['color_theme'])
+      sessionStorage.setItem('user_img', response.data['image'])
       this.setState({loginSuccess: true});
     });
   }

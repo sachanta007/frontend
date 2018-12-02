@@ -144,9 +144,8 @@ card: {
 
 },
 myProfileCard:{
-  marginTop: 80,
-   width: 800,
-  margin: 'auto'
+
+
 },
 media:{
   height:140,
@@ -293,6 +292,18 @@ class DashboardPage extends Component {
       editCourseImageBase64:'',
       editCourseImageFIleName:'',
 
+      personalLN:'',
+      personalFN: sessionStorage.getItem('user_first_name'),
+      personalMN:'',
+      personalMob:'',
+      personalProg:'',
+      personalPermAddr:'',
+      personalTempAddr:'',
+      personalEmail: sessionStorage.getItem('user_email'),
+      personalDOB:'',
+      personalGender:'',
+      personalImage:'',
+
       allProfessorsForSelect: [],
       allStudents: [],
       allProfessors: [],
@@ -425,6 +436,7 @@ class DashboardPage extends Component {
           this.setState({ currentTheme: 'default' }, () => {
                   this.changeThemeStates('default')
                   this.updateThemeInDB('default')
+
                 });
       }
 
@@ -448,8 +460,6 @@ class DashboardPage extends Component {
           var fileObj = e.target.files[0]
           var imageURL = URL.createObjectURL(fileObj)
           this.setState({newCourseImageFileName: fileObj.name})
-          console.log("file:",fileObj,  fileObj.name);
-          console.log("image url", imageURL);
           image2base64(imageURL)
               .then(
                   (response) => {
@@ -485,6 +495,11 @@ class DashboardPage extends Component {
                  )
       } //file upload innput end
     }
+
+submitPersonalDetails(e){
+  console.log("Submitting perosnola details");
+}
+
 
 // Calls api to update theme info in DB for user
 
@@ -602,6 +617,7 @@ logout(e){
   sessionStorage.setItem('user_first_name','')
   sessionStorage.setItem('user_email','')
   sessionStorage.setItem('user_theme', '')
+  sessionStorage.setItem('user_img', '')
 
   //Resetting state vars for all page flags...go back to Sign in Page!!
   this.setState({isHomePageHidden: true});
@@ -1245,6 +1261,7 @@ downloadPDF(e){
 
 changeThemeStates(theme){
   console.log("INSIDE CHANGE THEME STATES FUNCTION!!!!!!", this.state.currentTheme);
+  sessionStorage.setItem('user_theme',theme)
   if(theme == 'night'){
     console.log("Inside night mode........");
     this.setState({drawerPaper : {position: 'relative',width: 240, backgroundColor: '#070707'}})
@@ -2207,7 +2224,7 @@ submitFinAid(studentId, e){
                               <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
                                 <CardMedia
                                     className={classes.media}
-                                    image="build/computer-science.jpg"
+                                    image={element.image}
 
                                   />
                                 <CardContent>
@@ -2842,7 +2859,7 @@ submitFinAid(studentId, e){
                                  <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
                                    <CardMedia
                                        className={classes.media}
-                                       image="build/computer-science.jpg"
+                                       image={element.image}
 
                                      />
                                    <CardContent>
@@ -2985,7 +3002,7 @@ submitFinAid(studentId, e){
                                 <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
                                   <CardMedia
                                       className={classes.media}
-                                      image="build/computer-science.jpg"
+                                      image={element.image}
 
                                     />
                                   <CardContent>
@@ -3541,6 +3558,7 @@ else if(!(this.state.isfeeReceiptPageHidden))
 else if(!(this.state.isStudentDetailsFormHidden))
 {
     currentContent =  <main style={this.state.content}>
+      <div className={classes.toolbar} />
         <div>
           <Card className={classes.myProfileCard}>
               <CardContent>
@@ -3548,148 +3566,131 @@ else if(!(this.state.isStudentDetailsFormHidden))
               <Typography class='login-page-headers' color="primary">
                 Your Details
               </Typography>
-                   <FormControl >
-                     <InputLabel htmlFor="input-with-icon-adornment">First Name</InputLabel>
+
+                 <InputLabel style={{marginRight:10}} htmlFor="personalFN">First Name</InputLabel>
                      <Input
-                       id="input-with-icon-adornment"
-                       value="Aravind"
-                       startAdornment={
-                         <InputAdornment position="start">
-                           <AccountCircle />
-                         </InputAdornment>
-                       }
+                       id="personalFN"
+                       name="personalFN"
+                       value={this.state.personalFN}
+                       label='First Name'
+                       onChange={this.handleChange.bind(this)}
+                       margin='normal'
+                       style={{marginRight:25}}
                      />
-                   </FormControl>
 
-                   <FormControl className={classes.margin}>
-                     <InputLabel htmlFor="input-with-icon-adornment">Middle Name</InputLabel>
+                   <InputLabel style={{marginRight:10}} htmlFor="personalMN">Middle Name</InputLabel>
                      <Input
-                       id="input-with-icon-adornment"
-                       value=""
-                       startAdornment={
-                         <InputAdornment position="start">
-                           <AccountCircle />
-                         </InputAdornment>
-                       }
+                       id="personalMN"
+                       name="personalMN"
+                       value={this.state.personalMN}
+                       label='Middle Name'
+                       onChange={this.handleChange.bind(this)}
+                      style={{marginRight:25}}
                      />
-                   </FormControl>
 
-                   <FormControl className={classes.margin}>
-                     <InputLabel htmlFor="input-with-icon-adornment">Last Name</InputLabel>
+
+                   <InputLabel style={{marginRight:10}} htmlFor="personalLN">Last Name</InputLabel>
                      <Input
-                       id="input-with-icon-adornment"
-                       value="Parappil"
-                       startAdornment={
-                         <InputAdornment position="start">
-                           <AccountCircle />
-                         </InputAdornment>
-                       }
+                       id="personalLN"
+                       name="personalLN"
+                       value={this.state.personalLN}
+                       label='Last Name'
+                       onChange={this.handleChange.bind(this)}
                      />
-                   </FormControl>
 
-                <form className={classes.container} noValidate>
-                 <TextField
-                   id="date"
-                   label="Birthday"
-                   type="date"
-                   defaultValue="2018-10-29"
-                   className={classes.textField}
-                   InputLabelProps={{
-                   shrink: true,
-                   }}
-                  />
-
-<Typography style={{display: 'inline-block'}}></Typography>
-                       <FormControl className={classes.formControl, classes.margin1}>
-                         <InputLabel htmlFor="Gender-simple">Gender</InputLabel>
-                         <Select
-                           value={0}
-                           onChange={this.handleChange}
-                           inputProps={{
-                             name: 'Gender',
-                             id: 'Gender-simple',
-                           }}
-                         >
-                           <MenuItem value="">
-                             <em>N/A</em>
-                           </MenuItem>
-                           <MenuItem value={0}>Male</MenuItem>
-                           <MenuItem value={1}>Female</MenuItem>
-
-                         </Select>
-                       </FormControl>
-                       </form>
-
-                    <form>
-                      <TextField
-                       id="standard-multiline-static"
-                       label="Permanent Address"
-                       multiline
-                       rows="4"
-                       defaultValue="Luxe Gardens, Koppam, Palakkad, Kerala, India"
+                   <br/>
+                   <TextField
+                       id="personalDOB"
+                       name="personalDOB"
+                       label="Birthday"
+                       type="date"
+                       value={this.state.personalDOB}
                        className={classes.textField}
-                       margin="normal"
-                      />
+                       InputLabelProps={{
+                         shrink: true,
+                       }}
+                        onChange={this.handleChange.bind(this)}
+                          style={{marginRight:145, marginTop:25}}
+                     />
 
-                      <FormControl className={classes.margin1}>
-                          <TextField
-                          id="standard-multiline-static"
-                           label="Temporary Address"
-                           multiline
-                           rows="4"
-                           defaultValue="C101 1750 N Range Rd Bloomington Indiana"
-                           className={classes.textField}
-                           margin="normal"
-                          />
-                        </FormControl>
-                      </form>
-
-                      <form>
                       <TextField
-                        id="email-input"
+                        id="personalEmail"
                         type="email"
-                        name="newEmail"
+                        name="personalEmail"
                         label="Email"
-                        value="aravindparappil@gmail.com"
                         className={classes.textField}
-                        margin="normal"
+                        style={{marginTop:25}}
+                        value={this.state.personalEmail}
                         InputLabelProps={{
                         shrink: true,
                         }}
+                         onChange={this.handleChange.bind(this)}
                         />
+                        <br/><br/>
 
-                        <FormControl className={classes.margin1}>
+                          <InputLabel htmlFor="personalGender" style={{marginRight:15}}>Gender</InputLabel>
+                            <Select
+                              value={this.state.personalGender}
+                              onChange={this.handleChange.bind(this)}
+                              name="personalGender"
+                              id="personalGender"
+                              style={{marginRight:150,marginTop:17}}
+
+                            >
+                              <MenuItem value={0}>Male</MenuItem>
+                              <MenuItem value={1}>Female</MenuItem>
+                              <MenuItem value={2}>Others</MenuItem>
+                          </Select>
+
                         <TextField
+                          style={{marginLeft:45}}
                         label="Mobile Number"
-                        id="margin-none"
-                        defaultValue="+ 8123254730"
+                        id="personalMob"
+                        name="personalMob"
+                        value={this.state.personalMob}
                         className={classes.textField}
-                        helperText="Enter US number"
-                        />
-                        </FormControl>
-                        </form>
-
-                        <form>
-                        <TextField
-                        label="CGPA"
-                        id="margin-none"
-                        defaultValue="3.9"
-                        className={classes.textField}
-                        helperText="upto Current semester"
+                         onChange={this.handleChange.bind(this)}
                         />
 
-                        <FormControl className={classes.margin1}>
+<br/>
+
                         <TextField
+                        style={{marginTop:25}}
                         label="Program"
-                        id="margin-none"
-                        defaultValue="Computer Science"
+                        id="personalProg"
+                        name="personalProg"
+                        value={this.state.personalProg}
                         className={classes.textField}
-                        helperText="e.g CS/DS etc."
+                         onChange={this.handleChange.bind(this)}
                         />
-                        </FormControl>
-                        </form>
-                       <Button variant="outlined"  onClick={() => ToastStore.success(" Submitted the form successfully!!",4000,"whiteFont")}  className = {classes.marginBottom}  color="primary">Submit</Button>
+<br/>
+                        <TextField
+                         id="personalPermAddr"
+                         name="personalPermAddr"
+                         label="Permanent Address"
+                         multiline
+                         rows="4"
+                         value={this.state.personalPermAddr}
+                         className={classes.textField}
+                        onChange={this.handleChange.bind(this)}
+                          style={{marginRight:25}}
+                         margin="normal"
+                        />
 
+                            <TextField
+                              id="personalTempAddr"
+                              name="personalTempAddr"
+                             label="Temporary Address"
+                             multiline
+                             rows="4"
+                             value={this.state.personalTempAddr}
+                             className={classes.textField}
+                             onChange={this.handleChange.bind(this)}
+                             style={{marginLeft:105}}
+                             margin="normal"
+                            />
+<br/><br/>
+                       <Button variant="outlined"  onClick={this.submitPersonalDetails.bind(this)}  className = {classes.marginBottom}  color="primary">Submit</Button>
                       <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} store={ToastStore}/>
                  </div>
               </CardContent>
@@ -3795,7 +3796,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
                             <section class="profile">
                                 <figure>
                                   <div class="front">
-                                    <img src = "build/P_20150718_120437_HDR.jpg" alt="Your photo"/>
+                                    <img src = {sessionStorage.getItem('user_img')} alt="Your photo"/>
                                   </div>
 
                                   <div class="back">
@@ -3876,7 +3877,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
                                  <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
                                    <CardMedia
                                        className={classes.media}
-                                       image="build/computer-science.jpg"
+                                       image={element.image}
 
                                      />
                                    <CardContent>
@@ -3968,7 +3969,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
                                 <CardActionArea style= {this.state.inheritWidth} onClick = {this.goToCoursePage.bind(this, element)}>
                                   <CardMedia
                                       className={classes.media}
-                                      image="build/computer-science.jpg"
+                                      image={element.image}
 
                                     />
                                   <CardContent>
