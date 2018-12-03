@@ -413,7 +413,7 @@ class DashboardPage extends Component {
      this.state.isAdmin = false
      this.getListOfEnrolledCourses()
      this.getProfileDetails().then((data)=>{
-
+       console.log('CGPA',data['cgpa']);
        this.state.personalCGPA = data['cgpa'];
        this.state.personalImageURL = data['image']
      })
@@ -647,7 +647,7 @@ submitGPA(data,e){
       var courseClicked = this.state.dataOfClickedCourse
       axios({
         method:'get',
-        url:'http://localhost:5000/updateGPAByCourse/course/'+courseClicked.course_id+'/user/'+data.user_id+'/gpa/'+this.state.courseGPA,
+        url:'https://course360.herokuapp.com/updateGPAByCourse/course/'+courseClicked.course_id+'/user/'+data.user_id+'/gpa/'+this.state.courseGPA,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
@@ -682,7 +682,7 @@ deleteComment(commentId,courseId,e){
           if (willDelete) {
             axios({
               method:'post',
-              url:'http://localhost:5000/deleteComment',
+              url:'https://course360.herokuapp.com/deleteComment',
               data: dataJSON,
               headers: {'Access-Control-Allow-Origin': '*',
               'Authorization': sessionStorage.getItem('token')},
@@ -753,7 +753,7 @@ submitPersonalDetails(e){
         console.log('DATAsent==>',dataJSON);
         axios({
           method:'post',
-          url:'http://localhost:5000/personalDetails',
+          url:'https://course360.herokuapp.com/personalDetails',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -802,7 +802,7 @@ updateThemeInDB(theme){
   var user_id = sessionStorage.getItem('user_id');
   axios({
     method:'get',
-    url:'http://localhost:5000/updateColorTheme/theme/'+theme+'/student/'+user_id,
+    url:'https://course360.herokuapp.com/updateColorTheme/theme/'+theme+'/student/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -877,7 +877,7 @@ handleChangeAndGetMatchingCourses(e){
       //Hit API and get results that matches
       return axios({
         method:'get',
-        url:'http://localhost:5000/getCourseBy/name/'+e.target.value+'/start/0/end/100',
+        url:'https://course360.herokuapp.com/getCourseBy/name/'+e.target.value+'/start/0/end/100',
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
@@ -900,7 +900,7 @@ onlyGetSearchResults(key){
       //Hit API and get results that matches
       return axios({
         method:'get',
-        url:'http://localhost:5000/getCourseBy/name/'+key+'/start/0/end/100',
+        url:'https://course360.herokuapp.com/getCourseBy/name/'+key+'/start/0/end/100',
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
@@ -925,7 +925,10 @@ logout(e){
   // close pop down menu
   this.handleClose()
   // Leaving chat room
+  if(sessionStorage.getItem('user_role') != '1')
+  {
     this.leaveAllChatRooms();
+  }
 
   // Resetting session variables
   sessionStorage.setItem('token','')
@@ -1038,7 +1041,7 @@ getProfileDetails(){
 
   return axios({
     method:'get',
-    url:'http://localhost:5000/getProfileDetails/user/'+sessionStorage.getItem('user_id')+'/role/'+sessionStorage.getItem('user_role'),
+    url:'https://course360.herokuapp.com/getProfileDetails/user/'+sessionStorage.getItem('user_id')+'/role/'+sessionStorage.getItem('user_role'),
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1416,7 +1419,7 @@ getProfileDetails(){
       console.log('To be sent to enroll Courses ==>',dataJSON);
       axios({
         method:'post',
-        url:'http://localhost:5000/enrollCourses',
+        url:'https://course360.herokuapp.com/enrollCourses',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1472,7 +1475,7 @@ getProfileDetails(){
 getPaymentDetails(){
       return axios({
         method:'get',
-        url:'http://localhost:5000/getPaymentDetails/user/'+sessionStorage.getItem('user_id'),
+        url:'https://course360.herokuapp.com/getPaymentDetails/user/'+sessionStorage.getItem('user_id'),
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
@@ -1495,7 +1498,7 @@ getPaymentDetails(){
 
    axios({
      method:'post',
-     url:'http://localhost:5000/payfee',
+     url:'https://course360.herokuapp.com/payfee',
      data: dataJSON,
      headers: {'Access-Control-Allow-Origin': '*',
      'Authorization': sessionStorage.getItem('token')},
@@ -1532,7 +1535,7 @@ sendEmailReceipt(e){
 
   axios({
     method:'get',
-    url:'http://localhost:5000/sendReceipt/email/'+sessionStorage.getItem('user_email')+'/cost/'+cartCost+'/fiAid/'+financial+'/reg/'+regPen+'/pay/'+payPen,
+    url:'https://course360.herokuapp.com/sendReceipt/email/'+sessionStorage.getItem('user_email')+'/cost/'+cartCost+'/fiAid/'+financial+'/reg/'+regPen+'/pay/'+payPen,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1600,7 +1603,7 @@ downloadPDF(e){
     this.setState({studentEnrolledCourses: []})
     axios({
       method:'get',
-      url:'http://localhost:5000/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
+      url:'https://course360.herokuapp.com/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1753,7 +1756,7 @@ componentDidMount() {
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'http://localhost:5000/getAllCourses/start/0/end/100',
+    url:'https://course360.herokuapp.com/getAllCourses/start/0/end/100',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1768,7 +1771,7 @@ hitAPIForAdminHomePageCourses(){
   getAllProfessorsForSelect(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/getAllProfessors/start/0/end/1000',
+      url:'https://course360.herokuapp.com/getAllProfessors/start/0/end/1000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1783,7 +1786,7 @@ hitAPIForAdminHomePageCourses(){
   getSemestersForSelect(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/semesters',
+      url:'https://course360.herokuapp.com/semesters',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1802,7 +1805,7 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'http://localhost:5000/getAllStudents/start/0/end/100',
+      url:'https://course360.herokuapp.com/getAllStudents/start/0/end/100',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1842,7 +1845,7 @@ hitAPIForAdminHomePageCourses(){
         console.log(dataJSON);
         axios({
           method:'post',
-          url:'http://localhost:5000/insertCourses',
+          url:'https://course360.herokuapp.com/insertCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1942,7 +1945,7 @@ hitAPIForAdminHomePageCourses(){
         console.log('data to be sent',dataJSON);
         axios({
           method:'post',
-          url:'http://localhost:5000/updateCourses',
+          url:'https://course360.herokuapp.com/updateCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1984,37 +1987,53 @@ hitAPIForAdminHomePageCourses(){
             role_id: sessionStorage.getItem('user_role').toString()
         }
 
-    axios({
-          method:'post',
-          url:'http://localhost:5000/deleteCourses',
-          data: dataJSON,
-          headers: {'Access-Control-Allow-Origin': '*',
-          'Authorization': sessionStorage.getItem('token')},
+        swal({
+            title: "Are you sure?",
+            text: "Once deleted, you will not be able to recover this course!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
         })
-        .then((response) => {
-            if(response.status == 200)
-            {
+          .then((willDelete) => {
+                if (willDelete) {
+                  axios({
+                        method:'post',
+                        url:'https://course360.herokuapp.com/deleteCourses',
+                        data: dataJSON,
+                        headers: {'Access-Control-Allow-Origin': '*',
+                        'Authorization': sessionStorage.getItem('token')},
+                      })
+                      .then((response) => {
+                          if(response.status == 200)
+                          {
+                            this.componentDidMount();
+                            swal('Success!','Course has been deleted successfully!!','success')
+                            this.setState({editCourseName: ''});
+                            this.setState({editCourseDesc: ''});
+                            this.setState({editCourseLocation: ''});
+                            this.setState({editCourseProf: ''});
+                            this.setState({editCourseDays: ''});
+                            this.setState({editCourseStartTime: ''});
+                            this.setState({editCourseEndTime: ''});
+                            this.setState({editCourseID: ''});
 
-              swal('Success!','Course has been deleted successfully!!','success')
-              this.setState({editCourseName: ''});
-              this.setState({editCourseDesc: ''});
-              this.setState({editCourseLocation: ''});
-              this.setState({editCourseProf: ''});
-              this.setState({editCourseDays: ''});
-              this.setState({editCourseStartTime: ''});
-              this.setState({editCourseEndTime: ''});
-              this.setState({editCourseID: ''});
 
-              this.componentDidMount();
 
-              this.setState({isEditSingleCourseHidden: true})
-              this.setState({isEditCourseHidden: false})
-              this.setState({isIndividualCoursePageHidden: true});
-            }
-            else{
-              console.log('Error in deleting course');
-            }
-        });
+                            this.setState({isEditSingleCourseHidden: true})
+                            this.setState({isEditCourseHidden: false})
+                            this.setState({isIndividualCoursePageHidden: true});
+                          }
+                          else{
+                            console.log('Error in deleting course');
+                          }
+                      });
+
+                } else {
+                  swal("The course is not deleted!");
+                }
+          });
+
+
   }
 
   //-----------------
@@ -2022,6 +2041,8 @@ hitAPIForAdminHomePageCourses(){
   // showing only details of that particular card2
   //-----------------
   goToCoursePage(courseClicked,v){
+
+    //STUDENT
       if(sessionStorage.getItem('user_role') == 3){
         var allEnrolledCoursesOfStudent = this.state.studentEnrolledCourses
         console.log("Enrolled ==", allEnrolledCoursesOfStudent);
@@ -2079,12 +2100,13 @@ submitComment(e){
           course_id: this.state.dataOfClickedCourse['course_id'].toString(),
           user_id: sessionStorage.getItem('user_id'),
           comment: this.state.courseComment,
-          ratings: this.state.courseRating.toString()
+          ratings: this.state.courseRating.toString(),
+          sem_id: this.state.dataOfClickedCourse['sem']['sem_id']
       }
 
   axios({
         method:'post',
-        url:'http://localhost:5000/commentOnACourse',
+        url:'https://course360.herokuapp.com/commentOnACourse',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -2096,7 +2118,7 @@ submitComment(e){
             ToastStore.success("Thank you for your review! We appreciate it!",4000,"whiteFont")
             this.setState({courseComment: ''});
             this.setState({courseRating: 0});
-            this.getLatestCourseDetails(this.state.dataOfClickedCourse['course_id']).then((data) => {
+            this.getLatestCourseDetailsWithSem(this.state.dataOfClickedCourse['course_id'], this.state.dataOfClickedCourse['sem']['sem_id']).then((data) => {
                 this.setState({dataOfClickedCourse: data})
             })
 
@@ -2115,7 +2137,7 @@ submitComment(e){
 getLatestCourseDetails(course_id){
   return axios({
     method:'get',
-    url:'http://localhost:5000/getCourseBy/course/'+course_id,
+    url:'https://course360.herokuapp.com/getCourseBy/course/'+course_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2137,6 +2159,35 @@ getLatestCourseDetails(course_id){
   });
 }
 
+
+////////////////////////////////////////
+// Given courseID +SEMID, gets details
+///////////////////////////////////////
+getLatestCourseDetailsWithSem(course_id, sem_id){
+  return axios({
+    method:'get',
+    url:'https://course360.herokuapp.com/getCourseBy/course/'+course_id+'/sem/'+sem_id,
+    headers: {'Access-Control-Allow-Origin': '*',
+    'Authorization': sessionStorage.getItem('token')}
+  })
+  .then((response)=>{
+    var returnVal = response.data
+
+      returnVal['days'].forEach(function(item,index){
+        switch(item){
+          case 1: returnVal['days'][index] = "Mon"; break;
+          case 2: returnVal['days'][index] = "Tue"; break;
+          case 3: returnVal['days'][index] = "Wed"; break;
+          case 4: returnVal['days'][index] = "Thu"; break;
+          case 5: returnVal['days'][index] = "Fri"; break;
+        }
+      })
+
+    console.log('sem......>',returnVal);
+    return returnVal
+  });
+}
+
 //-------------
 // Adds clicked course to cart
 //-------------
@@ -2149,7 +2200,7 @@ addCourseToCart(id,e){
       console.log("Data to be sent",dataJSON);
   axios({
         method:'post',
-        url:'http://localhost:5000/addToCart',
+        url:'https://course360.herokuapp.com/addToCart',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -2171,7 +2222,7 @@ addCourseToCart(id,e){
 getCartDetails(id){
   return axios({
     method:'get',
-    url:'http://localhost:5000/getCart/userId/'+id,
+    url:'https://course360.herokuapp.com/getCart/userId/'+id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2252,7 +2303,7 @@ deleteFromCart(id,e){
   console.log("Del ob",id);
   axios({
     method:'get',
-    url:'http://localhost:5000/delete/course/'+id.course_id+'/fromCart/for/user/'+user_id+'/sem/'+id.sem['sem_id'],
+    url:'https://course360.herokuapp.com/delete/course/'+id.course_id+'/fromCart/for/user/'+user_id+'/sem/'+id.sem['sem_id'],
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2271,7 +2322,7 @@ getProfessorSchedule(){
   console.log('Professor ID is:',user_id);
   axios({
     method:'get',
-    url:'http://localhost:5000/getProfessorSchedule/id/'+user_id,
+    url:'https://course360.herokuapp.com/getProfessorSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2344,7 +2395,7 @@ getStudentSchedule(user_id){
 console.log("Getting students schedule.....hold on");
   axios({
     method:'get',
-    url:'http://localhost:5000/getStudentSchedule/id/'+user_id,
+    url:'https://course360.herokuapp.com/getStudentSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2463,7 +2514,7 @@ getEnrolledStudentsForCourse(courseId, profId){
   console.log('Course clicked',courseId,'For professor',profId);
   axios({
     method:'get',
-    url:'http://localhost:5000/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
+    url:'https://course360.herokuapp.com/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2510,7 +2561,7 @@ dropEnrolledCourse(element,v){
   console.log('Dropping course',element);
   axios({
     method:'get',
-    url:'http://localhost:5000/dropCourse/courseId/'+element.course_id+'/userId/'+sessionStorage.getItem('user_id')+'/sem/'+element.sem['sem_id'],
+    url:'https://course360.herokuapp.com/dropCourse/courseId/'+element.course_id+'/userId/'+sessionStorage.getItem('user_id')+'/sem/'+element.sem['sem_id'],
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2586,7 +2637,7 @@ submitFinAid(studentId, e){
   var finAid = this.state.finAidForStudent;
   axios({
     method:'get',
-    url:'http://localhost:5000/updateFinancialAid/value/'+finAid+'/student/'+studentId,
+    url:'https://course360.herokuapp.com/updateFinancialAid/value/'+finAid+'/student/'+studentId,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -3253,19 +3304,7 @@ submitFinAid(studentId, e){
 
                 <br /> <br />
 
-                <Card>
-                  <CardContent>
-                    <h1> Grade distribution</h1>
-                      <Pie
-                          data={this.state.chartData}
-                          options={{
-                          display:true,
-                          title:'Grade Distribution Fall 2018',
-                          text:"",
-                    }}
-                    />
-                  </CardContent>
-                </Card>
+
                 </div>
              }
             </main>
@@ -3400,8 +3439,13 @@ submitFinAid(studentId, e){
                                    <CardMedia
                                        className={classes.media}
                                        image={element.image}
+                                     >
+                                     <div name='gpa' class="cgpaRound">
+                                        GPA: {element.gpa}
+                                     </div>
 
-                                     />
+                                   </CardMedia>
+
                                    <CardContent>
                                      <div name="courseNameAndDrop" style={{paddingBottom:15}}>
                                          <Typography className ={classes.displayInline} style={this.state.courseNameStyle} >
@@ -3489,7 +3533,7 @@ submitFinAid(studentId, e){
       else if(sessionStorage.getItem('personal_chat_with') != null && !this.state.isPersonalChatPageHidden){
         currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
-            <Card >
+            <Card style={{color:'black'}}>
               <CardContent>
                     <ChatScreen chatWith={sessionStorage.getItem('personal_chat_with')} currentUser={this.state.chatUser}/>
               </CardContent>
@@ -3695,16 +3739,17 @@ submitFinAid(studentId, e){
                 <CardContent>
                   <h1>Comments about this course</h1>
                     {
+                      this.state.dataOfClickedCourse.comment.length >0 &&
                       this.state.dataOfClickedCourse.comment.map((el,i) => (
-                      <div name="outerWrapper" key={i}>
-                         <div name="commenterAndStars" className={classes.displayInlineBlock}>
+                      <div name="outerWrapper" key={i} style={{marginBottom:50}}>
+                         <div name="commenterAndStars" style={{display:'inline-block', verticalAlign:'middle', width:200}}>
 
-                                <div name="commenter" className={classes.displayInlineBlock} style={{paddingRight:10}}>
-                                  <AccountCircle/>
+                                <div name="commenter"  style={{paddingRight:10, display:'inline-block'}}>
+                                  <img src={el.image} style={{height:30, width:30, borderRadius:500, marginRight:10, verticalAlign:'middle'}} alt="Image"/>
                                   <span name="name">{el.first_name} {el.last_name}</span>
                                 </div>
                                 <br />
-                                <div name="stars" className={classes.displayInlineBlock}>
+                                <div name="stars" >
                                   <StarRatings
                                     rating={el.rating}
                                     starRatedColor="gold"
@@ -3713,21 +3758,23 @@ submitFinAid(studentId, e){
                                     starSpacing="1px"
                                     />
                                 </div>
+                                <div name = 'semester'>
+                                  {el.sem_id == 1 && <span> Fall 18</span>}
+                                  {el.sem_id == 2 && <span> Spring 19</span>}
+                                  {el.sem_id == 3 && <span> Summer 19</span>}
+                                </div>
                             </div>
 
-                            <div name="commentGiven" className={classes.displayInlineBlock}>
-                                <TextField
-                                    disabled
-                                    className ={classes.commentBox}
-                                    value={el.comment}
-                                    margin="normal"
-                                    variant="filled"
-                                  />
-                            </div>
+                            <span name="commentGiven" style={{fontStyle:'italic'}} >
+                              {el.comment}
+                            </span>
+
+
+                              <Divider style={{marginTop:10}} />
                         </div>
+
                       ))
                     }
-
                     {
                       this.state.dataOfClickedCourse.comment.length ==0 &&
                       <div>
@@ -3833,7 +3880,7 @@ submitFinAid(studentId, e){
                     this.state.cartData.map((el,i)=>{
                     if(el.sem['sem_name'] == 'SP19'){
                       return <div name="SP19">
-                          <h2> Spring 19</h2>
+
                           <Card key={i} style={this.state.cartCardStyle}>
                           <CardContent>
                             <div name="cartCourseAndDelete">
@@ -3871,7 +3918,7 @@ submitFinAid(studentId, e){
                     this.state.cartData.map((el,i)=>{
                     if(el.sem['sem_name'] == 'SU19'){
                       return <div name="SU19">
-                          <h2> Summer 19</h2>
+
                           <Card key={i} style={this.state.cartCardStyle}>
                           <CardContent>
                             <div name="cartCourseAndDelete">
@@ -3918,11 +3965,15 @@ submitFinAid(studentId, e){
             <div className={classes.toolbar} />
               <h2>Payment Information</h2>
                 <div style={{color:'black'}}>
-                  <Card style={{padding: 10, marginBottom: 20}}>
-                    <div> Cost of courses:   ${this.state.cartCost}</div>
-                    <div> Financial Aid Available:   ${this.state.finanical_aid}</div>
-                    <div> Late Registration Penalty:   ${this.state.lateRegPenalty}</div>
-                    <div style={{fontWeight: "bold"}}> Total Amount to be paid:   ${this.state.netAmount}</div>
+                  <Card style={{padding: 10, marginBottom: 20, width: 500}}>
+                    <span style={{width:100}}> Cost of courses: </span>   ${this.state.cartCost}
+                      <br/>  <br/>
+                    <span style={{width:100}}> Financial Aid Available: </span>  ${this.state.finanical_aid}
+                        <br/>  <br/>
+                    <span style={{width:100}}> Late Registration Penalty: </span>  ${this.state.lateRegPenalty}
+                        <br/>  <br/>
+                    <span style={{fontWeight: "bold", marginTop:25, width:150}}> Total Amount to be paid:</span>   ${this.state.netAmount}
+                        <br/>
                   </Card>
                     <Button style={{marginRight:20}} variant="contained" onClick = {this.goToPaymentPortal.bind(this)} className = {classes.marginAuto} color="primary"> Pay Now </Button>
                     <Button variant="contained" onClick = {this.goToHomePage.bind(this)} className = {classes.marginAuto} color="primary"> Pay Later </Button>
@@ -4256,7 +4307,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
                             />
 <br/><br/>
 
-          <span className = {classes.rightSpacing25} > Upload a profile image</span>
+          <span style={{color:'black'}} className = {classes.rightSpacing25} > Upload a profile image</span>
             <input
               accept="image/*"
               name="PersonalfileUploadInput"
@@ -4273,7 +4324,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
             </label>
              <span style={{fontStyle:'italic'}}> {this.state.personalImageFileName}</span>
               <br/><br/>
-                  <Button variant="outlined"  onClick={this.submitPersonalDetails.bind(this)}  className = {classes.marginBottom}  color="primary">Submit</Button>
+                  <Button variant="contained"  onClick={this.submitPersonalDetails.bind(this)}  className = {classes.marginBottom}  color="primary">Submit</Button>
                   <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} store={ToastStore}/>
                  </div>
               </CardContent>
@@ -4383,7 +4434,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
                                   </div>
 
                                   <div class="back">
-                                    <span> CGPA: {this.state.personalCGPA}</span>
+                                    <span style={{fontSize:18}}> CGPA: {this.state.personalCGPA}</span>
                                   </div>
                                   </figure>
                               </section>
@@ -4814,7 +4865,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
       else if(sessionStorage.getItem('personal_chat_with') != null && !this.state.isPersonalChatPageHidden){
         currentContent =   <main style={this.state.content}>
             <div className={classes.toolbar} />
-            <Card >
+            <Card style={{color:'black'}} >
               <CardContent>
                     <ChatScreen chatWith={sessionStorage.getItem('personal_chat_with')} currentUser={this.state.chatUser}/>
               </CardContent>
@@ -4972,7 +5023,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
                                   />
       <br/><br/>
 
-                <span className = {classes.rightSpacing25} > Upload a profile image</span>
+                <span style={{color:'black'}} className = {classes.rightSpacing25} > Upload a profile image</span>
                   <input
                     accept="image/*"
                     name="PersonalfileUploadInput"
@@ -4989,7 +5040,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
                   </label>
                    <span style={{fontStyle:'italic'}}> {this.state.personalImageFileName}</span>
                     <br/><br/>
-                        <Button variant="outlined"  onClick={this.submitPersonalDetails.bind(this)}  className = {classes.marginBottom}  color="primary">Submit</Button>
+                        <Button variant="contained"  onClick={this.submitPersonalDetails.bind(this)}  className = {classes.marginBottom}  color="primary">Submit</Button>
                         <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} store={ToastStore}/>
                        </div>
                     </CardContent>

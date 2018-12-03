@@ -52,7 +52,7 @@ whoThis(user){
   console.log("Going to private with", user.id);
   sessionStorage.setItem('personal_chat_with',user.id);
   this.props.navigateToPersonalChatPage()
-  
+
 }
    render() {
        var isThisForPersonalChatList = this.props.isThisForPersonalChatList;
@@ -98,7 +98,7 @@ whoThis(user){
           style={{
             ...styles.div,
             backgroundColor:
-              this.props.presenceState === 'online' ? '#539eff' : '#414756',
+              this.props.presenceState === 'online' ? '#66ff53' : '#414756',
           }}
         />
         {this.props.children}

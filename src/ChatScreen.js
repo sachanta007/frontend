@@ -80,7 +80,7 @@ class ChatScreen extends Component {
     // otherwise, create a room and subscribe
     subscriptionToARoom(){
       console.log("GOT INSIDE THE CALLBACK!!!! YAAAAAAY!!!");
-      
+
       if(this.state.roomToJoin != ''){
         console.log("ROOM EXISTS WITH CURRENT USER!!!!!!",this.state.roomToJoin);
         return this.state.currentUser.subscribeToRoom({
@@ -248,7 +248,7 @@ class ChatScreen extends Component {
         width: '200px',
         flex: 'none',
         padding: 20,
-        backgroundColor: '#2c303b',
+        backgroundColor: 'rgb(44, 93, 170)',
         color: 'white',
       },
       chatListContainer: {
