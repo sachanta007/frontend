@@ -19,6 +19,8 @@ import ListItemText from '@material-ui/core/ListItemText';
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
 import EmailIcon from '@material-ui/icons/Email';
 import DeleteIcon from '@material-ui/icons/Delete';
+import DoneIcon from '@material-ui/icons/Done';
+
 import ChatIcon from '@material-ui/icons/Chat';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
 import AddShoppingCartIcon from '@material-ui/icons/AddShoppingCart';
@@ -367,7 +369,8 @@ class DashboardPage extends Component {
       netAmount: 0,
       payRadio: 0,
       coursesFromPayment: [],
-      name:[]
+      name:[],
+      courseGPA:''
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -385,6 +388,15 @@ class DashboardPage extends Component {
      this.getProfileDetails().then((data)=>{
 
        this.state.personalCGPA = data['cgpa'];
+       this.state.personalImageURL = data['image']
+     })
+    }
+
+    else if(currentUserRole == 2)
+    {
+      console.log('constructor for prof');
+     this.state.isAdmin = false
+     this.getProfileDetails().then((data)=>{
        this.state.personalImageURL = data['image']
      })
     }
@@ -603,6 +615,25 @@ showOnlyFilteredCourses(e){
 
 }
 
+//submit cgpa for user
+submitGPA(data,e){
+      var courseClicked = this.state.dataOfClickedCourse
+      axios({
+        method:'get',
+        url:'http://localhost:5000/updateGPAByCourse/course/'+courseClicked.course_id+'/user/'+data.user_id+'/gpa/'+this.state.courseGPA,
+        headers: {'Access-Control-Allow-Origin': '*',
+        'Authorization': sessionStorage.getItem('token')}
+      })
+      .then((response)=>{
+        if(response.status == 200)
+        {
+          ToastStore.success('Grade changed',4000,"whiteFont")
+        }
+      }).catch(err => {
+        console.log("DAMN! grade change messed up ", err)
+        ToastStore.error('Oops! Please try again!',4000,"whiteFont")
+      })
+}
 
 // Personal details
 submitPersonalDetails(e){
@@ -910,7 +941,7 @@ getProfileDetails(){
 
   return axios({
     method:'get',
-    url:'http://localhost:5000/getProfileDetails/user/'+sessionStorage.getItem('user_id'),
+    url:'http://localhost:5000/getProfileDetails/user/'+sessionStorage.getItem('user_id')+'/role/'+sessionStorage.getItem('user_role'),
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1122,6 +1153,7 @@ getProfileDetails(){
       this.setState({isGroupChatPageHidden: true});
       this.setState({isPersonalChatPageHidden:true})
       this.setState({isPayNowOrLaterHidden:true})
+      this.setState({name:[]})
 
       //for populating filter dropdown
       this.getAllProfessorsForSelect().then((returnVal) => {
@@ -1580,7 +1612,7 @@ componentDidMount() {
     this.getProfileDetails().then((data)=>{
 
       this.setState({personalCGPA: data['cgpa'] });
-      this.setState({personalCGPA: data['cgpa'] });
+      this.setState({personalImageURL: data['image'] });
     })
   }
 
@@ -1589,6 +1621,9 @@ componentDidMount() {
   {
     this.setState({isAdmin: false });
     this.getProfessorSchedule()
+    this.getProfileDetails().then((data)=>{
+      this.setState({personalImageURL: data['image'] });
+    })
   }
 
   // chat user
@@ -1908,7 +1943,6 @@ hitAPIForAdminHomePageCourses(){
           this.setState({dataOfClickedCourse: courseClicked})
         }
 
-
         this.getSemestersForSelect().then((returnVal) => {
             this.setState({allSems: returnVal});
         })
@@ -1919,6 +1953,7 @@ hitAPIForAdminHomePageCourses(){
       if(sessionStorage.getItem('user_role') == 2){
             this.getEnrolledStudentsForCourse(courseClicked.course_id)
             this.setState({dataOfClickedCourse: courseClicked})
+
       }
 
       console.log("Clicked course",courseClicked);
@@ -2310,6 +2345,7 @@ getEnrolledStudentsForCourse(courseId){
   .then((response)=>{
     if(response.status == 200){
       this.setState({studentsEnrolledForCourse : response.data.students})
+
       console.log('students here',response.data.students);
     }
     else{
@@ -4237,8 +4273,7 @@ else if(!(this.state.isStudentDetailsFormHidden))
                 <TextField
                    id="searchCourseName"
                    placeholder="Enter a course name"
-                   style={{ margin: 8 }}
-                   fullWidth
+                  style={{ margin: 8, width:700, marginRight:25 }}
                    value={this.state.searchCourseName}
                    onChange={this.wrapperForCourseSearch.bind(this)}
                    margin="normal"
@@ -4248,6 +4283,33 @@ else if(!(this.state.isStudentDetailsFormHidden))
                      shrink: true,
                    }}
                 />
+
+                <FormControl className={classes.formControl}>
+                  <InputLabel htmlFor="select-multiple-chip">Filter By Professor</InputLabel>
+                  <Select
+                    multiple
+                    style={{width:300}}
+                    value={this.state.name}
+                    name="name"
+                    onChange={this.handleChangeForFilter.bind(this,this.showOnlyFilteredCourses.bind(this))}
+                    input={<Input id="select-multiple-chip" />}
+                    renderValue={selected => (
+                      <div className={classes.chips}>
+                        {selected.map(value => (
+                          <Chip key={value} label={value} className={classes.chip} />
+                        ))}
+                      </div>
+                    )}
+                    MenuProps={MenuProps}
+                  >
+                    {this.state.allProfessorsNames.map(name => (
+                      <MenuItem key={name} value={name} style={{fontSize:11}}>
+                        {name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
                 <Grid container
                   spacing = {24}
                   justify="flex-start"
@@ -4357,15 +4419,15 @@ else if(!(this.state.isStudentDetailsFormHidden))
                     {
                       this.state.dataOfClickedCourse.comment.length >0 &&
                       this.state.dataOfClickedCourse.comment.map((el,i) => (
-                      <div name="outerWrapper" key={i}>
-                         <div name="commenterAndStars" className={classes.displayInlineBlock}>
+                      <div name="outerWrapper" key={i} style={{marginBottom:50}}>
+                         <div name="commenterAndStars" style={{display:'inline-block', verticalAlign:'middle', width:200}}>
 
-                                <div name="commenter" className={classes.displayInlineBlock} style={{paddingRight:10}}>
-                                  <AccountCircle/>
+                                <div name="commenter"  style={{paddingRight:10, display:'inline-block'}}>
+                                  <img src={el.image} style={{height:30, width:30, borderRadius:500, marginRight:10, verticalAlign:'middle'}} alt="Image"/>
                                   <span name="name">{el.first_name} {el.last_name}</span>
                                 </div>
                                 <br />
-                                <div name="stars" className={classes.displayInlineBlock}>
+                                <div name="stars" >
                                   <StarRatings
                                     rating={el.rating}
                                     starRatedColor="gold"
@@ -4374,18 +4436,19 @@ else if(!(this.state.isStudentDetailsFormHidden))
                                     starSpacing="1px"
                                     />
                                 </div>
+                                <div name = 'semester'>
+                                  {el.sem_id == 1 && <span> Fall 18</span>}
+                                  {el.sem_id == 2 && <span> Spring 19</span>}
+                                  {el.sem_id == 3 && <span> Summer 19</span>}
+                                </div>
                             </div>
 
-                            <div name="commentGiven" className={classes.displayInlineBlock}>
-                                <TextField
-                                    disabled
-                                    className ={classes.commentBox}
-                                    value={el.comment}
-                                    margin="normal"
-                                    variant="filled"
-                                  />
-                            </div>
+                            <span name="commentGiven" style={{fontStyle:'italic'}} >
+                              {el.comment}
+                            </span>
+                              <Divider style={{marginTop:10}} />
                         </div>
+
                       ))
                     }
                     {
@@ -4403,12 +4466,29 @@ else if(!(this.state.isStudentDetailsFormHidden))
                 this.state.dataOfClickedCourse.professor['user_id'] == sessionStorage.getItem('user_id') &&
               <Card>
                 <CardContent>
-                    <h1> Students roster</h1>
+                    <h1> Students roster and grades</h1>
                       {
                         this.state.studentsEnrolledForCourse.length > 0 &&
                         this.state.studentsEnrolledForCourse.map((el,i) => (
-                          <div name="enrolledStudentsDiv" key={i}>
-                            <span className={classes.bulletpoint} name="name">{el.first_name} {el.last_name}</span>
+                          <div key={i}>
+                              <div name="enrolledStudentsDiv" style={{width:200, display:'inline-block'}}>
+                                <span className={classes.bulletpoint} name="name">{el.first_name} {el.last_name}</span>
+                              </div>
+                              <div name="gpa" style={{display:'inline-block'}}>
+                                <TextField
+                                    id="courseGPA"
+                                    className={classes.textField}
+                                    helperText={"Current GPA: " + el.gpa}
+                                    value={this.state.courseGPA}
+                                    onChange={this.handleChange.bind(this)}
+                                    name="courseGPA"
+                                    style={{width:95}}
+                                  />
+                                <IconButton style={{marginLeft:20, color:'green'}} onClick = {this.submitGPA.bind(this, el)}
+                                    >
+                                      <DoneIcon title='Update Grade'/>
+                                    </IconButton>
+                              </div>
                           </div>
                         ))
                       }
@@ -4500,6 +4580,171 @@ else if(!(this.state.isStudentDetailsFormHidden))
           </main>
       }
 
+
+      // Individual profile page FOR PROFESSOR @author: Kriti shree
+      else if(!(this.state.isStudentDetailsFormHidden))
+      {
+          currentContent =  <main style={this.state.content}>
+            <div className={classes.toolbar} />
+              <div>
+                <Card className={classes.myProfileCard}>
+                    <CardContent>
+                    <div>
+                    <Typography class='login-page-headers' color="primary">
+                      Your Details
+                    </Typography>
+
+                       <InputLabel style={{marginRight:10}} htmlFor="personalFN">First Name</InputLabel>
+                           <Input
+                             id="personalFN"
+                             name="personalFN"
+                             value={this.state.personalFN}
+                             label='First Name'
+                             onChange={this.handleChange.bind(this)}
+
+                             style={{marginRight:25}}
+                           />
+
+                         <InputLabel style={{marginRight:10}} htmlFor="personalMN">Middle Name</InputLabel>
+                           <Input
+                             id="personalMN"
+                             name="personalMN"
+                             value={this.state.personalMN}
+                             label='Middle Name'
+                             onChange={this.handleChange.bind(this)}
+                            style={{marginRight:25}}
+                           />
+
+
+                         <InputLabel style={{marginRight:10}} htmlFor="personalLN">Last Name</InputLabel>
+                           <Input
+                             id="personalLN"
+                             name="personalLN"
+                             value={this.state.personalLN}
+                             label='Last Name'
+                             onChange={this.handleChange.bind(this)}
+                           />
+
+                         <br/>
+                         <TextField
+                             id="personalDOB"
+                             name="personalDOB"
+                             label="Birthday"
+                             type="date"
+                             value={this.state.personalDOB}
+                             className={classes.textField}
+                             InputLabelProps={{
+                               shrink: true,
+                             }}
+                              onChange={this.handleChange.bind(this)}
+                                style={{marginRight:145, marginTop:25}}
+                           />
+
+                            <TextField
+                              id="personalEmail"
+                              type="email"
+                              name="personalEmail"
+                              label="Email"
+                              className={classes.textField}
+                              style={{marginTop:25}}
+                              value={this.state.personalEmail}
+                              InputLabelProps={{
+                              shrink: true,
+                              }}
+                               onChange={this.handleChange.bind(this)}
+                              />
+                              <br/><br/>
+
+                                <InputLabel htmlFor="personalGender" style={{marginRight:15}}>Gender</InputLabel>
+                                  <Select
+                                    value={this.state.personalGender}
+                                    onChange={this.handleChange.bind(this)}
+                                    name="personalGender"
+                                    id="personalGender"
+                                    style={{marginRight:175,marginTop:17}}
+
+                                  >
+                                    <MenuItem value="Male">Male</MenuItem>
+                                    <MenuItem value="Female">Female</MenuItem>
+                                    <MenuItem value="Others">Others</MenuItem>
+                                </Select>
+
+                              <TextField
+
+                              label="Mobile Number"
+                              id="personalMob"
+                              name="personalMob"
+                              value={this.state.personalMob}
+                              className={classes.textField}
+                               onChange={this.handleChange.bind(this)}
+                              />
+
+      <br/>
+
+                              <TextField
+                              style={{marginTop:25}}
+                              label="School"
+                              id="personalProg"
+                              name="personalProg"
+                              value={this.state.personalProg}
+                              className={classes.textField}
+                               onChange={this.handleChange.bind(this)}
+                              />
+      <br/>
+                              <TextField
+                               id="personalPermAddr"
+                               name="personalPermAddr"
+                               label="Permanent Address"
+                               multiline
+                               rows="4"
+                               value={this.state.personalPermAddr}
+                               className={classes.textField}
+                              onChange={this.handleChange.bind(this)}
+                                style={{marginRight:25, marginTop:25}}
+
+                              />
+
+                                  <TextField
+                                    id="personalTempAddr"
+                                    name="personalTempAddr"
+                                   label="Temporary Address"
+                                   multiline
+                                   rows="4"
+                                   value={this.state.personalTempAddr}
+                                   className={classes.textField}
+                                   onChange={this.handleChange.bind(this)}
+                                   style={{marginLeft:105, marginTop:25}}
+
+                                  />
+      <br/><br/>
+
+                <span className = {classes.rightSpacing25} > Upload a profile image</span>
+                  <input
+                    accept="image/*"
+                    name="PersonalfileUploadInput"
+                    className={classes.input}
+                    id="contained-button-file"
+                    type="file"
+                    style={{display:'none'}}
+                    onChange={this.handleChange.bind(this)}
+                  />
+                  <label htmlFor="contained-button-file">
+                    <Button variant="contained" component="span" className={classes.button} style={{marginRight:25}}>
+                      Upload
+                    </Button>
+                  </label>
+                   <span style={{fontStyle:'italic'}}> {this.state.personalImageFileName}</span>
+                    <br/><br/>
+                        <Button variant="outlined"  onClick={this.submitPersonalDetails.bind(this)}  className = {classes.marginBottom}  color="primary">Submit</Button>
+                        <ToastContainer position={ToastContainer.POSITION.BOTTOM_RIGHT} store={ToastStore}/>
+                       </div>
+                    </CardContent>
+                </Card>
+                </div >
+            </main>
+      }
+
+
       // ------------------------------ SIDE NAV FOR PROF ALWAYS EXISTS ---------------------------------------//
       if(this.state.currentTheme == 'default')
       {
@@ -4543,10 +4788,41 @@ else if(!(this.state.isStudentDetailsFormHidden))
                                           onClose={this.handleClose}
                                           >
                                         <MenuItem onClick={this.goToMyProfilePage.bind(this)}>My Profile</MenuItem>
+                                         <MenuItem onClick={this.showThemeModal.bind(this)}>Change Theme</MenuItem>
                                         <MenuItem onClick={this.logout.bind(this)}>Logout</MenuItem>
                                       </Menu>
                                    </div>
                            </div>
+                           <Modal
+                             aria-labelledby="simple-modal-title"
+                             aria-describedby="simple-modal-description"
+                             open={this.state.isThemeModalOpen}
+                             onClose={this.hideThemeModal.bind(this)}
+                           >
+                             <div style={{
+                               top: `50%`,
+                               left: `65%`,
+                               transform: `translate(-100%, -100%)`,
+                             }} className={classes.modalPaper}
+                             >
+
+                               <Typography class="theme-modal-font" id="modal-title">
+                                 Choose a theme
+                               </Typography>
+
+                               <RadioGroup
+                                 aria-label="themeRadio"
+                                 name="themeRadio"
+                                 className={classes.group}
+                                 value={this.state.themeRadio}
+                                 onChange={this.handleChange.bind(this)}>
+
+                                     <FormControlLabel  value="1" control={<Radio color="primary" checked = {this.state.themeRadio==="1"} />} label="Default" />
+                                     <FormControlLabel  value="2" control={<Radio color="primary" checked = {this.state.themeRadio==="2"}  />} label="Night Mode" />
+
+                               </RadioGroup>
+                             </div>
+                           </Modal>
                 </Toolbar>
               </AppBar>
 
@@ -4556,6 +4832,17 @@ else if(!(this.state.isStudentDetailsFormHidden))
               >
                 <div className={classes.toolbar} />
                 <List>
+                  <div style={{display:"inline-block", width:"80%"}}>
+                    <section class="profile">
+                        <figure>
+                          <div >
+                            <img src = {this.state.personalImageURL} alt="Your photo"/>
+                          </div>
+
+                          </figure>
+                      </section>
+                      </div>
+
                     <ListItem button onClick={this.handleMenuItemClick.bind(this, "home")}>
                       <ListItemIcon style={this.state.navDrawerIcon}>
                         <HomeIcon />
