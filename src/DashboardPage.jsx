@@ -70,7 +70,7 @@ import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import swal from 'sweetalert'
 import Chip from '@material-ui/core/Chip';
-
+import { Pie } from 'react-chartjs';
 
 
 // -------------------- Declaring constants here -------------------//
@@ -370,7 +370,34 @@ class DashboardPage extends Component {
       payRadio: 0,
       coursesFromPayment: [],
       name:[],
-      courseGPA:''
+      courseGPA:'',
+
+      chartData : [
+            {
+                value: 80,
+                color:"#F7464A",
+                highlight: "#FF5A5E",
+                label: "A"
+            },
+            {
+                value: 70,
+                color: "#46BFBD",
+                highlight: "#5AD3D1",
+                label: "B"
+            },
+            {
+                value: 75,
+                color: "#FDB45C",
+                highlight: "#FFC870",
+                label: "C"
+            },
+            {
+                value: 15,
+                color: "#D3D3D3",
+                highlight: "#D3D3D3",
+                label: "D"
+            }
+        ],
 
     }
     let currentUserRole = sessionStorage.getItem('user_role')
@@ -635,6 +662,76 @@ submitGPA(data,e){
       })
 }
 
+
+// ADMIN CAN DELETE A Comment
+deleteComment(commentId,courseId,e){
+  var dataJSON = {
+      comment_id: commentId,
+      course_id: courseId,
+      role_id: '1'
+  }
+
+  swal({
+      title: "Are you sure?",
+      text: "Once deleted, you will not be able to recover this comment!",
+      icon: "warning",
+      buttons: true,
+      dangerMode: true,
+  })
+    .then((willDelete) => {
+          if (willDelete) {
+            axios({
+              method:'post',
+              url:'http://localhost:5000/deleteComment',
+              data: dataJSON,
+              headers: {'Access-Control-Allow-Origin': '*',
+              'Authorization': sessionStorage.getItem('token')},
+            })
+            .then((response) => {
+                if(response.status != 500)
+                {
+                  swal("Poof! The comment has been deleted!", {
+                    icon: "success",
+                  });
+
+                  this.setState({isHomePageHidden: false});
+                  this.setState({isPaymentPortalHidden: true});
+                  this.setState({isCalendarHidden: true});
+                  this.setState({isSearchHidden: true});
+                  this.setState({isAddNewCourseHidden: true});
+                  this.setState({isEditCourseHidden: true});
+                  this.setState({isViewStudentsHidden: true});
+                  this.setState({isViewProfessorsHidden: true});
+                  this.setState({isEditSingleCourseHidden: true})
+                  this.setState({isPaymentModeCardHidden: true});
+                  this.setState({isfeeReceiptPageHidden: true});
+                  this.setState({isIndividualCoursePageHidden: true});
+                  this.setState({isCartPageHidden: true});
+                  this.setState({isThisAnEnrolledCourse: false})
+                  this.setState({isStudentDetailsFormHidden: true})
+                  this.setState({isChatPageHidden: true})
+                  this.setState({isGroupChatPageHidden: true});
+                  this.setState({isPersonalChatPageHidden:true})
+                  this.setState({isIndividualStudentPageHidden: true });
+                  this.setState({isPayNowOrLaterHidden:true})
+
+                  this.componentDidMount()
+
+
+                }
+            }).catch(err => {
+              console.log("DAMN! ==>admin comm<== ", err)
+              ToastStore.error('Oops! Please try again!',4000,"whiteFont")
+            });
+
+          } else {
+            swal("The comment is not deleted!");
+          }
+    });
+
+
+
+}
 // Personal details
 submitPersonalDetails(e){
         var dataJSON = {
@@ -1099,6 +1196,7 @@ getProfileDetails(){
 
 
       this.getAllStudents().then((returnVal) => {
+
         this.setState({allStudents: returnVal});
       })
       .catch(err => console.log("Something messed up with Axios!: ", err))
@@ -1655,7 +1753,7 @@ componentDidMount() {
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'http://localhost:5000/getAllCourses/start/0/end/100000',
+    url:'http://localhost:5000/getAllCourses/start/0/end/100',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1947,17 +2045,29 @@ hitAPIForAdminHomePageCourses(){
             this.setState({allSems: returnVal});
         })
         .catch(err => console.log("Error with fetching sems ", err))
+
+        this.setState({isIndividualCoursePageHidden: false});
+
       } //STUDENT ENDS
 
       // PROFESSOR
       if(sessionStorage.getItem('user_role') == 2){
-            this.getEnrolledStudentsForCourse(courseClicked.course_id)
-            this.setState({dataOfClickedCourse: courseClicked})
-
+            this.getEnrolledStudentsForCourse(courseClicked.course_id, courseClicked.professor.user_id)
+            this.setState({dataOfClickedCourse: courseClicked}, () =>{
+              this.setState({isIndividualCoursePageHidden: false});
+            });
       }
 
-      console.log("Clicked course",courseClicked);
-      this.setState({isIndividualCoursePageHidden: false});
+      // ADMIN
+      if(sessionStorage.getItem('user_role') == 1){
+            this.getEnrolledStudentsForCourse(courseClicked.course_id, courseClicked.professor.user_id)
+            this.getLatestCourseDetails(courseClicked.course_id).then((data)=>{
+                  console.log('Setting data======>>>>>',data);
+                  this.setState({dataOfClickedCourse: data}, () =>{
+                    this.setState({isIndividualCoursePageHidden: false});
+                  });
+      });
+    }
 
   }
 
@@ -1986,7 +2096,9 @@ submitComment(e){
             ToastStore.success("Thank you for your review! We appreciate it!",4000,"whiteFont")
             this.setState({courseComment: ''});
             this.setState({courseRating: 0});
-            this.getLatestCourseDetails(this.state.dataOfClickedCourse['course_id'])
+            this.getLatestCourseDetails(this.state.dataOfClickedCourse['course_id']).then((data) => {
+                this.setState({dataOfClickedCourse: data})
+            })
 
           }
       }).catch(err => {
@@ -2008,7 +2120,20 @@ getLatestCourseDetails(course_id){
     'Authorization': sessionStorage.getItem('token')}
   })
   .then((response)=>{
-    this.setState({dataOfClickedCourse: response.data})
+    var returnVal = response.data
+
+      returnVal['days'].forEach(function(item,index){
+        switch(item){
+          case 1: returnVal['days'][index] = "Mon"; break;
+          case 2: returnVal['days'][index] = "Tue"; break;
+          case 3: returnVal['days'][index] = "Wed"; break;
+          case 4: returnVal['days'][index] = "Thu"; break;
+          case 5: returnVal['days'][index] = "Fri"; break;
+        }
+      })
+
+    console.log('latest......>',returnVal);
+    return returnVal
   });
 }
 
@@ -2333,8 +2458,8 @@ populateEventsForStudentCalendar(){
 }
 
 // Get students who have enrolled to a course, given prof id and course id
-getEnrolledStudentsForCourse(courseId){
-  var profId = sessionStorage.getItem('user_id')
+getEnrolledStudentsForCourse(courseId, profId){
+
   console.log('Course clicked',courseId,'For professor',profId);
   axios({
     method:'get',
@@ -2725,11 +2850,11 @@ submitFinAid(studentId, e){
                               stats={[
                                 {
                                   name: 'CGPA',
-                                  value: 3.5
+                                  value: el.cgpa
                                 },
                                 {
                                   name: 'Date of Birth',
-                                  value: 'May 2, 1994'
+                                  value: el.dob
                                 }
                               ]}
                           />
@@ -2970,14 +3095,13 @@ submitFinAid(studentId, e){
 
                       <Card style={{width:500}}>
                         <CardContent>
-                          <h1 style={{display:'inline-block',marginRight:20}}> Financial Aid</h1>
+                          <h1 style={{display:'inline-block',marginRight:25}}> Financial Aid</h1>
                             <TextField
-                                style={{display:'inline-block', width:100}}
+                                style={{display:'inline-block', width:100, marginTop:35}}
                                 id="finAidForStudent"
                                 className={classes.textField}
                                 value={this.state.finAidForStudent}
                                 onChange={this.handleChange.bind(this)}
-                                margin="normal"
                                 name="finAidForStudent"
                               />
                             <Button style={{marginLeft:20}} onClick= {this.submitFinAid.bind(this, this.state.dataOfCurrentStudent.user_id)}
@@ -3018,6 +3142,136 @@ submitFinAid(studentId, e){
            }
           </main>
       }
+
+      // ----- INDIVIDUAL COURSE PAGE ADMIN ------------- ///
+        if(!(this.state.isIndividualCoursePageHidden)){
+          currentContent = <main style={this.state.content}>
+              <div className={classes.toolbar} />
+              {
+                <div style={{color:'black'}}>
+                  <Card>
+                    <CardContent>
+                      <div name="courseNameProfView">
+                        <h1> {this.state.dataOfClickedCourse.course_code} - {this.state.dataOfClickedCourse.course_name}</h1>
+                      </div>
+
+                      <span> {this.state.dataOfClickedCourse.professor['first_name']} {this.state.dataOfClickedCourse.professor['last_name']}</span> || {this.state.dataOfClickedCourse.professor['email']}
+                      <p> Location: {this.state.dataOfClickedCourse.location}</p>
+                      <p> Time: {this.state.dataOfClickedCourse.start_time} - {this.state.dataOfClickedCourse.end_time}</p>
+                      <p> Days Offered: {
+                          this.state.dataOfClickedCourse.days.map(function(element){
+                        return <span>{element} &nbsp;</span>
+                      })
+                    }
+                    </p>
+                    <p> Description: {this.state.dataOfClickedCourse.description}</p>
+                    </CardContent>
+                  </Card>
+                  <br />
+
+                <Card>
+                  <CardContent>
+                    <h1>Comments about this course</h1>
+                      {
+                        this.state.dataOfClickedCourse.comment.length >0 &&
+                        this.state.dataOfClickedCourse.comment.map((el,i) => (
+                        <div name="outerWrapper" key={i} style={{marginBottom:50}}>
+                           <div name="commenterAndStars" style={{display:'inline-block', verticalAlign:'middle', width:200}}>
+
+                                  <div name="commenter"  style={{paddingRight:10, display:'inline-block'}}>
+                                    <img src={el.image} style={{height:30, width:30, borderRadius:500, marginRight:10, verticalAlign:'middle'}} alt="Image"/>
+                                    <span name="name">{el.first_name} {el.last_name}</span>
+                                  </div>
+                                  <br />
+                                  <div name="stars" >
+                                    <StarRatings
+                                      rating={el.rating}
+                                      starRatedColor="gold"
+                                      numberOfStars={5}
+                                      starDimension="15px"
+                                      starSpacing="1px"
+                                      />
+                                  </div>
+                                  <div name = 'semester'>
+                                    {el.sem_id == 1 && <span> Fall 18</span>}
+                                    {el.sem_id == 2 && <span> Spring 19</span>}
+                                    {el.sem_id == 3 && <span> Summer 19</span>}
+                                  </div>
+                              </div>
+
+                              <span name="commentGiven" style={{fontStyle:'italic'}} >
+                                {el.comment}
+                              </span>
+
+                              <IconButton style={{float:'right', color:'red'}} onClick = {this.deleteComment.bind(this, el.comment_id, this.state.dataOfClickedCourse.course_id)}
+                                  >
+                                    <DeleteIcon/>
+                              </IconButton>
+
+                                <Divider style={{marginTop:10}} />
+                          </div>
+
+                        ))
+                      }
+                      {
+                        this.state.dataOfClickedCourse.comment.length ==0 &&
+                        <div>
+                          No comments so far!
+                        </div>
+                      }
+                  </CardContent>
+                </Card>
+
+                <br />
+
+
+                <Card>
+                  <CardContent>
+                      <h1> Students roster and grades</h1>
+                        {
+                          this.state.studentsEnrolledForCourse.length > 0 &&
+                          this.state.studentsEnrolledForCourse.map((el,i) => (
+                            <div key={i}>
+                                <div name="enrolledStudentsDiv" style={{width:200, display:'inline-block'}}>
+                                  <span className={classes.bulletpoint} name="name">{el.first_name} {el.last_name}</span>
+                                </div>
+                                <div name="gpa" style={{display:'inline-block'}}>
+                                     GPA: {el.gpa}
+
+                                </div>
+                            </div>
+                          ))
+                        }
+                        {
+                          this.state.studentsEnrolledForCourse.length ==0 &&
+                          <div>
+                            No students have enrolled for this course so far!
+                          </div>
+                        }
+                  </CardContent>
+                </Card>
+
+                <br /> <br />
+
+                <Card>
+                  <CardContent>
+                    <h1> Grade distribution</h1>
+                      <Pie
+                          data={this.state.chartData}
+                          options={{
+                          display:true,
+                          title:'Grade Distribution Fall 2018',
+                          text:"",
+                    }}
+                    />
+                  </CardContent>
+                </Card>
+                </div>
+             }
+            </main>
+        }
+
+
 
       //------------------- ADMIN SIDE NAV IS ALWAYS PRESENT --------------------//
       if(this.state.currentTheme == 'default')

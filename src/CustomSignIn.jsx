@@ -47,7 +47,8 @@ const styles = {
   newUserText:{
     marginTop: 12,
     marginBottom: 12,
-    fontSize: 12
+    fontSize: 12,
+    marginLeft: 12,
   }
 };
 const axios = require('axios');
