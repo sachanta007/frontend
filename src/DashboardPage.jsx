@@ -67,6 +67,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import swal from 'sweetalert'
+import Chip from '@material-ui/core/Chip';
 
 
 
@@ -229,6 +230,7 @@ class DashboardPage extends Component {
     this.deleteCourseInDB = this.deleteCourseInDB.bind(this);
     this.wrapperForCourseSearch = this.wrapperForCourseSearch.bind(this);
     this.PaymentMode = this.PaymentMode.bind(this);
+    this.handleChangeForFilter = this.handleChangeForFilter.bind(this);
 
     this.state = {
 
@@ -321,6 +323,7 @@ class DashboardPage extends Component {
       allProfessorsForSelect: [],
       allStudents: [],
       allProfessors: [],
+      allProfessorsNames:[],
       allCoursesForAdminHome: [],
       detailsOfCurrentCourseToEdit: [],
 
@@ -383,7 +386,6 @@ class DashboardPage extends Component {
 
        this.state.personalCGPA = data['cgpa'];
        this.state.personalImageURL = data['image']
-       console.log("inside constructorsss");
      })
     }
 
@@ -537,7 +539,69 @@ class DashboardPage extends Component {
                  )
       } //file upload innput end
 
-    } //HandleChange ends
+
+
+} //HandleChange ends
+
+//filtering dropdown pop
+handleChangeForFilter(callback,e){
+  let change = {}
+  change[e.target.name] = e.target.value
+  this.setState(change, ()=>{
+        callback();
+      });
+}
+
+//called each time a prof is chosen in filter dropdown
+showOnlyFilteredCourses(e){
+  var searchTerm = this.state.searchCourseName
+  var profs = this.state.name
+  console.log("filtering..................", searchTerm,'  ',profs);
+  this.onlyGetSearchResults(searchTerm).then((beforeFilter)=>{
+    var filtered = []
+    if(beforeFilter.length > 0)
+    {
+      if(profs.length > 0){
+        for(let i = 0; i < beforeFilter.length; i++){
+          beforeFilter[i]['days'].forEach(function(item,index){
+            switch(item){
+              case 1: beforeFilter[i]['days'][index] = "Mon"; break;
+              case 2: beforeFilter[i]['days'][index] = "Tue"; break;
+              case 3: beforeFilter[i]['days'][index] = "Wed"; break;
+              case 4: beforeFilter[i]['days'][index] = "Thu"; break;
+              case 5: beforeFilter[i]['days'][index] = "Fri"; break;
+            }
+          })
+
+            if(profs.includes(beforeFilter[i]['professor'].full_name)) {
+              console.log('found a prof');
+              filtered.push(beforeFilter[i])
+            }
+          } // for loop
+          this.setState({searchResults: filtered})
+        } //prof length > 0
+
+        // not filtering for anyone
+        else
+        {
+          for(let i = 0; i < beforeFilter.length; i++){
+            beforeFilter[i]['days'].forEach(function(item,index){
+              switch(item){
+                case 1: beforeFilter[i]['days'][index] = "Mon"; break;
+                case 2: beforeFilter[i]['days'][index] = "Tue"; break;
+                case 3: beforeFilter[i]['days'][index] = "Wed"; break;
+                case 4: beforeFilter[i]['days'][index] = "Thu"; break;
+                case 5: beforeFilter[i]['days'][index] = "Fri"; break;
+              }
+            })
+            } // for loop
+          this.setState({searchResults: beforeFilter})
+        } //else
+     } // results exist length >0
+
+  });
+
+}
 
 
 // Personal details
@@ -561,7 +625,7 @@ submitPersonalDetails(e){
         console.log('DATAsent==>',dataJSON);
         axios({
           method:'post',
-          url:'https://course360.herokuapp.com/personalDetails',
+          url:'http://localhost:5000/personalDetails',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -610,7 +674,7 @@ updateThemeInDB(theme){
   var user_id = sessionStorage.getItem('user_id');
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/updateColorTheme/theme/'+theme+'/student/'+user_id,
+    url:'http://localhost:5000/updateColorTheme/theme/'+theme+'/student/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -685,14 +749,36 @@ handleChangeAndGetMatchingCourses(e){
       //Hit API and get results that matches
       return axios({
         method:'get',
-        url:'https://course360.herokuapp.com/getCourseBy/name/'+e.target.value+'/start/0/end/100',
+        url:'http://localhost:5000/getCourseBy/name/'+e.target.value+'/start/0/end/100',
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
       .then((response)=>{
         if(response.status == 200)
         {
-          console.log("Get course by name",response.data);
+          return(response.data)
+        }
+        else{
+          return([])
+        }
+      }).catch(err => {
+        console.log("No search results ", err)
+        return([])
+      })
+}
+
+// No handle change..used in filtering courses
+onlyGetSearchResults(key){
+      //Hit API and get results that matches
+      return axios({
+        method:'get',
+        url:'http://localhost:5000/getCourseBy/name/'+key+'/start/0/end/100',
+        headers: {'Access-Control-Allow-Origin': '*',
+        'Authorization': sessionStorage.getItem('token')}
+      })
+      .then((response)=>{
+        if(response.status == 200)
+        {
           return(response.data)
         }
         else{
@@ -824,7 +910,7 @@ getProfileDetails(){
 
   return axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getProfileDetails/user/'+sessionStorage.getItem('user_id'),
+    url:'http://localhost:5000/getProfileDetails/user/'+sessionStorage.getItem('user_id'),
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -852,6 +938,8 @@ getProfileDetails(){
  //-------------------------------------------
   wrapperForCourseSearch(e){
     let searchTerm = e.target.value
+    var profs = this.state.name
+    var filtered = []
 
     this.handleChangeAndGetMatchingCourses(e).then((returnVal) => {
       for(let i = 0; i < returnVal.length; i++){
@@ -866,7 +954,6 @@ getProfileDetails(){
           }
         })
       }
-
         this.setState({searchResults: returnVal});
     })
 
@@ -1036,6 +1123,16 @@ getProfileDetails(){
       this.setState({isPersonalChatPageHidden:true})
       this.setState({isPayNowOrLaterHidden:true})
 
+      //for populating filter dropdown
+      this.getAllProfessorsForSelect().then((returnVal) => {
+        var profNames = []
+        for(let i = 0; i < returnVal.length; i++){
+          profNames.push(returnVal[i]['full_name'])
+        }
+          this.setState({allProfessorsNames: profNames});
+      })
+      .catch(err => console.log("Axios err at add course: ", err))
+
       this.leaveAllChatRooms();
     }
 
@@ -1189,7 +1286,7 @@ getProfileDetails(){
       console.log('To be sent to enroll Courses ==>',dataJSON);
       axios({
         method:'post',
-        url:'https://course360.herokuapp.com/enrollCourses',
+        url:'http://localhost:5000/enrollCourses',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1245,7 +1342,7 @@ getProfileDetails(){
 getPaymentDetails(){
       return axios({
         method:'get',
-        url:'https://course360.herokuapp.com/getPaymentDetails/user/'+sessionStorage.getItem('user_id'),
+        url:'http://localhost:5000/getPaymentDetails/user/'+sessionStorage.getItem('user_id'),
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')}
       })
@@ -1268,7 +1365,7 @@ getPaymentDetails(){
 
    axios({
      method:'post',
-     url:'https://course360.herokuapp.com/payfee',
+     url:'http://localhost:5000/payfee',
      data: dataJSON,
      headers: {'Access-Control-Allow-Origin': '*',
      'Authorization': sessionStorage.getItem('token')},
@@ -1305,7 +1402,7 @@ sendEmailReceipt(e){
 
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/sendReceipt/email/'+sessionStorage.getItem('user_email')+'/cost/'+cartCost+'/fiAid/'+financial+'/reg/'+regPen+'/pay/'+payPen,
+    url:'http://localhost:5000/sendReceipt/email/'+sessionStorage.getItem('user_email')+'/cost/'+cartCost+'/fiAid/'+financial+'/reg/'+regPen+'/pay/'+payPen,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1373,7 +1470,7 @@ downloadPDF(e){
     this.setState({studentEnrolledCourses: []})
     axios({
       method:'get',
-      url:'https://course360.herokuapp.com/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
+      url:'http://localhost:5000/getEnrolledCourses/userId/'+sessionStorage.getItem('user_id'),
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1484,7 +1581,6 @@ componentDidMount() {
 
       this.setState({personalCGPA: data['cgpa'] });
       this.setState({personalCGPA: data['cgpa'] });
-      console.log("did mm");
     })
   }
 
@@ -1524,7 +1620,7 @@ componentDidMount() {
 hitAPIForAdminHomePageCourses(){
   return axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getAllCourses/start/0/end/100000',
+    url:'http://localhost:5000/getAllCourses/start/0/end/100000',
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1539,11 +1635,12 @@ hitAPIForAdminHomePageCourses(){
   getAllProfessorsForSelect(){
     return axios({
       method:'get',
-      url:'https://course360.herokuapp.com/getAllProfessors/start/0/end/100000',
+      url:'http://localhost:5000/getAllProfessors/start/0/end/1000',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
     .then((response)=>{
+      console.log('profs',response.data);
       return(response.data)
     });
   }
@@ -1553,7 +1650,7 @@ hitAPIForAdminHomePageCourses(){
   getSemestersForSelect(){
     return axios({
       method:'get',
-      url:'https://course360.herokuapp.com/semesters',
+      url:'http://localhost:5000/semesters',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1572,7 +1669,7 @@ hitAPIForAdminHomePageCourses(){
   getAllStudents(){
     return axios({
       method:'get',
-      url:'https://course360.herokuapp.com/getAllStudents/start/0/end/100',
+      url:'http://localhost:5000/getAllStudents/start/0/end/100',
       headers: {'Access-Control-Allow-Origin': '*',
       'Authorization': sessionStorage.getItem('token')}
     })
@@ -1612,7 +1709,7 @@ hitAPIForAdminHomePageCourses(){
         console.log(dataJSON);
         axios({
           method:'post',
-          url:'https://course360.herokuapp.com/insertCourses',
+          url:'http://localhost:5000/insertCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1712,7 +1809,7 @@ hitAPIForAdminHomePageCourses(){
         console.log('data to be sent',dataJSON);
         axios({
           method:'post',
-          url:'https://course360.herokuapp.com/updateCourses',
+          url:'http://localhost:5000/updateCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1756,7 +1853,7 @@ hitAPIForAdminHomePageCourses(){
 
     axios({
           method:'post',
-          url:'https://course360.herokuapp.com/deleteCourses',
+          url:'http://localhost:5000/deleteCourses',
           data: dataJSON,
           headers: {'Access-Control-Allow-Origin': '*',
           'Authorization': sessionStorage.getItem('token')},
@@ -1842,7 +1939,7 @@ submitComment(e){
 
   axios({
         method:'post',
-        url:'https://course360.herokuapp.com/commentOnACourse',
+        url:'http://localhost:5000/commentOnACourse',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1871,7 +1968,7 @@ submitComment(e){
 getLatestCourseDetails(course_id){
   return axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getCourseBy/course/'+course_id,
+    url:'http://localhost:5000/getCourseBy/course/'+course_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1892,7 +1989,7 @@ addCourseToCart(id,e){
       console.log("Data to be sent",dataJSON);
   axios({
         method:'post',
-        url:'https://course360.herokuapp.com/addToCart',
+        url:'http://localhost:5000/addToCart',
         data: dataJSON,
         headers: {'Access-Control-Allow-Origin': '*',
         'Authorization': sessionStorage.getItem('token')},
@@ -1914,7 +2011,7 @@ addCourseToCart(id,e){
 getCartDetails(id){
   return axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getCart/userId/'+id,
+    url:'http://localhost:5000/getCart/userId/'+id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -1995,7 +2092,7 @@ deleteFromCart(id,e){
   console.log("Del ob",id);
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/delete/course/'+id.course_id+'/fromCart/for/user/'+user_id+'/sem/'+id.sem['sem_id'],
+    url:'http://localhost:5000/delete/course/'+id.course_id+'/fromCart/for/user/'+user_id+'/sem/'+id.sem['sem_id'],
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2014,7 +2111,7 @@ getProfessorSchedule(){
   console.log('Professor ID is:',user_id);
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getProfessorSchedule/id/'+user_id,
+    url:'http://localhost:5000/getProfessorSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2087,7 +2184,7 @@ getStudentSchedule(user_id){
 console.log("Getting students schedule.....hold on");
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getStudentSchedule/id/'+user_id,
+    url:'http://localhost:5000/getStudentSchedule/id/'+user_id,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2206,7 +2303,7 @@ getEnrolledStudentsForCourse(courseId){
   console.log('Course clicked',courseId,'For professor',profId);
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
+    url:'http://localhost:5000/getStudentsByCourseAndProfessor/course/'+courseId+'/professor/'+profId,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2252,7 +2349,7 @@ dropEnrolledCourse(element,v){
   console.log('Dropping course',element);
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/dropCourse/courseId/'+element.course_id+'/userId/'+sessionStorage.getItem('user_id')+'/sem/'+element.sem['sem_id'],
+    url:'http://localhost:5000/dropCourse/courseId/'+element.course_id+'/userId/'+sessionStorage.getItem('user_id')+'/sem/'+element.sem['sem_id'],
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -2328,7 +2425,7 @@ submitFinAid(studentId, e){
   var finAid = this.state.finAidForStudent;
   axios({
     method:'get',
-    url:'https://course360.herokuapp.com/updateFinancialAid/value/'+finAid+'/student/'+studentId,
+    url:'http://localhost:5000/updateFinancialAid/value/'+finAid+'/student/'+studentId,
     headers: {'Access-Control-Allow-Origin': '*',
     'Authorization': sessionStorage.getItem('token')}
   })
@@ -3130,7 +3227,7 @@ submitFinAid(studentId, e){
                 <TextField
                    id="searchCourseName"
                    placeholder="Enter a course name"
-                   style={{ margin: 8, width:200 }}
+                   style={{ margin: 8, width:700, marginRight:25 }}
                    value={this.state.searchCourseName}
                    onChange={this.wrapperForCourseSearch.bind(this)}
                    margin="normal"
@@ -3144,8 +3241,10 @@ submitFinAid(studentId, e){
                   <InputLabel htmlFor="select-multiple-chip">Filter By Professor</InputLabel>
                   <Select
                     multiple
+                    style={{width:300}}
                     value={this.state.name}
-                    onChange={this.handleChange.bind(this)}
+                    name="name"
+                    onChange={this.handleChangeForFilter.bind(this,this.showOnlyFilteredCourses.bind(this))}
                     input={<Input id="select-multiple-chip" />}
                     renderValue={selected => (
                       <div className={classes.chips}>
@@ -3156,8 +3255,8 @@ submitFinAid(studentId, e){
                     )}
                     MenuProps={MenuProps}
                   >
-                    {names.map(name => (
-                      <MenuItem key={name} value={name} style={getStyles(name, this)}>
+                    {this.state.allProfessorsNames.map(name => (
+                      <MenuItem key={name} value={name} style={{fontSize:11}}>
                         {name}
                       </MenuItem>
                     ))}
