@@ -56,7 +56,7 @@ class ChatScreen extends Component {
     getWhichRoomToJoin(roomData, callback){
       console.log('roooms',roomData);
           for(let item of roomData){ //remove public room
-            if(item.id == "19420562"){
+            if(item.id == "19494079"){
               console.log("Popping public room at index......",roomData.indexOf(item));
               roomData.splice(roomData.indexOf(item),1)
               console.log("Popped",roomData);
@@ -175,7 +175,7 @@ class ChatScreen extends Component {
           .then(currentUser => {
             this.setState({ currentUser })
             return currentUser.subscribeToRoom({
-              roomId: "19420562",
+              roomId: "19494079",
               messageLimit: 100,
               hooks: {
                 onMessage: message => {

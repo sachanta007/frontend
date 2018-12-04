@@ -962,12 +962,12 @@ logout(e){
 
 // Leaves public and private room
 leaveAllChatRooms(){
-      this.state.chatUser.leaveRoom({ roomId: '19420562' })
+      this.state.chatUser.leaveRoom({ roomId: '19494079' })
       .then(room => {
         console.log("Left room public")
       })
       .catch(err => {
-        console.log('Error leaving PUBLIC room ${"19420562"}',err)
+        console.log('Error leaving PUBLIC room ${"19494079"}',err)
       })
 }
 
