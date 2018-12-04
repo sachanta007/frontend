@@ -56,7 +56,7 @@ class ChatScreen extends Component {
     getWhichRoomToJoin(roomData, callback){
       console.log('roooms',roomData);
           for(let item of roomData){ //remove public room
-            if(item.id == "19494079"){
+            if(item.id == "19494079" || item.id == "19420562"){
               console.log("Popping public room at index......",roomData.indexOf(item));
               roomData.splice(roomData.indexOf(item),1)
               console.log("Popped",roomData);
