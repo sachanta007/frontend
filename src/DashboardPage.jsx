@@ -1397,7 +1397,6 @@ getProfileDetails(){
 
   // search for a sem value in an array of obj
    search(myArray,nameKey){
-     console.log('inside ss',myArray,nameKey);
       for (var i=0; i < myArray.length; i++) {
           if (myArray[i].sem['sem_name'] === nameKey) {
               return true;
@@ -1707,14 +1706,19 @@ componentDidMount() {
 //STUDENT SECTION
   else if(currentUserRole == 3)
   {
-    this.setState({isAdmin: false });
-    this.getListOfEnrolledCourses()
-    this.getStudentSchedule(sessionStorage.getItem('user_id'))
-    this.getProfileDetails().then((data)=>{
 
+    this.setState({isAdmin: false });
+    this.getProfileDetails().then((data)=>{
+      console.log('Getting personal',data);
       this.setState({personalCGPA: data['cgpa'] });
       this.setState({personalImageURL: data['image'] });
+
+      this.getListOfEnrolledCourses()
+      this.getStudentSchedule(sessionStorage.getItem('user_id'))
     })
+
+
+
   }
 
 // PROFESSOR
@@ -1898,6 +1902,15 @@ hitAPIForAdminHomePageCourses(){
   editSingleCourse(value,event){
 
     let details = this.getDetailsOfCourseToEdit(value,this.state.allCoursesForAdminHome)
+
+    this.setState({editCourseName: details['course_name']})
+    this.setState({editCourseDesc: details['description']})
+    this.setState({editCourseLocation: details['location']})
+    this.setState({editCourseProf: details['professor']})
+    this.setState({editCourseStartTime: details['start_time']})
+    this.setState({editCourseEndTime: details['end_time']})
+    this.setState({editCourseID: details['course_code']})
+
     this.setState({detailsOfCurrentCourseToEdit: details})
     this.setState({isEditCourseHidden: true})
     this.setState({isEditSingleCourseHidden: false})
@@ -1987,53 +2000,34 @@ hitAPIForAdminHomePageCourses(){
             role_id: sessionStorage.getItem('user_role').toString()
         }
 
-        swal({
-            title: "Are you sure?",
-            text: "Once deleted, you will not be able to recover this course!",
-            icon: "warning",
-            buttons: true,
-            dangerMode: true,
-        })
-          .then((willDelete) => {
-                if (willDelete) {
-                  axios({
-                        method:'post',
-                        url:'https://course360.herokuapp.com/deleteCourses',
-                        data: dataJSON,
-                        headers: {'Access-Control-Allow-Origin': '*',
-                        'Authorization': sessionStorage.getItem('token')},
-                      })
-                      .then((response) => {
-                          if(response.status == 200)
-                          {
-                            this.componentDidMount();
-                            swal('Success!','Course has been deleted successfully!!','success')
-                            this.setState({editCourseName: ''});
-                            this.setState({editCourseDesc: ''});
-                            this.setState({editCourseLocation: ''});
-                            this.setState({editCourseProf: ''});
-                            this.setState({editCourseDays: ''});
-                            this.setState({editCourseStartTime: ''});
-                            this.setState({editCourseEndTime: ''});
-                            this.setState({editCourseID: ''});
-
-
-
-                            this.setState({isEditSingleCourseHidden: true})
-                            this.setState({isEditCourseHidden: false})
-                            this.setState({isIndividualCoursePageHidden: true});
-                          }
-                          else{
-                            console.log('Error in deleting course');
-                          }
-                      });
-
-                } else {
-                  swal("The course is not deleted!");
-                }
-          });
-
-
+            axios({
+                  method:'post',
+                  url:'https://course360.herokuapp.com/deleteCourses',
+                  data: dataJSON,
+                  headers: {'Access-Control-Allow-Origin': '*',
+                  'Authorization': sessionStorage.getItem('token')},
+                })
+                .then((response) => {
+                    if(response.status == 200)
+                    {
+                      this.componentDidMount();
+                      swal('Success!','Course has been deleted successfully!!','success')
+                      this.setState({editCourseName: ''});
+                      this.setState({editCourseDesc: ''});
+                      this.setState({editCourseLocation: ''});
+                      this.setState({editCourseProf: ''});
+                      this.setState({editCourseDays: ''});
+                      this.setState({editCourseStartTime: ''});
+                      this.setState({editCourseEndTime: ''});
+                      this.setState({editCourseID: ''});
+                      this.setState({isEditSingleCourseHidden: true})
+                      this.setState({isEditCourseHidden: false})
+                      this.setState({isIndividualCoursePageHidden: true});
+                    }
+                    else{
+                      console.log('Error in deleting course');
+                    }
+                });
   }
 
   //-----------------
@@ -2433,7 +2427,11 @@ console.log("Getting students schedule.....hold on");
   }).catch(err => {
     console.log("COULDN'T FETCH STUDENT SCHEDULE!!!", err)
     this.setState({studentSchedule : []})
-
+    if(sessionStorage.getItem('user_role') == 1) //  ADMIN
+    {
+        this.setState({isViewStudentsHidden: true});
+        this.setState({isIndividualStudentPageHidden: false });
+    }
   });;
 }
 
@@ -2559,42 +2557,61 @@ dummySuccessPayment(){
 // Drop enrolled course for a student
 dropEnrolledCourse(element,v){
   console.log('Dropping course',element);
-  axios({
-    method:'get',
-    url:'https://course360.herokuapp.com/dropCourse/courseId/'+element.course_id+'/userId/'+sessionStorage.getItem('user_id')+'/sem/'+element.sem['sem_id'],
-    headers: {'Access-Control-Allow-Origin': '*',
-    'Authorization': sessionStorage.getItem('token')}
-  })
-  .then((response)=>{
-    if(response.status == 200){
 
-        swal('Success!','This course has been dropped from your schedule','success')
+    swal({
+        title: "Are you sure?",
+        text: "This course will no longer be in your schedule and you would have to enroll again",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+    })
+      .then((willDelete) => {
+            if (willDelete) {
+              axios({
+                method:'get',
+                url:'https://course360.herokuapp.com/dropCourse/courseId/'+element.course_id+'/userId/'+sessionStorage.getItem('user_id')+'/sem/'+element.sem['sem_id'],
+                headers: {'Access-Control-Allow-Origin': '*',
+                'Authorization': sessionStorage.getItem('token')}
+              })
+              .then((response)=>{
+                if(response.status == 200){
 
-        this.setState({isHomePageHidden: false});
-        this.setState({isPaymentPortalHidden: true});
-        this.setState({isCalendarHidden: true});
-        this.setState({isSearchHidden: true});
-        this.setState({isAddNewCourseHidden: true});
-        this.setState({isEditCourseHidden: true});
-        this.setState({isViewStudentsHidden: true});
-        this.setState({isViewProfessorsHidden: true});
-        this.setState({isEditSingleCourseHidden: true})
-        this.setState({isPaymentModeCardHidden: true});
-        this.setState({isfeeReceiptPageHidden: true});
-        this.setState({isIndividualCoursePageHidden: true});
-        this.setState({isCartPageHidden: true});
-        this.setState({isStudentDetailsFormHidden: true})
-        this.componentDidMount()
+                    swal('Success!','This course has been dropped from your schedule','success')
 
-    }
-    else{
-      console.log("Error with dropping course");
-      ToastStore.error("Oops! We couldn't process that right now! Sorry!",4000,"whiteFont")
-    }
-  }).catch(err => {
-    ToastStore.error("Oops! We couldn't process that right now! Sorry!",4000,"whiteFont")
-    console.log("Error with dropping course",err);
-  });;
+                    this.setState({isHomePageHidden: false});
+                    this.setState({isPaymentPortalHidden: true});
+                    this.setState({isCalendarHidden: true});
+                    this.setState({isSearchHidden: true});
+                    this.setState({isAddNewCourseHidden: true});
+                    this.setState({isEditCourseHidden: true});
+                    this.setState({isViewStudentsHidden: true});
+                    this.setState({isViewProfessorsHidden: true});
+                    this.setState({isEditSingleCourseHidden: true})
+                    this.setState({isPaymentModeCardHidden: true});
+                    this.setState({isfeeReceiptPageHidden: true});
+                    this.setState({isIndividualCoursePageHidden: true});
+                    this.setState({isCartPageHidden: true});
+                    this.setState({isStudentDetailsFormHidden: true})
+                    this.componentDidMount()
+
+                }
+                else{
+                  console.log("Error with dropping course");
+                  ToastStore.error("Oops! We couldn't process that right now! Sorry!",4000,"whiteFont")
+                }
+              }).catch(err => {
+                ToastStore.error("Oops! We couldn't process that right now! Sorry!",4000,"whiteFont")
+                console.log("Error with dropping course",err);
+              });
+            }
+
+            else {
+              swal("The course is not dropped!");
+            }
+      });
+
+
+
 
 }
 
@@ -3558,6 +3575,7 @@ submitFinAid(studentId, e){
         currentContent = <main style={this.state.content}>
             <div className={classes.toolbar} />
               <h2> Search for a course</h2>
+
                 <TextField
                    id="searchCourseName"
                    placeholder="Enter a course name"
@@ -3565,11 +3583,18 @@ submitFinAid(studentId, e){
                    value={this.state.searchCourseName}
                    onChange={this.wrapperForCourseSearch.bind(this)}
                    margin="normal"
-                   variant="outlined"
+                   variant="filled"
                    name="searchCourseName"
                    InputLabelProps={{
                      shrink: true,
                    }}
+                   InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    }}
                 />
                 <FormControl className={classes.formControl}>
                   <InputLabel htmlFor="select-multiple-chip">Filter By Professor</InputLabel>
@@ -3596,7 +3621,6 @@ submitFinAid(studentId, e){
                     ))}
                   </Select>
                 </FormControl>
-
 
                 <Grid container
                   spacing = {24}
@@ -3689,30 +3713,34 @@ submitFinAid(studentId, e){
                       <h1> {this.state.dataOfClickedCourse.course_code} - {this.state.dataOfClickedCourse.course_name}</h1>
                         {!(this.state.isThisAnEnrolledCourse) &&
                           <div>
-                              <FormControl required>
-                                <Select
-                                      value={this.state.semSelected}
-                                      onChange={this.handleChange.bind(this)}
-                                      name="semSelected"
-                                      >
-                                          {
-                                            this.state.allSems.map((el,i) => (
-                                              <MenuItem key={i} value={el.sem_id}>
-                                                {el.name}
-                                              </MenuItem>))
-                                          }
-                                    </Select>
-                              </FormControl>
 
-                            <IconButton color="inherit" title="Add to cart" onClick={this.addCourseToCart.bind(this, this.state.dataOfClickedCourse.course_id)} style={{float:"right"}}>
-                              <AddShoppingCartIcon  />
-                            </IconButton>
+                              <FormControl style={{float:'right'}} required>
+                                <div style={{fontWeight:'bold'}}> Add course to cart</div>
+                                <div name='btnAndSelect' style={{display:'inline-block'}}>
+                                    <Select
+                                          value={this.state.semSelected}
+                                          onChange={this.handleChange.bind(this)}
+                                          name="semSelected"
+                                          style={{marginTop:8}}
+                                          >
+                                              {
+                                                this.state.allSems.map((el,i) => (
+                                                  <MenuItem key={i} value={el.sem_id}>
+                                                    {el.name}
+                                                  </MenuItem>))
+                                              }
+                                        </Select>
+                                        <IconButton color="inherit" title="Add to cart" onClick={this.addCourseToCart.bind(this, this.state.dataOfClickedCourse.course_id)} style={{marginLeft:8}}>
+                                          <AddShoppingCartIcon  />
+                                        </IconButton>
+                                    </div>
+                              </FormControl>
                         </div>
                       }
                       {
                         this.state.isThisAnEnrolledCourse &&
                         <div>
-                          <IconButton color="inherit" title="Drop Course" onClick={this.dropEnrolledCourse.bind(this, this.state.dataOfClickedCourse)} style={{float:"right"}}>
+                          <IconButton title="Drop Course" onClick={this.dropEnrolledCourse.bind(this, this.state.dataOfClickedCourse)} style={{float:"right",color:'red'}}>
                             <DeleteIcon  />
                           </IconButton>
                           <p> Semester: {this.state.dataOfClickedCourse.sem['name']}</p>
@@ -3786,6 +3814,8 @@ submitFinAid(studentId, e){
               </Card>
               <br /> <br />
 
+            {
+              this.state.isThisAnEnrolledCourse &&
                 <Card>
                   <CardContent>
                     <h1>Write a comment?</h1>
@@ -3820,6 +3850,7 @@ submitFinAid(studentId, e){
                       <Button variant="contained" onClick = {this.submitComment.bind(this)} className = {classes.marginAuto} color="primary">Submit</Button>
                     </CardActions>
                 </Card>
+              }
               </div>
            }
           </main>
@@ -3972,6 +4003,8 @@ submitFinAid(studentId, e){
                         <br/>  <br/>
                     <span style={{width:100}}> Late Registration Penalty: </span>  ${this.state.lateRegPenalty}
                         <br/>  <br/>
+                          <span style={{width:100}}> Late Fee Penalty: </span>  ${this.state.latePayPenalty}
+                              <br/>  <br/>
                     <span style={{fontWeight: "bold", marginTop:25, width:150}}> Total Amount to be paid:</span>   ${this.state.netAmount}
                         <br/>
                   </Card>
